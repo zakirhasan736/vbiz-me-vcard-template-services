@@ -1,4 +1,4 @@
-export type NotificationPreferenceKey = 'contact' | 'video' | 'blog' | 'company'
+export type NotificationPreferenceKey = 'contact' | 'video' | 'blog' | 'company' | 'services'
 
 export type NotificationPreferences = Record<NotificationPreferenceKey, boolean>
 
@@ -7,6 +7,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   video: true,
   blog: true,
   company: true,
+  services: true,
 }
 
 export type PushSubscriptionKeys = {
@@ -20,36 +21,6 @@ export type PushSubscriptionPayload = {
   keys: PushSubscriptionKeys
 }
 
-export type StoredPushSubscription = {
-  id: string
-  cardSlug: string
-  cardOwnerId?: string
-  endpoint: string
-  keys: PushSubscriptionKeys
-  preferences: NotificationPreferences
-  userAgent?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export type PushSubscribeRequest = {
-  cardSlug: string
-  cardOwnerId?: string
-  subscription: PushSubscriptionPayload
-  preferences?: Partial<NotificationPreferences>
-}
-
-export type PushPreferencesRequest = {
-  cardSlug: string
-  endpoint: string
-  preferences: NotificationPreferences
-}
-
-export type PushUnsubscribeRequest = {
-  cardSlug: string
-  endpoint: string
-}
-
 export type PushStatusResponse = {
   following: boolean
   permission: NotificationPermission | 'unsupported'
@@ -57,16 +28,14 @@ export type PushStatusResponse = {
   endpoint: string | null
 }
 
-export type PushTestRequest = {
-  cardSlug: string
-  title?: string
-  body?: string
-}
-
-export type PushSimulateRequest = {
-  cardSlug: string
-  category?: NotificationPreferenceKey
+export type PlatformUpdateDetail = {
   title: string
-  body: string
+  message: string
+  businessName?: string
+  avatarUrl?: string
+  avatarImageUrl?: string
+  avatarVideoUrl?: string
+  category?: NotificationPreferenceKey
   url?: string
+  slug?: string
 }

@@ -5,7 +5,6 @@ import {
   isPushSupported,
   NOTIFICATION_PREFERENCE_OPTIONS,
   readFollowState,
-  sendTestNotification,
   subscribeToCard,
   unsubscribeFromCard,
   updateCardPreferences,

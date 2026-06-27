@@ -21,6 +21,7 @@ function readInitialPreferences(cardSlug: string): NotificationPreferences {
     video: true,
     blog: true,
     company: true,
+    services: true,
   }
 }
 
@@ -61,7 +62,7 @@ const NotificationSettingsForm = ({
     setError(null)
     setMessage(null)
     try {
-      await sendTestNotification(cardSlug, 'vBiz Me Update', 'This is a demo push notification for your followed card.')
+      await sendTestNotification(cardSlug, 'vBiz Me Update', 'This is a test push notification for your followed card.')
       setMessage('Test notification sent.')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send test notification.')

@@ -295,8 +295,14 @@ export const HomeSection = () => {
       window.dispatchEvent(
         new CustomEvent('vbiz_platform_update', {
           detail: {
-            title: isFirebaseAvailable ? 'Update Published' : 'Simulated Update',
-            message: `${user.displayName || 'Michaelangelo Casanova'} just updated his card with new services and links.${!isFirebaseAvailable ? ' (Local Mode Enabled)' : ''}`,
+            title: isFirebaseAvailable ? 'Services updated' : 'Simulated update',
+            message: `${user.displayName || 'Michaelangelo Casanova'} just updated services and links on the card.${!isFirebaseAvailable ? ' (Local Mode Enabled)' : ''}`,
+            businessName: 'vBiz Me',
+            avatarImageUrl: '',
+            avatarVideoUrl: 'https://app.vbizme.com/storage/ecard/profileimages/91/mc%20vbizme.mp4',
+            category: 'services',
+            speakLine:
+              'Hey, this is vBiz Me. We just updated our services section. Take a look when you have a moment.',
           },
         })
       )

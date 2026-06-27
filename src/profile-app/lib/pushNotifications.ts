@@ -10,18 +10,29 @@ export { DEFAULT_NOTIFICATION_PREFERENCES }
 export type { NotificationPreferenceKey, NotificationPreferences }
 
 export const SERVICE_WORKER_PATH = '/sw.js'
-export const PUSH_API_ROOT = process.env.NEXT_PUBLIC_PUSH_API_URL ?? ''
+
+function getPushApiBase() {
+  const base =
+    process.env.NEXT_PUBLIC_PUSH_API_URL?.replace(/\/$/, '') ||
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ||
+    ''
+  if (!base) {
+    throw new Error('Push API is not configured. Set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_PUSH_API_URL.')
+  }
+  return base
+}
+
+function pushApiUrl(path: string) {
+  return `${getPushApiBase()}/push${path}`
+}
 
 export const NOTIFICATION_PREFERENCE_OPTIONS: Array<{ id: NotificationPreferenceKey; label: string }> = [
   { id: 'contact', label: '📞 Updated contact info' },
   { id: 'video', label: '🎬 New videos or photos' },
   { id: 'blog', label: '📝 New blog posts' },
+  { id: 'services', label: '🛠️ Services section updates' },
   { id: 'company', label: '🏢 Professional updates' },
 ]
-
-function pushApiUrl(path: string) {
-  return `${PUSH_API_ROOT}/api/push${path}`
-}
 
 export function isPushSupported() {
   return (
@@ -254,7 +265,7 @@ export async function unsubscribeFromCard(cardSlug: string) {
         endpoint: stored.endpoint,
       }),
     }).catch(() => {
-      /* local demo should still clear browser state */
+      /* still clear browser state if backend call fails */
     })
   }
 

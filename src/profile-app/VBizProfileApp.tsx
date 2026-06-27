@@ -21,7 +21,6 @@ import { LiveAgent } from './components/LiveAgent'
 import { NotificationAskModal } from './components/NotificationAskModal'
 import { NotificationModal } from './components/NotificationModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
-import { NotificationToast } from './components/NotificationToast'
 import { ProfileBackgroundAudio } from './components/ProfileBackgroundAudio'
 import { ProfileCoverMedia } from './components/ProfileCoverMedia'
 import { ProfileIntroPreloader } from './components/ProfileIntroPreloader'
@@ -479,7 +478,6 @@ export function VBizProfileApp({
             ownerName={liveAgentCardData?.ownerName ?? ownerName ?? 'Guest'}
             enabled={introAllowed}
           />
-          <NotificationToast />
           <SaveContactModal
             isOpen={activeModal === 'contact'}
             onClose={() => setActiveModal(null)}
