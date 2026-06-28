@@ -72,15 +72,18 @@ export function renderProfileSection({
 }: RenderSectionOptions): ReactNode {
   switch (contentKey) {
     case 'home':
-      if (template === 'v3' && homeHeroProps) {
-        return (
-          <HomeHero
-            key={tabId}
-            theme={homeHeroProps.theme}
-            onAction={homeHeroProps.onAction}
-            toggleTheme={homeHeroProps.toggleTheme}
-          />
-        )
+      if ((template === 'v3' || template === 'v1') && homeHeroProps) {
+        if (template === 'v3') {
+          return (
+            <HomeHero
+              key={tabId}
+              theme={homeHeroProps.theme}
+              onAction={homeHeroProps.onAction}
+              toggleTheme={homeHeroProps.toggleTheme}
+            />
+          )
+        }
+        return <HomeSectionV1 key={tabId} homeHeroProps={homeHeroProps} />
       }
       return template === 'v1' ? <HomeSectionV1 key={tabId} /> : <HomeSectionV2 key={tabId} />
     case 'about':

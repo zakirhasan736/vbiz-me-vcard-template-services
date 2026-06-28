@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -9,8 +9,8 @@
   --font-notepad: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
   --font-notebook: 'Caveat', cursive, sans-serif;
 
-  --color-gold: var(--vbiz-accent, #eed677);
-  --color-gold-dark: var(--vbiz-accent-dark, #cca43b);
+  --color-gold: #eed677;
+  --color-gold-dark: #cca43b;
   --color-ocean-deep: #020914;
   --color-ocean-dark: #051429;
   --color-ocean-medium: #09203f;

@@ -116,19 +116,29 @@ function V3CtaButton({
 function V1CtaButton({
   button,
   accentColor,
+  theme,
   onClick,
 }: {
   button: ResolvedHomeCtaButton
   accentColor: string
+  theme?: string
   onClick: () => void
 }) {
   const inlineStyle = buildHomeCtaInlineStyle(button, accentColor)
+  const isFilled = button.variant === 'accent' || button.variant === 'cta'
+  const isDark = theme === 'dark'
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group/btn flex w-full items-center justify-center gap-3 rounded-2xl px-6 py-4.5 text-[10px] font-black tracking-[0.2em] text-black uppercase shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] transition-all hover:shadow-[0_25px_50px_-10px_rgba(234,179,8,0.6)] sm:text-xs"
+      className={`group/btn flex w-full items-center justify-center gap-3 rounded-2xl px-6 py-4.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all sm:text-xs ${
+        isFilled
+          ? 'text-black shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] hover:shadow-[0_25px_50px_-10px_rgba(234,179,8,0.6)]'
+          : isDark
+            ? 'border-yellow-primary/30 text-yellow-primary hover:border-yellow-primary/50 border bg-gray-900/70 shadow-none hover:bg-gray-900'
+            : 'border border-black/10 bg-white text-gray-900 shadow-sm hover:bg-gray-50'
+      }`}
       style={inlineStyle}
     >
       <CtaButtonContent button={button} iconSize={18} />
@@ -164,7 +174,7 @@ function renderV3Layout(
   desktop?: boolean,
   className?: string
 ) {
-  const Button = ({ button, fullWidth }: { button: ResolvedHomeCtaButton; fullWidth?: boolean }) => (
+  const Button = ({ button }: { button: ResolvedHomeCtaButton; fullWidth?: boolean }) => (
     <V3CtaButton
       button={button}
       theme={theme}
@@ -191,12 +201,23 @@ function renderV3Layout(
   )
 }
 
-function renderV1Layout(layout: HomeCtaLayout, accentColor: string, onClick: (button: ResolvedHomeCtaButton) => void) {
+function renderV1Layout(
+  layout: HomeCtaLayout,
+  accentColor: string,
+  onClick: (button: ResolvedHomeCtaButton) => void,
+  theme?: string
+) {
   const buttons = [...layout.row1, layout.row2, layout.row3]
   return (
     <div className="relative z-10 flex flex-col gap-4">
       {buttons.map((button) => (
-        <V1CtaButton key={button.key} button={button} accentColor={accentColor} onClick={() => onClick(button)} />
+        <V1CtaButton
+          key={button.key}
+          button={button}
+          accentColor={accentColor}
+          theme={theme}
+          onClick={() => onClick(button)}
+        />
       ))}
     </div>
   )
@@ -227,7 +248,7 @@ export function ProfileActionButtons({ variant, theme, onAction, className }: Pr
   }
 
   if (variant === 'v1') {
-    return <div className={className}>{renderV1Layout(layout, accentColor, click)}</div>
+    return <div className={className}>{renderV1Layout(layout, accentColor, click, theme)}</div>
   }
 
   if (variant === 'v2') {

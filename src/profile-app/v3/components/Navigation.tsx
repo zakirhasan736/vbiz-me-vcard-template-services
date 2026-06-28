@@ -118,12 +118,12 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUpOrLeave}
         onMouseLeave={onMouseUpOrLeave}
-        className={`no-scrollbar flex w-full touch-pan-x items-center gap-1.5 overflow-x-auto scroll-smooth px-6 py-0.5 select-none md:w-auto md:gap-3 md:px-2 ${
+        className={`no-scrollbar flex w-full touch-pan-x items-center gap-1.5 overflow-x-auto scroll-smooth px-6 py-0.5 select-none md:w-auto md:gap-3.5 md:px-2 ${
           isPressed ? 'scale-[0.995] cursor-grabbing' : 'cursor-grab'
         } transition-all duration-150`}
         style={{ scrollbarWidth: 'none' }}
       >
-        {tabs.map((tab, idx) => {
+        {tabs.map((tab) => {
           const isActive = activeTab === tab.id
           const isHovered = hoveredTab === tab.id
 
@@ -132,11 +132,9 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               layout="position"
               key={tab.id}
               onClick={() => {
-                try {
-                  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                    navigator.vibrate(10)
-                  }
-                } catch (e) {}
+                if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                  navigator.vibrate(10)
+                }
                 if (!dragged) {
                   setActiveTab(tab.id)
                   // Scroll selected element into view smoothly on mobile
@@ -151,21 +149,19 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               id={`tab-btn-${tab.id}`}
               onMouseEnter={() => setHoveredTab(tab.id)}
               onMouseLeave={() => setHoveredTab(null)}
-              className="focus-visible:ring-gold/60 relative flex h-9 w-9 shrink-0 items-center justify-center transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-10 md:w-10"
+              className="focus-visible:ring-gold/60 relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-12 md:w-12 md:rounded-[14px]"
               title={tab.label}
-              style={{ borderRadius: '12px' }}
             >
               {/* Hover highlight with animated layout transition */}
               {isHovered && !isActive && (
                 <motion.div
                   layoutId="hoverIndicator"
-                  className={`absolute inset-0 border ${
+                  className={`absolute inset-0 rounded-[12px] border md:rounded-[14px] ${
                     theme === 'dark'
                       ? 'bg-ocean-light/30 border-gold/20 shadow-[0_2px_10px_rgba(22,54,95,0.2)]'
                       : 'bg-gold/10 border-gold/20 shadow-[0_2px_10px_rgba(238,214,119,0.1)]'
                   }`}
                   transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                  style={{ borderRadius: '12px' }}
                 />
               )}
 
@@ -173,13 +169,12 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               {isActive && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className={`absolute inset-0 border shadow-sm ${
+                  className={`absolute inset-0 rounded-[12px] border shadow-sm md:rounded-[14px] ${
                     theme === 'dark'
                       ? 'bg-ocean-dark border-gold/80 shadow-ocean-dark/40'
                       : 'bg-gold/10 border-gold shadow-gold/5'
                   }`}
                   transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-                  style={{ borderRadius: '12px' }}
                 />
               )}
 
@@ -187,7 +182,7 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               <div className="relative z-10 flex items-center justify-center">
                 <tab.icon
                   size={16}
-                  className={`${
+                  className={`h-4 w-4 md:h-[18px] md:w-[18px] ${
                     isActive
                       ? theme === 'dark'
                         ? 'text-gold'

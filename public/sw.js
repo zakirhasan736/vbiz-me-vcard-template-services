@@ -29,7 +29,7 @@ self.addEventListener('push', (event) => {
     payload.body = event.data.text()
   }
 
-  const targetUrl = payload.url || (payload.slug ? `/vcard/${payload.slug}` : '/')
+  const targetUrl = payload.url || (payload.slug ? `/${payload.slug}` : '/')
   const richPayload = {
     title: payload.title,
     message: payload.body,

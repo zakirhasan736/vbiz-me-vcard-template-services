@@ -1,7 +1,6 @@
 'use client'
 
 import { getNavDisplayLabel } from '@/lib/vcardNavbar'
-import { ProfileNavScrollArrows } from '@/profile-app/components/ProfileNavScrollArrows'
 import { useProfileNavScroll } from '@/profile-app/hooks/useProfileNavScroll'
 import { useProfileNavigation } from '@/profile-app/providers/ProfileNavigationProvider'
 import { cn } from '@/utils/cn'
@@ -9,20 +8,18 @@ import { motion } from 'motion/react'
 import { type KeyboardEvent } from 'react'
 
 type ProfileNavigationV2Props = {
-  theme: 'light' | 'dark'
   slugForPersistence?: string
   embedded?: boolean
 }
 
-export function ProfileNavigationV2({ theme, slugForPersistence, embedded }: ProfileNavigationV2Props) {
+export function ProfileNavigationV2({ slugForPersistence, embedded }: ProfileNavigationV2Props) {
   const { visibleTabs, activeSectionId, goToSection } = useProfileNavigation()
-  const {
-    scrollRef: navScrollRef,
-    scrollClassName: navScrollClassName,
-    canScrollLeft,
-    canScrollRight,
-    scrollToEdge,
-  } = useProfileNavScroll(slugForPersistence, 'v2', activeSectionId, 'tab')
+  const { scrollRef: navScrollRef, scrollClassName: navScrollClassName } = useProfileNavScroll(
+    slugForPersistence,
+    'v2',
+    activeSectionId,
+    'tab'
+  )
 
   return (
     <div
@@ -40,13 +37,6 @@ export function ProfileNavigationV2({ theme, slugForPersistence, embedded }: Pro
           embedded ? 'max-w-[calc(100%-0.5rem)]' : ''
         )}
       >
-        <ProfileNavScrollArrows
-          canScrollLeft={canScrollLeft}
-          canScrollRight={canScrollRight}
-          onScroll={scrollToEdge}
-          variant="v2"
-          theme={theme}
-        />
         <div className="min-w-0 flex-1 overflow-hidden">
           <div
             ref={navScrollRef}

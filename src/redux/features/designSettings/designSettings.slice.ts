@@ -17,9 +17,9 @@ export type DesignSettingsState = {
 }
 
 const initialState: DesignSettingsState = {
-  vcardPrimaryColor: '#6366f1',
-  vcardAccentColor: '#f43f5e',
-  dashboardAccent: 'indigo',
+  vcardPrimaryColor: '#eed677',
+  vcardAccentColor: '#eed677',
+  dashboardAccent: 'amber',
   fontFamily: 'inter',
   profileTemplate: 'v3',
   layoutStyle: 'classic',

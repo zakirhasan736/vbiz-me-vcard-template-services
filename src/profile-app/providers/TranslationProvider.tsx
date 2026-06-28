@@ -18,11 +18,13 @@ export function TranslationProvider({
   cardOwnerId,
   profileSlug,
   theme = 'light',
+  languageModalPresentation,
   children,
 }: {
   cardOwnerId?: string
   profileSlug?: string
   theme?: 'light' | 'dark'
+  languageModalPresentation?: 'default' | 'bottom-sheet'
   children: ReactNode
 }) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false)
@@ -48,7 +50,12 @@ export function TranslationProvider({
     <TranslationUiContext.Provider value={value}>
       <div id={I18N_CONFIG.googleTranslateElementId} className="hidden" aria-hidden />
       {children}
-      <LanguageModal isOpen={languageModalOpen} onClose={closeLanguageModal} theme={theme} />
+      <LanguageModal
+        isOpen={languageModalOpen}
+        onClose={closeLanguageModal}
+        theme={theme}
+        presentation={languageModalPresentation}
+      />
     </TranslationUiContext.Provider>
   )
 }

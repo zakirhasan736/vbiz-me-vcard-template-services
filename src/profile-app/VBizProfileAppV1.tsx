@@ -2,39 +2,44 @@
 
 import { hasContactFlowBeenAsked, writeContactFlowAsked } from '@/lib/push/config'
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
-import { designToCssVars, resolveProfileDesign } from '@/lib/resolvedProfileDesign'
-import { getNavDisplayLabel } from '@/lib/vcardNavbar'
-import { Moon, Sun } from 'lucide-react'
-import { motion } from 'motion/react'
-import { useCallback, useEffect, useState } from 'react'
-import { CursorTrail } from './components/CursorTrail'
-import { DoneModal } from './components/DoneModal'
-import { LiveAgent } from './components/LiveAgent'
-import { NotificationAskModal } from './components/NotificationAskModal'
-import { NotificationSettingsModal } from './components/NotificationSettingsModal'
-import { ProfileBackgroundAudio } from './components/ProfileBackgroundAudio'
-import { ProfileIntroPreloader } from './components/ProfileIntroPreloader'
-import { ProfileLanguageButton } from './components/ProfileLanguageButton'
-import { ProfileNavScrollArrows } from './components/ProfileNavScrollArrows'
-import { ProfileSectionOutlet } from './components/ProfileSectionOutlet'
-import { SaveContactModal } from './components/SaveContactModal'
-import { SaveToWalletModal } from './components/SaveToWalletModal'
-import { SiteGeometricGrid } from './components/SiteGeometricGrid'
-import { useLiveAgentProfileActions } from './hooks/useLiveAgentProfileActions'
-import { useProfileNavScroll } from './hooks/useProfileNavScroll'
-import { useProfileDisplay } from './lib/profileDisplayContext'
-import { PROFILE_NAV_MAX_WIDTH_CLASS } from './profileLayout'
-import type { VBizProfileAppProps } from './profilePublicProps'
-import { DEMO_PROFILE_PROPS } from './profilePublicProps'
-import { ProfileThemeStyles } from './ProfileThemeStyles'
-import { useProfileIntroContext } from './providers/ProfileIntroProvider'
-import { useProfileNavigation } from './providers/ProfileNavigationProvider'
+import { resolveProfileDesign } from '@/lib/resolvedProfileDesign'
+import { v3DesignToCssVars } from '@/lib/v3Theme'
+import { CursorTrail } from '@/profile-app/components/CursorTrail'
+import { DoneModal } from '@/profile-app/components/DoneModal'
+import { LiveAgent } from '@/profile-app/components/LiveAgent'
+import { NotificationAskModal } from '@/profile-app/components/NotificationAskModal'
+import { NotificationSettingsModal } from '@/profile-app/components/NotificationSettingsModal'
+import { ProfileBackgroundAudio } from '@/profile-app/components/ProfileBackgroundAudio'
+import { ProfileIntroPreloader } from '@/profile-app/components/ProfileIntroPreloader'
+import { ProfileSectionOutlet } from '@/profile-app/components/ProfileSectionOutlet'
+import { SaveContactModal } from '@/profile-app/components/SaveContactModal'
+import { SaveToWalletModal } from '@/profile-app/components/SaveToWalletModal'
+import { SiteGeometricGrid } from '@/profile-app/components/SiteGeometricGrid'
+import { useLiveAgentProfileActions } from '@/profile-app/hooks/useLiveAgentProfileActions'
+import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import type { VBizProfileAppProps } from '@/profile-app/profilePublicProps'
+import { DEMO_PROFILE_PROPS } from '@/profile-app/profilePublicProps'
+import { ProfileThemeStyles } from '@/profile-app/ProfileThemeStyles'
+import { useProfileIntroContext } from '@/profile-app/providers/ProfileIntroProvider'
+import { useProfileNavigation } from '@/profile-app/providers/ProfileNavigationProvider'
+import { useTranslationUi } from '@/profile-app/providers/TranslationProvider'
+import { getV3AnimationProps, type V3AnimationPreset } from '@/profile-app/v3/animationEngine'
+import { InfoModal } from '@/profile-app/v3/components/InfoModal'
+import { Navigation } from '@/profile-app/v3/components/Navigation'
+import { NotepadModal } from '@/profile-app/v3/components/NotepadModal'
+import { ShareModal } from '@/profile-app/v3/components/ShareModal'
+import { mapNavItemsToV3Tabs } from '@/profile-app/v3/navCategories'
+import { AnimatePresence, motion } from 'motion/react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-type ModalState = 'none' | 'contact' | 'wallet' | 'notification' | 'settings' | 'done'
+type V1ModalState = 'contact' | 'wallet' | 'notification' | 'done' | 'settings' | 'notepad' | 'share' | 'info' | null
+
+const V1_MODAL_PRESENTATION = 'bottom-sheet' as const
 
 export function VBizProfileAppV1({
   explainerVideoUrl,
   cardOwnerId = DEMO_PROFILE_PROPS.cardOwnerId,
+  ownerName = DEMO_PROFILE_PROPS.ownerName,
   liveAgentCardData = DEMO_PROFILE_PROPS.liveAgentCardData,
   liveAgentSystemPrompt,
   design: designProp,
@@ -44,12 +49,11 @@ export function VBizProfileAppV1({
   previewTheme,
   onPreviewThemeChange,
 }: VBizProfileAppProps) {
-  const { pageColors } = useProfileDisplay()
-  const slugForNav = profileSlug ?? shareSlug
-  const { visibleTabs: visibleV1Tabs, activeSectionId, goToSection } = useProfileNavigation()
+  const { pageColors, design: contextDesign } = useProfileDisplay()
 
   const design: ResolvedProfileDesign =
     designProp ??
+    contextDesign ??
     resolveProfileDesign(
       {
         vcardPrimaryColor: '#dcc969',
@@ -64,110 +68,112 @@ export function VBizProfileAppV1({
       { darkMode: true }
     )
 
+  const { visibleTabs, activeSectionId, goToSection } = useProfileNavigation()
+  const navTabs = useMemo(() => mapNavItemsToV3Tabs(visibleTabs), [visibleTabs])
+
   const [internalTheme, setInternalTheme] = useState<'light' | 'dark'>(() => {
     if (embedded) return design.darkMode ? 'dark' : 'light'
-    return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark'
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (saved === 'dark' || saved === 'light') return saved
+    return design.darkMode ? 'dark' : 'light'
   })
   const theme = embedded && previewTheme !== undefined ? previewTheme : internalTheme
-  const [activeModal, setActiveModal] = useState<ModalState>('none')
-  const {
-    scrollRef: v1NavScrollRef,
-    scrollClassName: v1NavScrollClassName,
-    canScrollLeft: v1CanScrollLeft,
-    canScrollRight: v1CanScrollRight,
-    scrollToEdge: v1ScrollToEdge,
-  } = useProfileNavScroll(slugForNav, 'v1', activeSectionId)
+  const [activeModal, setActiveModal] = useState<V1ModalState>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [animationPreset] = useState<V3AnimationPreset>(() => {
+    if (typeof window === 'undefined') return 'dynamic'
+    return (localStorage.getItem('animationPreset') as V3AnimationPreset) || 'dynamic'
+  })
+  const [animationDuration] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0.65
+    const saved = localStorage.getItem('animationDuration')
+    return saved ? parseFloat(saved) : 0.65
+  })
+
   const { showPreloader, introAllowed, endPreloader, hasVideo } = useProfileIntroContext()
+  const { openLanguageModal } = useTranslationUi()
+  const cardSlug = profileSlug ?? shareSlug ?? 'preview'
 
   const openSaveContactModal = useCallback(() => setActiveModal('contact'), [])
   useLiveAgentProfileActions(openSaveContactModal)
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  useEffect(() => {
     if (embedded) return
     if (theme === 'dark') {
       document.documentElement.classList.add('dark')
+      document.body.className = 'bg-[#050505] text-[#e0e0e0] transition-colors duration-500 ease-in-out font-sans'
     } else {
       document.documentElement.classList.remove('dark')
+      document.body.className = 'bg-white text-gray-900 transition-colors duration-500 ease-in-out font-sans'
     }
     localStorage.setItem('theme', theme)
   }, [theme, embedded])
 
-  useEffect(() => {
-    console.log('🚀 vBiz Profile App Mounted (Version 1 - Classic)')
-  }, [])
-
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const next = theme === 'dark' ? 'light' : 'dark'
     if (embedded && onPreviewThemeChange) {
       onPreviewThemeChange(next)
     } else {
       setInternalTheme(next)
     }
-  }
+  }, [embedded, onPreviewThemeChange, theme])
 
-  const accent = design.accentColor
+  const handleHeroAction = useCallback(
+    (action: string) => {
+      if (action === 'language') {
+        openLanguageModal()
+        return
+      }
+      if (action === 'notepad') {
+        setActiveModal('notepad')
+        return
+      }
+      setActiveModal(action as V1ModalState)
+    },
+    [openLanguageModal]
+  )
+
+  useEffect(() => {
+    const handleSaveContactEvent = () => setActiveModal('contact')
+    const handleOpenNotepadEvent = () => setActiveModal('notepad')
+    const handleOpenShareEvent = () => setActiveModal('share')
+    window.addEventListener('saveContactAction', handleSaveContactEvent)
+    window.addEventListener('openNotepadAction', handleOpenNotepadEvent)
+    window.addEventListener('openShareModal', handleOpenShareEvent)
+    return () => {
+      window.removeEventListener('saveContactAction', handleSaveContactEvent)
+      window.removeEventListener('openNotepadAction', handleOpenNotepadEvent)
+      window.removeEventListener('openShareModal', handleOpenShareEvent)
+    }
+  }, [])
+
   const rootStyle = {
-    ...designToCssVars(design),
+    ...v3DesignToCssVars(design),
     ...(pageColors.pageBg ? { backgroundColor: pageColors.pageBg } : {}),
   }
 
-  const renderV1NavTab = (tab: (typeof visibleV1Tabs)[number], isActive: boolean) => {
-    const className = `relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-500 sm:h-11 lg:h-12 lg:w-12 ${
-      isActive
-        ? 'text-black'
-        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white'
-    }`
-    return (
-      <button
-        key={tab.id}
-        id={`tab-btn-${tab.id}`}
-        type="button"
-        onClick={() => goToSection(tab.id)}
-        className={className}
-        title={getNavDisplayLabel(tab)}
-        aria-label={getNavDisplayLabel(tab)}
-        aria-current={isActive ? 'page' : undefined}
-      >
-        {isActive && (
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-full shadow-[0_0_16px_rgba(234,179,8,0.45)] sm:shadow-[0_0_20px_rgba(234,179,8,0.5)]"
-            style={{ backgroundColor: accent }}
-          />
-        )}
-        <tab.icon
-          size={isActive ? 22 : 20}
-          className={`relative z-10 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-sm' : ''}`}
-        />
-      </button>
-    )
+  const homeHeroProps = {
+    theme,
+    onAction: handleHeroAction,
+    toggleTheme,
   }
 
   const shellClass = embedded
     ? 'vbiz-profile-root vbiz-profile-v1 relative isolate flex min-h-0 w-full max-w-full flex-col overflow-x-clip overflow-y-visible'
-    : 'vbiz-profile-root vbiz-profile-v1 flex h-screen w-screen flex-col overflow-hidden'
-
-  const v1NavClass = embedded
-    ? 'vbiz-v1-nav pointer-events-none fixed inset-x-0 top-9 z-50 flex justify-center px-2 sm:top-10'
-    : 'vbiz-v1-nav pointer-events-none fixed right-0 bottom-6 left-0 z-50 flex w-full justify-center px-4 lg:top-6 lg:bottom-auto'
-
-  const v1NavInnerClass = embedded
-    ? 'pointer-events-auto relative flex w-full min-w-0 max-w-[calc(100%-0.5rem)] items-center overflow-hidden rounded-full border border-black/5 bg-white p-1 shadow-[0_30px_70px_-10px_rgba(0,0,0,0.15)] dark:border-white/15 dark:bg-black/80 dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.9)]'
-    : `pointer-events-auto relative flex w-full min-w-0 overflow-hidden ${PROFILE_NAV_MAX_WIDTH_CLASS} items-center rounded-full border border-black/5 bg-white p-1.5 shadow-[0_30px_70px_-10px_rgba(0,0,0,0.15)] md:p-2 dark:border-white/15 dark:bg-black/80 dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.9)]`
-
-  const v1MainClass = embedded
-    ? 'vbiz-v1-main relative z-10 flex w-full flex-1 flex-col bg-white pt-16 pb-4 transition-colors duration-700 dark:bg-[#050505]'
-    : 'relative flex h-full w-full flex-1 flex-col overflow-y-auto bg-white pt-6 pb-28 transition-colors duration-700 lg:pt-28 lg:pb-6 dark:bg-[#050505]'
-
-  const v1MainInnerClass = embedded
-    ? 'vbiz-v1-main-inner relative z-10 flex h-full w-full max-w-full min-w-0 flex-1 flex-col px-0 py-0'
-    : 'relative z-10 mx-auto flex h-full w-full max-w-[1500px] flex-1 flex-col px-4 py-2 sm:px-6 lg:px-8'
+    : 'vbiz-profile-root vbiz-profile-v1 no-scrollbar relative flex min-h-dvh w-full flex-col items-center overflow-x-clip transition-colors duration-500'
 
   return (
     <div
       data-embedded={embedded ? '' : undefined}
       data-profile-template="v1"
-      className={`${shellClass} selection:bg-yellow-primary/30 font-sans transition-colors duration-700 selection:text-gray-900 dark:selection:text-white ${theme === 'dark' ? 'dark bg-[#050505] text-[#e0e0e0]' : 'bg-white text-gray-900'}`}
+      className={`${shellClass} selection:bg-yellow-primary/30 font-sans selection:text-gray-900 dark:selection:text-white ${theme === 'dark' ? 'dark bg-[#050505] text-[#e0e0e0]' : 'bg-white text-gray-900'} ${embedded ? 'min-h-0 max-w-full' : ''}`}
       style={rootStyle}
     >
       <ProfileThemeStyles design={design} />
@@ -178,8 +184,8 @@ export function VBizProfileAppV1({
       {showPreloader && !hasVideo && (
         <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-[#050505] text-zinc-100">
           <div
-            className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
-            style={{ borderColor: accent, borderTopColor: 'transparent' }}
+            className="border-yellow-primary h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
+            style={{ borderTopColor: 'transparent' }}
           />
           <p className="mt-4 text-xs font-bold tracking-[0.3em] text-zinc-500 uppercase">Preparing</p>
         </div>
@@ -188,87 +194,57 @@ export function VBizProfileAppV1({
       <SiteGeometricGrid />
       <CursorTrail />
 
-      {!embedded && (
-        <div className="pointer-events-auto fixed top-1/2 right-4 z-60 flex -translate-y-1/2 flex-col gap-2 sm:right-6">
-          <ProfileLanguageButton className="flex h-12 w-12 items-center justify-center rounded-full border border-black/5 bg-white text-zinc-700 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] dark:border-white/10 dark:bg-black/20 dark:text-zinc-200" />
-          <motion.button
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            whileHover={{ scale: 1.05, x: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={toggleTheme}
-            type="button"
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="pointer-events-auto fixed top-1/2 right-4 z-60 flex h-20 w-12 -translate-y-1/2 flex-col items-center justify-between rounded-4xl border border-black/5 bg-white p-2 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] sm:right-6 sm:h-24 sm:w-14 lg:p-3 dark:border-white/10 dark:bg-black/20 dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)]"
-          >
-            <div
-              className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'light' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-black/5 text-white/30 dark:bg-white/5'}`}
-              style={theme === 'light' ? { backgroundColor: accent } : undefined}
-            >
-              <Sun size={20} className="sm:h-6 sm:w-6" />
-            </div>
-            <div
-              className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'dark' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-gray-50 text-gray-500 dark:text-white/20'}`}
-              style={theme === 'dark' ? { backgroundColor: accent } : undefined}
-            >
-              <Moon size={20} className="sm:h-6 sm:w-6" />
-            </div>
-          </motion.button>
-        </div>
-      )}
-
-      {embedded ? (
-        <header className={v1NavClass}>
-          <div className={v1NavInnerClass}>
-            <ProfileNavScrollArrows
-              canScrollLeft={v1CanScrollLeft}
-              canScrollRight={v1CanScrollRight}
-              onScroll={v1ScrollToEdge}
-              variant="v1"
-              theme={theme}
-            />
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <div
-                ref={v1NavScrollRef}
-                className={`vbiz-v1-nav-scroll mask-edges items-center gap-1.5 px-2 py-0.5 ${v1NavScrollClassName}`}
-              >
-                {visibleV1Tabs.map((tab) => renderV1NavTab(tab, activeSectionId === tab.id))}
-              </div>
-            </div>
-          </div>
-        </header>
-      ) : null}
-
-      <main className={v1MainClass}>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.05),transparent_50%)]" />
-        <div className={v1MainInnerClass}>
-          <div className="relative isolate w-full contain-[layout]">
-            <ProfileSectionOutlet sectionId={activeSectionId} template="v1" />
+      {/* v3 navbar layout */}
+      <div className="pointer-events-none fixed bottom-1 left-0 z-100 w-full px-2 md:top-5 md:bottom-auto md:px-20">
+        <div
+          className={`pointer-events-auto relative mx-auto flex max-w-[1032px] items-center justify-center rounded-[14px] px-2 py-2 md:rounded-[20px] ${theme === 'dark' ? 'border-gold/30 bg-ocean-dark/85 border text-zinc-100 backdrop-blur-xl' : 'border-gold/40 border bg-white/95 text-zinc-900 backdrop-blur-xl'}`}
+        >
+          <div className="no-scrollbar flex flex-1 justify-center overflow-x-auto">
+            <Navigation tabs={navTabs} activeTab={activeSectionId} setActiveTab={goToSection} theme={theme} />
           </div>
         </div>
-      </main>
+      </div>
 
-      {!embedded ? (
-        <header className={v1NavClass}>
-          <div className={v1NavInnerClass}>
-            <ProfileNavScrollArrows
-              canScrollLeft={v1CanScrollLeft}
-              canScrollRight={v1CanScrollRight}
-              onScroll={v1ScrollToEdge}
-              variant="v1"
-              theme={theme}
-            />
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <div
-                ref={v1NavScrollRef}
-                className={`vbiz-v1-nav-scroll mask-edges items-center justify-start gap-2 px-3 py-1 sm:gap-2.5 ${v1NavScrollClassName}`}
-              >
-                {visibleV1Tabs.map((tab) => renderV1NavTab(tab, activeSectionId === tab.id))}
-              </div>
-            </div>
-          </div>
-        </header>
-      ) : null}
+      <div className={`relative z-20 mt-0 flex h-full w-full flex-1 flex-col px-0 ${embedded ? '' : 'md:mt-[72px]'}`}>
+        <main
+          className="no-scrollbar relative flex w-full flex-1 flex-col overflow-x-hidden md:overflow-x-visible"
+          role="tabpanel"
+          id={`panel-${activeSectionId}`}
+          aria-labelledby={`tab-${activeSectionId}`}
+          style={{ perspective: '1600px', transformStyle: 'preserve-3d' }}
+        >
+          <AnimatePresence mode="wait">
+            {(() => {
+              const anim = getV3AnimationProps(activeSectionId, animationPreset, animationDuration, isMobile)
+              return (
+                <motion.div
+                  key={activeSectionId}
+                  initial={anim.initial}
+                  animate={anim.animate}
+                  exit={anim.exit}
+                  transition={anim.transition}
+                  style={{
+                    ...anim.style,
+                    width: '100%',
+                    height: '100%',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                  className="flex h-full w-full flex-1 flex-col"
+                >
+                  {activeSectionId === 'home' ? (
+                    <ProfileSectionOutlet sectionId={activeSectionId} template="v1" homeHeroProps={homeHeroProps} />
+                  ) : (
+                    <div className="mx-auto mt-10 mb-10 min-h-screen w-full max-w-[1032px] px-6 md:mt-28">
+                      <ProfileSectionOutlet sectionId={activeSectionId} template="v1" />
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })()}
+          </AnimatePresence>
+        </main>
+      </div>
 
       <LiveAgent
         embedded={embedded}
@@ -280,10 +256,16 @@ export function VBizProfileAppV1({
 
       {!embedded && (
         <>
+          <NotepadModal
+            isOpen={activeModal === 'notepad'}
+            onClose={() => setActiveModal(null)}
+            cardOwnerId={cardOwnerId ?? 'michaelangelo_casanova'}
+          />
           <SaveContactModal
             isOpen={activeModal === 'contact'}
-            onClose={() => setActiveModal('none')}
+            onClose={() => setActiveModal(null)}
             profileId={cardOwnerId}
+            presentation={V1_MODAL_PRESENTATION}
             onSuccess={() => {
               if (hasContactFlowBeenAsked(cardOwnerId ?? '91')) {
                 setActiveModal('done')
@@ -294,17 +276,18 @@ export function VBizProfileAppV1({
           />
           <SaveToWalletModal
             isOpen={activeModal === 'wallet'}
-            onClose={() => setActiveModal('none')}
+            onClose={() => setActiveModal(null)}
             onAction={() => setActiveModal('notification')}
           />
           <NotificationAskModal
             isOpen={activeModal === 'notification'}
             onClose={() => {
               writeContactFlowAsked(cardOwnerId ?? '91', false)
-              setActiveModal('none')
+              setActiveModal(null)
             }}
             cardOwnerId={cardOwnerId ?? '91'}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
+            cardSlug={cardSlug}
+            ownerName={liveAgentCardData?.ownerName ?? ownerName}
             onAccept={(preferences) => {
               writeContactFlowAsked(cardOwnerId ?? '91', true, preferences)
               setActiveModal('done')
@@ -312,10 +295,13 @@ export function VBizProfileAppV1({
           />
           <NotificationSettingsModal
             isOpen={activeModal === 'settings'}
-            onClose={() => setActiveModal('none')}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
+            onClose={() => setActiveModal(null)}
+            cardSlug={cardSlug}
+            presentation={V1_MODAL_PRESENTATION}
           />
-          <DoneModal isOpen={activeModal === 'done'} onClose={() => setActiveModal('none')} />
+          <DoneModal isOpen={activeModal === 'done'} onClose={() => setActiveModal(null)} />
+          <ShareModal isOpen={activeModal === 'share'} onClose={() => setActiveModal(null)} />
+          <InfoModal isOpen={activeModal === 'info'} onClose={() => setActiveModal(null)} theme={theme} />
         </>
       )}
 

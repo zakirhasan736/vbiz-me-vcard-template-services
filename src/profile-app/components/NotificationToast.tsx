@@ -1,5 +1,6 @@
 'use client'
 
+import { buildProfilePath } from '@/lib/profileRoutes'
 import { isSubscribedAnywhere, PLATFORM_UPDATE_EVENT } from '@/lib/push/notificationExperience'
 import { initialsFromName, isVideoAvatarSrc } from '@/lib/push/resolveNotificationAvatar'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
@@ -126,7 +127,7 @@ export const NotificationToast = () => {
   const videoUrl = notification?.avatarVideoUrl
   const title = notification?.title?.trim() || `${businessName} sent an update`
   const message = notification?.message?.trim() || 'Tap to view the latest on this card.'
-  const targetUrl = notification?.url || (notification?.slug ? `/vcard/${notification.slug}` : '')
+  const targetUrl = notification?.url || (notification?.slug ? buildProfilePath(notification.slug) : '')
 
   const handleOpenTarget = useCallback(() => {
     if (!targetUrl) return

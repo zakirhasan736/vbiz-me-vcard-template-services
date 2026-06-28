@@ -1,3 +1,4 @@
+import { getStaticProfileTheme } from '@/lib/staticProfileThemes'
 import { resolveVCardAppearance } from '@/lib/vcardDesignDefaults'
 import type { DesignSettingsState, ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import type { VCardAppearance, VCardData, VCardRecord, VCardTheme } from '@/types/vcard'
@@ -54,22 +55,23 @@ export function buttonStyleClasses(buttonStyle: string): string {
   }
 }
 
-/** Merge account defaults with per-card theme + appearance (card wins when set). */
+/** Merge account defaults with per-card appearance; colors always come from the static template palette. */
 export function resolveProfileDesign(
   designSettings: DesignSettingsState,
-  cardTheme?: Partial<VCardTheme> | null,
+  _cardTheme?: Partial<VCardTheme> | null,
   cardAppearance?: Partial<VCardAppearance> | null
 ): ResolvedProfileDesign {
   const appearance = resolveVCardAppearance(designSettings, cardAppearance)
+  const staticTheme = getStaticProfileTheme(appearance.profileTemplate)
   return {
-    primaryColor: cardTheme?.primaryColor || designSettings.vcardPrimaryColor || '#6366f1',
-    accentColor: cardTheme?.accentColor || designSettings.vcardAccentColor || '#f43f5e',
-    fontFamily: cardTheme?.fontFamily || designSettings.fontFamily || 'inter',
+    primaryColor: staticTheme.primaryColor,
+    accentColor: staticTheme.accentColor,
+    fontFamily: staticTheme.fontFamily || designSettings.fontFamily || 'inter',
     profileTemplate: appearance.profileTemplate,
     layoutStyle: appearance.layoutStyle,
     buttonStyle: appearance.buttonStyle,
     cornerStyle: appearance.cornerStyle,
-    darkMode: cardTheme?.darkMode ?? true,
+    darkMode: staticTheme.darkMode ?? true,
   }
 }
 

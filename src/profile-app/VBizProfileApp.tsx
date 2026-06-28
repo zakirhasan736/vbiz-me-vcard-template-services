@@ -241,7 +241,7 @@ export function VBizProfileApp({
           onLanguage={openLanguageModal}
         />
 
-        <ProfileNavigationV2 theme={theme} slugForPersistence={slugForPersistence} embedded={embedded} />
+        <ProfileNavigationV2 slugForPersistence={slugForPersistence} embedded={embedded} />
 
         <main
           id="content-pane"

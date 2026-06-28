@@ -61,7 +61,7 @@ export type VBizProfileAppProps = {
   displaySettings?: VCardDisplaySettings
   /** Public slug used to build the share URL. */
   shareSlug?: string
-  /** Slug for the public profile URL (`/vcard/{slug}`). */
+  /** Slug for the public profile URL (`/{slug}`). */
   profileSlug?: string
   /** Active nav section (client state — not reflected in the URL). */
   sectionId?: string

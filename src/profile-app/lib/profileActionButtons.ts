@@ -49,8 +49,6 @@ function resolveSaveMyInfoButton(
     key: 'save_my_info',
     label: (api?.label?.trim() || labels.save_my_info || HOME_CTA_DEFAULT_LABELS.save_my_info).toUpperCase(),
     icon: resolveFaIcon(api?.icon, Download),
-    backgroundColor: api?.background_color,
-    textColor: api?.text_color,
     variant: 'outline',
   }
 }
@@ -202,8 +200,6 @@ function resolveButton(
     key,
     label: label.toUpperCase(),
     icon: resolveFaIcon(button.icon, DEFAULT_ICONS[key]),
-    backgroundColor: button.background_color,
-    textColor: button.text_color,
     count: button.count ?? (key === 'view_counter' ? profileViews : undefined),
     link: button.link,
   }
@@ -306,13 +302,8 @@ export function buildActionButtonInlineStyle(
   accentColor?: string
 ): CSSProperties | undefined {
   const style: CSSProperties = {}
-  if (button.backgroundColor) {
-    style.background = button.backgroundColor
-  } else if (button.key === 'save_contact' && accentColor) {
+  if (button.key === 'save_contact' && accentColor) {
     style.background = `linear-gradient(to right, ${accentColor}, color-mix(in srgb, ${accentColor} 75%, black))`
-  }
-  if (button.textColor) {
-    style.color = button.textColor
   }
   return Object.keys(style).length > 0 ? style : undefined
 }

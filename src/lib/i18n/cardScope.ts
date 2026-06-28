@@ -15,7 +15,7 @@ export function resolveCardOwnerId(fallback = 'michaelangelo_casanova'): string 
 
   if (typeof window === 'undefined') return fallback
 
-  const pathMatch = window.location.pathname.match(/\/vcard\/([^/]+)/)
+  const pathMatch = window.location.pathname.match(/^\/([^/]+)/)
   if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1])
 
   const params = new URLSearchParams(window.location.search)

@@ -1,3 +1,4 @@
+import { getStaticProfileTheme } from '@/lib/staticProfileThemes'
 import { createDefaultNavFieldConfig, NAV_BAR_FIELDS } from '@/lib/vcardNavbar'
 import { createDefaultVCardSocial } from '@/lib/vcardSocial'
 import type { ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
@@ -103,11 +104,6 @@ function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
       if (label === 'Nav Background Color') continue
       if (!fields[label]) continue
       fields[label] = { ...fields[label], visible }
-      const bgColorKey = apiKey.replace('_checkbox', 'Nav_background_color')
-      const navBg = settings[bgColorKey] ?? settings[`${apiKey.replace('_checkbox', '')}_background_color`]
-      if (navBg) {
-        fields[label] = { ...fields[label], backgroundColor: navBg }
-      }
     }
   }
 
@@ -137,8 +133,6 @@ function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
     fields[label] = {
       ...fields[label],
       visible: button.enabled === true,
-      ...(button.background_color ? { backgroundColor: button.background_color } : {}),
-      ...(button.text_color ? { textColor: button.text_color } : {}),
     }
   }
 
@@ -147,29 +141,6 @@ function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
     fields['Vcard View Counter'] = { ...fields['Vcard View Counter'], visible: true }
   } else if (viewCounter?.enabled === false) {
     fields['Vcard View Counter'] = { ...fields['Vcard View Counter'], visible: false }
-  }
-
-  if (settings.pageHeader_text_color) {
-    fields['Pages Header'] = {
-      ...fields['Pages Header'],
-      textColor: settings.pageHeader_text_color,
-    }
-  }
-  if (settings.pageHeader_background_color) {
-    fields['Pages Header'] = {
-      ...fields['Pages Header'],
-      backgroundColor: settings.pageHeader_background_color,
-    }
-    fields['vCard Header Color'] = {
-      ...fields['vCard Header Color'],
-      textColor: settings.pageHeader_background_color,
-    }
-  }
-  if (settings.bgNav_background_color) {
-    fields['Nav Background Color'] = {
-      ...fields['Nav Background Color'],
-      backgroundColor: settings.bgNav_background_color,
-    }
   }
 
   const introUrl =
@@ -270,17 +241,7 @@ function resolveTemplate(card: MyCardData): ProfileTemplateId {
 }
 
 function resolveTheme(card: MyCardData) {
-  const primary =
-    card.settings.pageHeader_background_color || card.action_buttons.save_contact?.background_color || '#6366f1'
-  const accent =
-    card.action_buttons.save_contact?.background_color || card.settings.pageHeader_background_color || '#f43f5e'
-
-  return {
-    primaryColor: primary,
-    accentColor: accent,
-    darkMode: true,
-    fontFamily: 'inter',
-  }
+  return getStaticProfileTheme(resolveTemplate(card))
 }
 
 export function mapMyCardToVCardData(card: MyCardData): VCardData {

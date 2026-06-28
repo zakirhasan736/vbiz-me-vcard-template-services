@@ -41,7 +41,12 @@ export function ProfileApp(props: VBizProfileAppProps) {
       profileViews={props.profileViews}
       actionButtons={props.actionButtons}
     >
-      <TranslationProvider cardOwnerId={props.cardOwnerId} profileSlug={props.profileSlug ?? props.shareSlug}>
+      <TranslationProvider
+        cardOwnerId={props.cardOwnerId}
+        profileSlug={props.profileSlug ?? props.shareSlug}
+        theme={props.design?.profileTemplate === 'v1' ? (props.design.darkMode ? 'dark' : 'light') : undefined}
+        languageModalPresentation={template === 'v1' ? 'bottom-sheet' : 'default'}
+      >
         <ProfileNavigationProvider sectionId={props.sectionId} onSectionChange={props.onSectionChange}>
           <ProfileIntroProvider
             embedded={props.embedded}

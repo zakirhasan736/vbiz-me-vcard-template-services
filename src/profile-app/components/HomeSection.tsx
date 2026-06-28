@@ -1,17 +1,21 @@
 'use client'
 
-import { cornerStyleToRadius } from '@/lib/resolvedProfileDesign'
+import { LANGUAGE_LABELS } from '@/lib/i18n/translation'
+import { useTranslation } from '@/lib/i18n/translationData'
 import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import {
   ArrowUpRight,
+  Bell,
   Briefcase,
   Eye,
   Facebook,
+  FileText,
   Globe,
   Instagram,
   Linkedin,
   MessageCircle,
+  Moon,
   PlaySquare,
   QrCode,
   Share2,
@@ -25,9 +29,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { auth, db, isFirebaseAvailable } from '../lib/firebase'
 import { handleFirestoreError, OperationType } from '../lib/firebaseUtils'
 import { useProfileDisplay } from '../lib/profileDisplayContext'
-import { buildExtraFieldContactItems, buildProfileContactItems, splitDisplayName } from '../lib/profileHomeData'
+import {
+  buildExtraFieldContactItems,
+  buildProfileContactItems,
+  formatProfileViewCount,
+  splitDisplayName,
+} from '../lib/profileHomeData'
 import { filterSocialItemsWithLinks } from '../lib/profileSocialLinks'
 import { resolveProfileAvatarSrc } from '../profilePublicProps'
+import { V1ContactInfoSheet } from '../v1/components/V1ContactInfoSheet'
 import { CustomVideoPlayer } from './CustomVideoPlayer'
 import { LeaveMessageModal } from './LeaveMessageModal'
 import { ProfileActionButtons } from './ProfileActionButtons'
@@ -217,13 +227,34 @@ type PublishUser = Pick<User, 'uid'> & {
   email?: string | null
 }
 
-export const HomeSection = () => {
-  const { personal, isVisible, field, pageColors, homeMedia, design, socialHref, extraFields, embedded, cardOwnerId } =
-    useProfileDisplay()
+type V1HomeHeroProps = {
+  theme: 'light' | 'dark'
+  onAction: (action: string) => void
+  toggleTheme: () => void
+}
+
+type HomeSectionProps = {
+  homeHeroProps?: V1HomeHeroProps
+}
+
+export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
+  const { lang } = useTranslation()
+  const {
+    personal,
+    isVisible,
+    field,
+    pageColors,
+    homeMedia,
+    design,
+    socialHref,
+    extraFields,
+    embedded,
+    cardOwnerId,
+    profileViews,
+  } = useProfileDisplay()
   const showShare = isVisible('Share Btn')
   const nameStyle = field('MyInfo section Name')
   const accent = design?.accentColor ?? '#dcc969'
-  const cornerRadius = design ? cornerStyleToRadius(design.cornerStyle) : '16px'
   const coverSrc = homeMedia.bgMedia || DEFAULT_COVER
   const introSrc = homeMedia.introVideo || personal.explainerVideoUrl || undefined
   const profileSrc = useMemo(
@@ -248,7 +279,18 @@ export const HomeSection = () => {
   const visibleSocials = filterSocialItemsWithLinks(V1_SOCIAL_GRID, socialHref, personal.whatsapp)
 
   const [messageModalOpen, setMessageModalOpen] = useState(false)
+  const [showContactPopup, setShowContactPopup] = useState(false)
   const messageOwnerName = personal.fullName?.trim() || 'the card owner'
+  const currentLanguage = (LANGUAGE_LABELS[lang]?.flag ?? lang.toUpperCase()).slice(0, 2)
+
+  const triggerAction = (action: string) => {
+    homeHeroProps?.onAction(action)
+  }
+
+  const isDarkTheme = homeHeroProps?.theme === 'dark'
+  const v1MiniActionClass = isDarkTheme
+    ? 'group/mini flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-gray-900/70 py-5 text-[8px] font-black tracking-[0.2em] text-white/70 uppercase shadow-lg transition-all hover:border-yellow-primary/40 hover:bg-gray-900 hover:text-yellow-primary'
+    : 'group/mini hover:text-yellow-primary flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/5 bg-gray-50 py-5 text-[8px] font-black tracking-[0.2em] text-gray-500 uppercase shadow-lg transition-all'
 
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -358,9 +400,80 @@ export const HomeSection = () => {
               <GeometricPattern />
             </motion.div>
 
+            {/* Top-right hero actions (first-template desktop) */}
+            {homeHeroProps ? (
+              <div className="absolute top-6 right-6 z-50 hidden shrink-0 flex-col gap-3 sm:flex">
+                {[
+                  ...(showShare ? [{ icon: Share2, label: 'Share', action: () => triggerAction('share') }] : []),
+                  {
+                    icon: Eye,
+                    label: 'Views',
+                    badge: (
+                      <div className="absolute -top-1.5 -right-3 z-20 rounded-full bg-[#b91c1c] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-md">
+                        {formatProfileViewCount(profileViews)}
+                      </div>
+                    ),
+                    action: undefined,
+                  },
+                  {
+                    icon: Globe,
+                    label: 'Website',
+                    action: () => {
+                      const website = socialHref('Website')
+                      if (website && website !== '#') window.open(website, '_blank', 'noopener,noreferrer')
+                    },
+                  },
+                  {
+                    content: (
+                      <div className="flex flex-col items-center justify-center leading-none">
+                        <span className="text-[11px] font-black text-gray-700 dark:text-gray-300">
+                          {currentLanguage}
+                        </span>
+                        <span className="text-yellow-primary text-[8px] font-bold">LANG</span>
+                      </div>
+                    ),
+                    label: 'Language',
+                    action: () => triggerAction('language'),
+                  },
+                  {
+                    icon: Moon,
+                    label: 'Theme',
+                    action: () => homeHeroProps.toggleTheme(),
+                  },
+                ].map((action, idx) => (
+                  <motion.button
+                    key={`${action.label}-${idx}`}
+                    type="button"
+                    onClick={action.action}
+                    whileHover={{
+                      scale: 1.15,
+                      rotate: idx % 2 === 0 ? 10 : -10,
+                      backgroundColor: accent,
+                      color: 'rgba(0, 0, 0, 1)',
+                      boxShadow: `0 0 20px color-mix(in srgb, ${accent} 40%, transparent)`,
+                    }}
+                    whileTap={{ scale: 0.9 }}
+                    className="group/btn border-yellow-primary/50 dark:border-yellow-primary/40 relative flex h-12 w-12 items-center justify-center overflow-visible rounded-full border-2 bg-white/80 text-gray-700 shadow-lg backdrop-blur-2xl transition-all duration-500 dark:bg-black/40 dark:text-gray-300"
+                  >
+                    {'icon' in action && action.icon ? (
+                      <action.icon
+                        size={18}
+                        className="relative z-10 transition-transform group-hover/btn:scale-110"
+                        strokeWidth={2.5}
+                      />
+                    ) : null}
+                    {'content' in action && action.content ? (
+                      <div className="relative z-10">{action.content}</div>
+                    ) : null}
+                    {'badge' in action ? action.badge : null}
+                  </motion.button>
+                ))}
+              </div>
+            ) : null}
+
             <motion.div
               style={{ y: yContent }}
-              className="relative z-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end"
+              className="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end"
             >
               {/* Profile Details */}
               <div className="flex-1">
@@ -414,7 +527,7 @@ export const HomeSection = () => {
                 )}
                 {professionLine ? (
                   <p
-                    className="text-yellow-primary flex w-fit items-center rounded-full border border-black/5 bg-gray-50 px-3 py-1.5 text-[9px] font-bold tracking-[0.25em] uppercase drop-shadow-md backdrop-blur-xl sm:px-4 sm:py-2 sm:text-xs dark:border-white/10 dark:bg-white/5"
+                    className="text-yellow-primary mx-auto flex w-fit items-center rounded-full border border-black/5 bg-gray-50 px-3 py-1.5 text-[9px] font-bold tracking-[0.25em] uppercase drop-shadow-md backdrop-blur-xl sm:mx-0 sm:px-4 sm:py-2 sm:text-xs dark:border-white/10 dark:bg-white/5"
                     style={
                       field('MyInfo Profession').textColor ? { color: field('MyInfo Profession').textColor } : undefined
                     }
@@ -422,53 +535,71 @@ export const HomeSection = () => {
                     <TypewriterText text={professionLine} delay={500} speed={120} />
                   </p>
                 ) : null}
+
+                {homeHeroProps ? (
+                  <div className="mt-4 flex w-full items-center justify-center gap-3 md:hidden">
+                    {[
+                      ...(showShare
+                        ? [
+                            {
+                              icon: Share2,
+                              hover: 'hover:bg-blue-500 hover:border-blue-500 hover:text-white text-blue-500',
+                              onClick: () => triggerAction('share'),
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: Bell,
+                        hover: 'hover:bg-amber-500 hover:border-amber-500 hover:text-white text-amber-500',
+                        onClick: () => triggerAction('settings'),
+                      },
+                      {
+                        icon: FileText,
+                        hover: 'hover:bg-emerald-500 hover:border-emerald-500 hover:text-white text-emerald-500',
+                        onClick: () => triggerAction('notepad'),
+                      },
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={item.onClick}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/80 shadow-md backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-gray-900/80 ${item.hover}`}
+                      >
+                        <item.icon size={18} />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               {/* Action Floating Buttons */}
-              <div className="flex shrink-0 gap-4 sm:flex-col">
-                <motion.button
-                  type="button"
-                  onClick={() => setMessageModalOpen(true)}
-                  whileHover={{
-                    scale: 1.15,
-                    rotate: -10,
-                    backgroundColor: accent,
-                    color: 'rgba(0, 0, 0, 1)',
-                    boxShadow: `0 0 30px color-mix(in srgb, ${accent} 40%, transparent)`,
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Leave a message"
-                  className="group/btn relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/5 bg-gray-50 text-gray-500 backdrop-blur-2xl transition-all duration-500 lg:h-14 lg:w-14 dark:border-white/20 dark:bg-white/5 dark:text-white/90"
-                >
-                  <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover/btn:opacity-100 dark:from-white/20" />
-                  <StickyNote size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
-                  <div className="text-yellow-primary pointer-events-none absolute right-full mr-4 hidden translate-x-4 rounded-lg border border-white/10 bg-black/80 px-3 py-1.5 text-[10px] font-black tracking-widest whitespace-nowrap uppercase opacity-0 backdrop-blur-md transition-all group-hover/btn:translate-x-0 group-hover/btn:opacity-100 lg:block dark:border-black/5 dark:bg-white/90">
-                    Leave Message
-                  </div>
-                </motion.button>
-                <motion.button
-                  type="button"
-                  whileHover={{
-                    scale: 1.15,
-                    rotate: 15,
-                    backgroundColor: accent,
-                    color: 'rgba(0, 0, 0, 1)',
-                    boxShadow: `0 0 30px color-mix(in srgb, ${accent} 40%, transparent)`,
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  className="group/btn relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/5 bg-gray-50 text-gray-500 backdrop-blur-2xl transition-all duration-500 lg:h-14 lg:w-14 dark:border-white/20 dark:bg-white/5 dark:text-white/90"
-                >
-                  <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover/btn:opacity-100 dark:from-white/20" />
-                  <Eye size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
-                  <div className="text-yellow-primary pointer-events-none absolute right-full mr-4 hidden translate-x-4 rounded-lg border border-white/10 bg-black/80 px-3 py-1.5 text-[10px] font-black tracking-widest whitespace-nowrap uppercase opacity-0 backdrop-blur-md transition-all group-hover/btn:translate-x-0 group-hover/btn:opacity-100 lg:block dark:border-black/5 dark:bg-white/90">
-                    Preview Card
-                  </div>
-                </motion.button>
-                {showShare && (
+              {!homeHeroProps ? (
+                <div className="flex shrink-0 gap-4 sm:flex-col">
                   <motion.button
+                    type="button"
+                    onClick={() => setMessageModalOpen(true)}
                     whileHover={{
                       scale: 1.15,
-                      rotate: -15,
+                      rotate: -10,
+                      backgroundColor: accent,
+                      color: 'rgba(0, 0, 0, 1)',
+                      boxShadow: `0 0 30px color-mix(in srgb, ${accent} 40%, transparent)`,
+                    }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Leave a message"
+                    className="group/btn relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/5 bg-gray-50 text-gray-500 backdrop-blur-2xl transition-all duration-500 lg:h-14 lg:w-14 dark:border-white/20 dark:bg-white/5 dark:text-white/90"
+                  >
+                    <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover/btn:opacity-100 dark:from-white/20" />
+                    <StickyNote size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
+                    <div className="text-yellow-primary pointer-events-none absolute right-full mr-4 hidden translate-x-4 rounded-lg border border-white/10 bg-black/80 px-3 py-1.5 text-[10px] font-black tracking-widest whitespace-nowrap uppercase opacity-0 backdrop-blur-md transition-all group-hover/btn:translate-x-0 group-hover/btn:opacity-100 lg:block dark:border-black/5 dark:bg-white/90">
+                      Leave Message
+                    </div>
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileHover={{
+                      scale: 1.15,
+                      rotate: 15,
                       backgroundColor: accent,
                       color: 'rgba(0, 0, 0, 1)',
                       boxShadow: `0 0 30px color-mix(in srgb, ${accent} 40%, transparent)`,
@@ -477,13 +608,31 @@ export const HomeSection = () => {
                     className="group/btn relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/5 bg-gray-50 text-gray-500 backdrop-blur-2xl transition-all duration-500 lg:h-14 lg:w-14 dark:border-white/20 dark:bg-white/5 dark:text-white/90"
                   >
                     <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover/btn:opacity-100 dark:from-white/20" />
-                    <Share2 size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
+                    <Eye size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
                     <div className="text-yellow-primary pointer-events-none absolute right-full mr-4 hidden translate-x-4 rounded-lg border border-white/10 bg-black/80 px-3 py-1.5 text-[10px] font-black tracking-widest whitespace-nowrap uppercase opacity-0 backdrop-blur-md transition-all group-hover/btn:translate-x-0 group-hover/btn:opacity-100 lg:block dark:border-black/5 dark:bg-white/90">
-                      Share Business
+                      Preview Card
                     </div>
                   </motion.button>
-                )}
-              </div>
+                  {showShare && (
+                    <motion.button
+                      type="button"
+                      onClick={() => triggerAction('share')}
+                      whileHover={{
+                        scale: 1.15,
+                        rotate: -15,
+                        backgroundColor: accent,
+                        color: 'rgba(0, 0, 0, 1)',
+                        boxShadow: `0 0 30px color-mix(in srgb, ${accent} 40%, transparent)`,
+                      }}
+                      whileTap={{ scale: 0.9 }}
+                      className="group/btn relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/5 bg-gray-50 text-gray-500 backdrop-blur-2xl transition-all duration-500 lg:h-14 lg:w-14 dark:border-white/20 dark:bg-white/5 dark:text-white/90"
+                    >
+                      <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover/btn:opacity-100 dark:from-white/20" />
+                      <Share2 size={22} className="relative z-10 transition-transform group-hover/btn:scale-110" />
+                    </motion.button>
+                  )}
+                </div>
+              ) : null}
             </motion.div>
           </motion.div>
 
@@ -494,20 +643,39 @@ export const HomeSection = () => {
               <div className="from-yellow-primary/10 absolute inset-0 bg-linear-to-tr via-transparent to-black/1 opacity-0 transition-opacity duration-700 group-hover:opacity-100 dark:to-white/2" />
 
               <div className="relative z-10 flex flex-col gap-4">
-                <ProfileActionButtons variant="v1" />
+                {contactItems.length > 0 ? (
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowContactPopup(true)}
+                    className="border-yellow-primary/30 hover:border-yellow-primary flex w-full items-center justify-center gap-1.5 rounded-xl border-2 bg-white px-2 py-2.5 text-[10px] font-black tracking-wider whitespace-nowrap text-gray-900 uppercase shadow-sm transition-all md:hidden dark:bg-gray-900 dark:text-white"
+                  >
+                    <FileText size={14} strokeWidth={2.5} /> My Info
+                  </motion.button>
+                ) : null}
+                <ProfileActionButtons variant="v1" theme={homeHeroProps?.theme} onAction={homeHeroProps?.onAction} />
 
                 <div className="grid grid-cols-2 gap-3">
                   <motion.button
-                    whileHover={{ backgroundColor: 'rgba(0,0,0,0.05)', y: -2 }}
+                    whileHover={
+                      isDarkTheme
+                        ? { backgroundColor: 'rgba(255,255,255,0.06)', y: -2 }
+                        : { backgroundColor: 'rgba(0,0,0,0.05)', y: -2 }
+                    }
                     onClick={handlePublish}
-                    className="group/mini hover:text-yellow-primary flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/5 bg-gray-50 py-5 text-[8px] font-black tracking-[0.2em] text-gray-500 uppercase shadow-lg transition-all dark:border-white/10 dark:bg-white/5 dark:text-white/60 dark:hover:bg-black/10"
+                    className={v1MiniActionClass}
                   >
                     <QrCode size={20} className="transition-transform group-hover/mini:scale-110" />
                     <span>Sync</span>
                   </motion.button>
                   <motion.button
-                    whileHover={{ backgroundColor: 'rgba(0,0,0,0.05)', y: -2 }}
-                    className="group/mini hover:text-yellow-primary flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/5 bg-gray-50 py-5 text-[8px] font-black tracking-[0.2em] text-gray-500 uppercase shadow-lg transition-all dark:border-white/10 dark:bg-white/5 dark:text-white/60 dark:hover:bg-black/10"
+                    whileHover={
+                      isDarkTheme
+                        ? { backgroundColor: 'rgba(255,255,255,0.06)', y: -2 }
+                        : { backgroundColor: 'rgba(0,0,0,0.05)', y: -2 }
+                    }
+                    className={v1MiniActionClass}
                   >
                     <Briefcase size={20} className="transition-transform group-hover/mini:scale-110" />
                     <span>Works</span>
@@ -601,6 +769,8 @@ export const HomeSection = () => {
         design={design}
         embedded={embedded}
       />
+
+      <V1ContactInfoSheet isOpen={showContactPopup} onClose={() => setShowContactPopup(false)} items={contactItems} />
     </SectionContainer>
   )
 }

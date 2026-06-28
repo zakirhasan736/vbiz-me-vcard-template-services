@@ -44,7 +44,7 @@ export const AboutSection = () => {
   if (!profileId) return null
 
   if (showInitialLoader) {
-    return <V3LoadingSkeleton className="min-h-[50vh]" />
+    return <V3LoadingSkeleton className="min-h-[320px]" />
   }
 
   if (isError) {
@@ -79,7 +79,7 @@ export const AboutSection = () => {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className="flex flex-col gap-4 md:gap-6"
       >
-        <div className="bg-ocean-deep dark:border-gold/20 relative flex min-h-[50vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl md:min-h-[60vh] md:rounded-[2.5rem]">
+        <div className="bg-ocean-deep dark:border-gold/20 relative flex min-h-[280px] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl sm:min-h-[300px] md:min-h-[340px] md:rounded-[2.5rem]">
           <div className="absolute inset-0 z-0 h-full w-full">
             {heroImage ? (
               <Image
@@ -98,22 +98,22 @@ export const AboutSection = () => {
           </div>
 
           {ownerInitial ? (
-            <div className="absolute top-6 right-6 z-20 md:top-10 md:right-10">
-              <div className="border-gold/30 flex h-12 w-12 flex-col items-center justify-center rounded-2xl border bg-black/40 shadow-2xl backdrop-blur-xl md:h-16 md:w-16">
-                <span className="mb-0.5 font-serif text-xl font-black tracking-tighter text-white drop-shadow-md md:text-3xl">
+            <div className="absolute top-4 right-4 z-20 md:top-6 md:right-6">
+              <div className="border-gold/30 flex h-10 w-10 flex-col items-center justify-center rounded-xl border bg-black/40 shadow-2xl backdrop-blur-xl md:h-12 md:w-12">
+                <span className="mb-0.5 font-serif text-lg font-black tracking-tighter text-white drop-shadow-md md:text-2xl">
                   {ownerInitial}
                 </span>
               </div>
             </div>
           ) : null}
 
-          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-6 md:p-10 lg:p-14">
-            <div className="mt-auto flex max-w-3xl flex-col gap-4 pt-24 md:gap-6 md:pt-0">
+          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-6 md:p-8 lg:p-10">
+            <div className="mt-auto flex max-w-3xl flex-col gap-3 pt-14 sm:gap-4 sm:pt-0 md:gap-5">
               <div className="bg-gold/10 border-gold/30 text-gold inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:text-xs">
                 <Sparkles size={14} className="text-gold" /> {sectionTitle}
               </div>
 
-              <h2 className="text-[28px] leading-[1.15] font-black tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+              <h2 className="text-2xl leading-[1.15] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
                 {titleAccent ? (
                   <>
                     {titleLead}{' '}

@@ -1,3 +1,4 @@
+import { getStaticProfileTheme } from '@/lib/staticProfileThemes'
 import { ALL_DISPLAY_FIELD_KEYS } from '@/lib/vcardDisplaySettings'
 import type { DesignSettingsState, ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import type { VCardAppearance, VCardData, VCardTheme } from '@/types/vcard'
@@ -14,12 +15,8 @@ export function appearanceFromDesignSettings(design: DesignSettingsState): VCard
 }
 
 export function themeFromDesignSettings(design: DesignSettingsState): VCardTheme {
-  return {
-    primaryColor: design.vcardPrimaryColor,
-    accentColor: design.vcardAccentColor,
-    darkMode: true,
-    fontFamily: design.fontFamily || 'inter',
-  }
+  const template = design.profileTemplate ?? 'v3'
+  return getStaticProfileTheme(template)
 }
 
 /** Snapshot account profile Template + Appearance for a new vCard draft. */
