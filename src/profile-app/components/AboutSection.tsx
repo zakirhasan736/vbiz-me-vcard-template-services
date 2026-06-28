@@ -1,31 +1,37 @@
 'use client'
 
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import { V3EmptyState, V3ErrorState, V3LoadingSkeleton, V3SectionShell } from '@/profile-app/sections'
 import { useGetAboutMeQuery } from '@/redux/api'
-import { ArrowRight, Award, BookOpen, Quote, Rocket, Target } from 'lucide-react'
+import { BookOpen, Flag, Lightbulb, Quote, Sparkles, Target, Users } from 'lucide-react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 
-const PILLAR_ICONS = [Target, Award, Rocket] as const
-const PILLAR_ACCENTS = ['from-[#eab308]/20', 'from-zinc-900/10 dark:from-zinc-100/20', 'from-blue-500/20'] as const
+const PILLAR_ICONS = [Lightbulb, Target, Users, Flag] as const
+const PILLAR_COLORS = [
+  { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10' },
+  { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10' },
+  { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+  { color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-500/10' },
+] as const
 
-function AboutSectionSkeleton() {
-  return (
-    <div className="vbiz-bento-grid grid w-full grid-cols-1 gap-4 pb-20 md:grid-cols-3 lg:grid-cols-4">
-      <div className="min-h-[360px] animate-pulse rounded-3xl border border-zinc-200 bg-zinc-200 md:col-span-3 lg:col-span-3 dark:border-zinc-800/80 dark:bg-zinc-800" />
-      <div className="min-h-[300px] animate-pulse rounded-3xl border border-zinc-200 bg-zinc-200 md:col-span-3 lg:col-span-1 dark:border-zinc-800/80 dark:bg-zinc-800" />
-      {Array.from({ length: 3 }, (_, idx) => (
-        <div
-          key={idx}
-          className="min-h-[180px] animate-pulse rounded-3xl border border-zinc-200 bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-800"
-        />
-      ))}
-    </div>
-  )
+function resolveOwnerInitial(fullName: string): string {
+  const trimmed = fullName.trim()
+  if (!trimmed) return ''
+  return trimmed.charAt(0).toUpperCase()
+}
+
+function splitSectionTitle(title: string): { lead: string; accent: string } {
+  const words = title.trim().split(/\s+/)
+  if (words.length <= 1) return { lead: title, accent: '' }
+  return {
+    lead: words.slice(0, -1).join(' '),
+    accent: words[words.length - 1] ?? '',
+  }
 }
 
 export const AboutSection = () => {
-  const { cardOwnerId } = useProfileDisplay()
+  const { cardOwnerId, personal } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
 
   const { data, isLoading, isError } = useGetAboutMeQuery(profileId, { skip: !profileId })
@@ -38,32 +44,20 @@ export const AboutSection = () => {
   if (!profileId) return null
 
   if (showInitialLoader) {
-    return <AboutSectionSkeleton />
+    return <V3LoadingSkeleton className="min-h-[50vh]" />
   }
 
   if (isError) {
-    return (
-      <div className="w-full pb-20">
-        <div className="rounded-3xl border border-red-200 bg-red-50/80 px-6 py-8 text-center text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-          Unable to load {sectionTitle.toLowerCase()} right now. Please try again later.
-        </div>
-      </div>
-    )
+    return <V3ErrorState sectionTitle={sectionTitle} />
   }
 
   if (showEmptyState || !aboutItem) {
     return (
-      <div className="w-full pb-20">
-        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-200 bg-white/40 p-10 text-center dark:border-zinc-800/80 dark:bg-zinc-900/30">
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-[#eab308] dark:border-zinc-700 dark:bg-zinc-800/80">
-            <BookOpen size={24} />
-          </div>
-          <h2 className="mb-3 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{sectionTitle}</h2>
-          <p className="max-w-md text-sm leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
-            No about me content has been published yet. Add content from the vCard editor.
-          </p>
-        </div>
-      </div>
+      <V3EmptyState
+        icon={BookOpen}
+        title={sectionTitle}
+        message="No about me content has been published yet. Add content from the vCard editor."
+      />
     )
   }
 
@@ -71,135 +65,169 @@ export const AboutSection = () => {
   const heroImage = item.featuredImage.trim()
   const hasIntroHtml = item.introHtml.trim().length > 0
   const pillars = item.pillars
+  const highlight = item.highlight
+  const footer = item.footer
+  const ownerInitial = resolveOwnerInitial(personal.fullName)
+  const { lead: titleLead, accent: titleAccent } = splitSectionTitle(sectionTitle)
+  const showDetailsGrid = Boolean(highlight || pillars.length > 0 || footer)
 
   return (
-    <div className="vbiz-bento-grid grid w-full grid-cols-1 gap-4 pb-20 md:grid-cols-3 lg:grid-cols-4">
+    <V3SectionShell>
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-8 backdrop-blur-xl md:col-span-3 lg:col-span-3 lg:p-10 dark:border-zinc-800/80 dark:bg-zinc-900/50"
+        className="flex flex-col gap-4 md:gap-6"
       >
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
-        <div className="pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full bg-[#eab308]/10 p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110 dark:bg-[#eab308]/5" />
-        <div className="pointer-events-none absolute bottom-0 left-0 -mb-24 -ml-24 rounded-full bg-black/5 p-24 blur-3xl transition-transform delay-100 duration-1000 group-hover:scale-110 dark:bg-white/5" />
-
-        <div className="relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white/80 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300"
-          >
-            <BookOpen size={12} className="text-[#eab308]" /> {sectionTitle}
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-6 max-w-3xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100"
-          >
-            {item.title}
-          </motion.h2>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="relative"
-          >
-            <Quote size={40} className="absolute -top-4 -left-4 -rotate-12 text-zinc-200 dark:text-zinc-800/50" />
-            {hasIntroHtml ? (
-              <div
-                className="prose prose-zinc dark:prose-invert relative z-10 max-w-3xl px-4 text-base leading-relaxed font-medium lg:text-lg [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_p]:mb-4"
-                dangerouslySetInnerHTML={{ __html: item.introHtml }}
+        <div className="bg-ocean-deep dark:border-gold/20 relative flex min-h-[50vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl md:min-h-[60vh] md:rounded-[2.5rem]">
+          <div className="absolute inset-0 z-0 h-full w-full">
+            {heroImage ? (
+              <Image
+                src={heroImage}
+                alt={item.title}
+                fill
+                className="scale-105 object-cover object-top opacity-50 mix-blend-luminosity"
+                sizes="100vw"
+                priority
               />
-            ) : item.plainDescription ? (
-              <p className="relative z-10 mb-4 max-w-2xl px-4 text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400">
-                {item.plainDescription}
-              </p>
-            ) : null}
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {heroImage ? (
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-          className="group relative flex min-h-[300px] flex-col justify-end overflow-hidden rounded-3xl border border-zinc-200 bg-white p-4 transition-all duration-500 hover:border-zinc-300 md:col-span-3 lg:col-span-1 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-        >
-          <div className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-white via-white/40 to-transparent dark:from-zinc-950 dark:via-zinc-900/40" />
-          <Image
-            src={heroImage}
-            alt={item.title}
-            className="absolute inset-0 h-full w-full object-cover opacity-60 transition-all duration-[2s] group-hover:scale-105 group-hover:opacity-80"
-            width={800}
-            height={800}
-          />
-
-          <div className="relative z-20 mt-auto mb-2 w-full px-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#eab308]/30 bg-[#eab308]/20 text-[#eab308] shadow-lg backdrop-blur-md transition-transform duration-300 group-hover:-translate-y-1">
-                <Award size={20} />
-              </div>
-              <div>
-                <p className="text-base leading-tight font-bold text-zinc-900 dark:text-zinc-100">Professional</p>
-                <p className="text-xs font-semibold tracking-wide text-[#eab308] uppercase">Journey</p>
-              </div>
-            </div>
+            ) : (
+              <div className="bg-ocean-deep h-full w-full" />
+            )}
+            <div className="from-ocean-deep via-ocean-deep/80 to-ocean-deep/30 absolute inset-0 bg-linear-to-t" />
+            <div className="from-ocean-deep via-ocean-deep/50 absolute inset-0 hidden bg-linear-to-r to-transparent md:block md:w-2/3" />
           </div>
-        </motion.div>
-      ) : null}
 
-      {pillars.map((pillar, idx) => {
-        const Icon = PILLAR_ICONS[idx % PILLAR_ICONS.length]
-        const accent = PILLAR_ACCENTS[idx % PILLAR_ACCENTS.length]
-
-        return (
-          <motion.div
-            key={`${pillar.title}-${idx}`}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.6, delay: 0.2 + idx * 0.1, ease: 'easeOut' }}
-            className="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-6 backdrop-blur-xl transition-colors duration-500 hover:bg-white/80 md:col-span-1 lg:col-span-1 dark:border-zinc-800/80 dark:bg-zinc-900/50 dark:hover:bg-zinc-900/80"
-          >
-            <div
-              className={`absolute top-0 left-0 h-full w-full bg-linear-to-br ${accent} pointer-events-none to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-10 dark:group-hover:opacity-10`}
-            />
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-600 shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-zinc-900 group-hover:text-white group-hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100 dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-950">
-              <Icon size={20} />
+          {ownerInitial ? (
+            <div className="absolute top-6 right-6 z-20 md:top-10 md:right-10">
+              <div className="border-gold/30 flex h-12 w-12 flex-col items-center justify-center rounded-2xl border bg-black/40 shadow-2xl backdrop-blur-xl md:h-16 md:w-16">
+                <span className="mb-0.5 font-serif text-xl font-black tracking-tighter text-white drop-shadow-md md:text-3xl">
+                  {ownerInitial}
+                </span>
+              </div>
             </div>
-            <div>
-              <h4 className="mb-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">{pillar.title}</h4>
-              {pillar.description ? (
-                <p className="text-sm leading-relaxed font-medium text-zinc-600 transition-colors group-hover:text-zinc-900 dark:text-zinc-400 dark:group-hover:text-zinc-300">
-                  {pillar.description}
-                </p>
+          ) : null}
+
+          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-6 md:p-10 lg:p-14">
+            <div className="mt-auto flex max-w-3xl flex-col gap-4 pt-24 md:gap-6 md:pt-0">
+              <div className="bg-gold/10 border-gold/30 text-gold inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:text-xs">
+                <Sparkles size={14} className="text-gold" /> {sectionTitle}
+              </div>
+
+              <h2 className="text-[28px] leading-[1.15] font-black tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                {titleAccent ? (
+                  <>
+                    {titleLead}{' '}
+                    <span className="from-gold bg-linear-to-r to-yellow-500 bg-clip-text text-transparent">
+                      {titleAccent}
+                    </span>
+                  </>
+                ) : (
+                  item.title
+                )}
+              </h2>
+
+              {item.title && item.title !== sectionTitle ? (
+                <p className="text-gold/90 max-w-2xl text-base leading-snug font-bold md:text-xl">{item.title}</p>
               ) : null}
-            </div>
-          </motion.div>
-        )
-      })}
 
-      {pillars.length > 0 && pillars.length < 4 ? (
-        <div className="group relative hidden cursor-default flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-zinc-200 bg-zinc-100/50 p-6 text-center opacity-50 backdrop-blur-xl transition-all duration-500 hover:border-[#eab308]/50 hover:opacity-100 lg:col-span-1 lg:flex dark:border-zinc-800/50 dark:bg-zinc-900/30">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-200 text-zinc-500 transition-all duration-500 group-hover:rotate-12 group-hover:bg-[#eab308]/10 group-hover:text-[#eab308] dark:bg-zinc-800/50">
-            <ArrowRight size={20} />
+              <div className="relative">
+                <Quote className="text-gold/10 absolute -top-3 -left-3 -rotate-12" size={32} />
+                {hasIntroHtml ? (
+                  <div
+                    className="prose prose-invert prose-sm md:prose-base relative z-10 max-w-2xl pl-2 leading-relaxed font-medium text-zinc-300 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-white [&_p]:mb-3 [&_strong]:text-white"
+                    dangerouslySetInnerHTML={{ __html: item.introHtml }}
+                  />
+                ) : item.plainDescription ? (
+                  <p className="relative z-10 max-w-2xl pl-2 text-sm leading-relaxed font-medium text-zinc-300 md:text-lg">
+                    {item.plainDescription}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </div>
-          <p className="text-xs font-bold tracking-widest text-zinc-500 uppercase group-hover:text-[#eab308]">
-            Explore More
-          </p>
         </div>
-      ) : null}
-    </div>
+
+        {showDetailsGrid ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+            {highlight ? (
+              <div className="from-gold flex h-full items-center justify-center rounded-4xl bg-linear-to-br to-amber-500 p-6 text-center shadow-sm md:p-8 md:text-left lg:p-10">
+                <div className="text-base leading-relaxed font-bold text-black md:text-lg lg:text-xl">
+                  {highlight.title ? (
+                    <span className="mb-2 block text-3xl font-black tracking-tight md:mb-4 md:text-4xl">
+                      {highlight.title}
+                    </span>
+                  ) : null}
+                  {highlight.html ? (
+                    <div
+                      className="[&_p]:mb-0 [&_strong]:font-black"
+                      dangerouslySetInnerHTML={{ __html: highlight.html }}
+                    />
+                  ) : highlight.plain ? (
+                    <span>{highlight.plain}</span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {pillars.length > 0 ? (
+              <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${highlight ? '' : 'md:col-span-2'}`}>
+                {pillars.map((pillar, idx) => {
+                  const Icon = PILLAR_ICONS[idx % PILLAR_ICONS.length]
+                  const palette = PILLAR_COLORS[idx % PILLAR_COLORS.length]
+                  return (
+                    <div
+                      key={`${pillar.title}-${idx}`}
+                      className="group hover:border-gold/30 flex flex-col gap-3 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm transition-colors md:rounded-4xl md:p-6 dark:border-zinc-800/80 dark:bg-[#031327]"
+                    >
+                      <div
+                        className={`w-fit rounded-xl p-3 ${palette.bg} ${palette.color} transition-transform duration-300 group-hover:scale-110`}
+                      >
+                        <Icon size={20} strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <h4 className="mb-1 text-sm font-bold text-zinc-900 md:text-base dark:text-zinc-100">
+                          {pillar.title}
+                        </h4>
+                        {pillar.description ? (
+                          <p className="text-xs leading-snug font-medium text-zinc-500 md:text-sm dark:text-zinc-400">
+                            {pillar.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            {footer && (footer.headline || footer.subheadline || footer.tagline) ? (
+              <div className="dark:bg-ocean-deep dark:border-gold/20 relative mt-2 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-4xl border border-zinc-800 bg-zinc-950 p-6 text-center shadow-2xl md:col-span-2 md:mt-0 md:flex-row md:gap-8 md:rounded-[2.5rem] md:p-10 lg:p-12">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(238,214,119,0.15)_0%,transparent_70%)]" />
+                <div className="via-gold/50 absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent to-transparent" />
+
+                <div className="relative z-10 flex-1 text-center md:text-left">
+                  {footer.headline ? (
+                    <h3 className="mb-1.5 text-xl font-black tracking-tight text-white md:mb-2 md:text-2xl lg:text-3xl">
+                      {footer.headline}
+                    </h3>
+                  ) : null}
+                  {footer.subheadline ? (
+                    <p className="text-base font-bold text-zinc-400 md:text-lg">{footer.subheadline}</p>
+                  ) : null}
+                </div>
+
+                {footer.tagline ? (
+                  <div className="bg-gold/10 border-gold/20 relative z-10 w-full shrink-0 rounded-2xl border p-4 text-center md:w-auto md:p-5 md:text-right">
+                    <p className="text-gold text-sm leading-snug font-black tracking-widest uppercase md:text-base">
+                      {footer.tagline}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </motion.div>
+    </V3SectionShell>
   )
 }

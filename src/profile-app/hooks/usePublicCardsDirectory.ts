@@ -52,6 +52,19 @@ export function usePublicCardsDirectory() {
     resetPagination({ setExtraCards, setLoadedThroughPage })
   }, [draftFilters])
 
+  const updateAndApplyFilter = useCallback(
+    <K extends keyof PublicCardsFilterState>(key: K, value: PublicCardsFilterState[K]) => {
+      setDraftFilters((prev) => {
+        const next = updatePublicCardsFilter(prev, key, value)
+        const applied = { ...next, service: next.service.trim() }
+        setAppliedFilters(applied)
+        resetPagination({ setExtraCards, setLoadedThroughPage })
+        return next
+      })
+    },
+    []
+  )
+
   const clearFilters = useCallback(() => {
     setDraftFilters(EMPTY_PUBLIC_CARDS_FILTERS)
     setAppliedFilters(EMPTY_PUBLIC_CARDS_FILTERS)
@@ -87,6 +100,7 @@ export function usePublicCardsDirectory() {
     total: data?.pagination.total ?? 0,
     setDraftFilter,
     applyFilters,
+    updateAndApplyFilter,
     clearFilters,
     loadMore,
   }

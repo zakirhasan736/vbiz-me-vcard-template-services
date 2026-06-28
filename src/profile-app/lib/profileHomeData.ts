@@ -25,6 +25,16 @@ export function splitDisplayName(fullName: string) {
   return { first: parts[0], rest: parts.slice(1).join(' ') }
 }
 
+/** Strip legacy vBiz field separators (e.g. "Software Engineer ||") from API values. */
+export function cleanProfileFieldValue(value: string): string {
+  return value
+    .replace(/\s*\|\|\s*/g, ' · ')
+    .replace(/\s*·\s*$/g, '')
+    .replace(/^\s*·\s*/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 export function buildProfileContactItems(
   personal: VCardPersonal,
   isVisible: (key: string) => boolean,
@@ -95,6 +105,24 @@ export function buildProfileContactItems(
   }
 
   return items
+}
+
+export function formatProfileViewCount(views: number): string {
+  if (views >= 1_000_000) {
+    const m = views / 1_000_000
+    return `${m >= 10 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, '')}M`
+  }
+  if (views >= 1_000) {
+    const k = views / 1_000
+    return `${k >= 10 ? Math.round(k) : k.toFixed(1).replace(/\.0$/, '')}K`
+  }
+  return String(views)
+}
+
+export function resolveWhatsappHref(whatsapp: string): string {
+  const digits = whatsapp.replace(/\D/g, '')
+  if (!digits) return ''
+  return `https://wa.me/${digits}`
 }
 
 export function buildExtraFieldContactItems(extraFields: VCardExtraField[]): ProfileContactItem[] {

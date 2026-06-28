@@ -1,6 +1,6 @@
-import ClientProviders from '@/providers/ClientProviders'
 import { NotificationToast } from '@/profile-app/components/NotificationToast'
 import { PushNotificationRegistrar } from '@/profile-app/components/PushNotificationRegistrar'
+import ClientProviders from '@/providers/ClientProviders'
 import type { Metadata } from 'next'
 import './globals.css'
 

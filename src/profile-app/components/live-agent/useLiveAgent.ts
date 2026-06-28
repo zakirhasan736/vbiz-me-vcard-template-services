@@ -2,14 +2,11 @@
 
 import { getGeminiApiKey } from '@/lib/gemini'
 import {
-  buildLiveAgentTools,
-  handleLiveAgentToolCalls,
-} from '@/profile-app/lib/liveAgentTools'
-import {
   buildLiveAgentSystemPrompt,
   DEFAULT_LIVE_AGENT_CARD,
   type LiveAgentCardData,
 } from '@/profile-app/lib/liveAgentPrompt'
+import { buildLiveAgentTools, handleLiveAgentToolCalls } from '@/profile-app/lib/liveAgentTools'
 import { EndSensitivity, GoogleGenAI, LiveServerMessage, Modality, Session, StartSensitivity } from '@google/genai'
 import {
   useCallback,
@@ -299,7 +296,11 @@ export function useLiveAgent({
       const now = Date.now()
       const idleSinceUser = now - lastUserSpeechAtRef.current
       const idleSinceAgent = now - lastAgentAudioAtRef.current
-      if (!isSpeakingRef.current && idleSinceUser > SESSION_WAKE_INTERVAL_MS && idleSinceAgent > SESSION_WAKE_INTERVAL_MS) {
+      if (
+        !isSpeakingRef.current &&
+        idleSinceUser > SESSION_WAKE_INTERVAL_MS &&
+        idleSinceAgent > SESSION_WAKE_INTERVAL_MS
+      ) {
         sendRecoveryNudge(
           '[SYSTEM: Stay awake and ready. If the visitor seems to be waiting, briefly let them know you are still listening and they can answer in a normal voice. Keep it warm and concise.]'
         )

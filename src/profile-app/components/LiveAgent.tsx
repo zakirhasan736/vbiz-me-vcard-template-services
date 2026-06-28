@@ -1,17 +1,14 @@
 'use client'
 
-import { LiveAgentPanelV1 } from '@/profile-app/components/live-agent/LiveAgentPanelV1'
-import { useLiveAgent, type UseLiveAgentOptions } from '@/profile-app/components/live-agent/useLiveAgent'
+import { LiveAgentPanel } from '@/profile-app/components/live-agent/LiveAgentPanel'
+import type { UseLiveAgentOptions } from '@/profile-app/components/live-agent/useLiveAgent'
 import { DEFAULT_LIVE_AGENT_CARD, type LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
 import { useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 
 export type LiveAgentProps = UseLiveAgentOptions & {
-  /** @deprecated Ignored — V1 concierge UI is always used. */
-  variant?: 'v1' | 'v2'
-  /** Scope UI to editor phone preview (not full-page viewport). */
   embedded?: boolean
-  /** Accent for v1 gold controls (from card theme). */
+  /** Accent from the card theme (`design.accentColor`). */
   accentColor?: string
 }
 
@@ -28,6 +25,7 @@ function subscribeToPreviewPhoneShell(onStoreChange: () => void) {
   return () => observer.disconnect()
 }
 
+/** Shared live agent (central configuration & UI) for all profile templates. */
 export function LiveAgent({
   accentColor,
   embedded = false,
@@ -35,8 +33,6 @@ export function LiveAgent({
   systemInstruction,
   readyToConnect = false,
 }: LiveAgentProps) {
-  const controller = useLiveAgent({ cardData, systemInstruction, readyToConnect })
-
   const subscribe = useCallback(
     (onStoreChange: () => void) => (embedded ? subscribeToPreviewPhoneShell(onStoreChange) : () => {}),
     [embedded]
@@ -46,8 +42,15 @@ export function LiveAgent({
 
   const phoneShell = useSyncExternalStore(subscribe, getSnapshot, () => null)
 
-  const panel = <LiveAgentPanelV1 {...controller} embedded={embedded} accentColor={accentColor} />
-
+  const panel = (
+    <LiveAgentPanel
+      accentColor={accentColor}
+      cardData={cardData}
+      systemInstruction={systemInstruction}
+      readyToConnect={readyToConnect}
+      embedded={embedded}
+    />
+  )
 
   if (!embedded) return panel
 

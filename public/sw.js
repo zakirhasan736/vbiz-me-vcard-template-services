@@ -74,23 +74,21 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = event.notification.data?.url || '/'
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        for (const client of clientList) {
-          const clientUrl = new URL(client.url)
-          const target = new URL(targetUrl, self.location.origin)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        const clientUrl = new URL(client.url)
+        const target = new URL(targetUrl, self.location.origin)
 
-          if (clientUrl.pathname === target.pathname) {
-            return client.focus()
-          }
+        if (clientUrl.pathname === target.pathname) {
+          return client.focus()
         }
+      }
 
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(targetUrl)
-        }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl)
+      }
 
-        return undefined
-      })
+      return undefined
+    })
   )
 })

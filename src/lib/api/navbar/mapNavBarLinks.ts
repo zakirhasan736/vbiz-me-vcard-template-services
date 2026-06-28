@@ -36,6 +36,8 @@ const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
   'certifications licenses': 'certificates',
   'certifications licensing': 'certificates',
   'certifications/licenses': 'certificates',
+  'certificates licenses': 'certificates',
+  'certificates/licensing': 'certificates',
   'department of consumer protection (dcp)': 'dcp',
   dcp: 'dcp',
   dinner: 'dinner',

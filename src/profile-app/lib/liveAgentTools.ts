@@ -1,9 +1,6 @@
-import { Type, type FunctionCall, type Session } from '@google/genai'
+import { dispatchGoToProfileSection, dispatchOpenSaveContactFlow } from '@/profile-app/lib/liveAgentEvents'
 import type { LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
-import {
-  dispatchGoToProfileSection,
-  dispatchOpenSaveContactFlow,
-} from '@/profile-app/lib/liveAgentEvents'
+import { Type, type FunctionCall, type Session } from '@google/genai'
 
 export const LIVE_AGENT_TOOL_DECLARATIONS = [
   {
@@ -95,11 +92,7 @@ function readToolArgs(call: FunctionCall): Record<string, string> {
   )
 }
 
-export function handleLiveAgentToolCalls(
-  functionCalls: FunctionCall[],
-  session: Session,
-  cardData: LiveAgentCardData
-) {
+export function handleLiveAgentToolCalls(functionCalls: FunctionCall[], session: Session, cardData: LiveAgentCardData) {
   for (const call of functionCalls) {
     let result = 'Action executed successfully'
     const args = readToolArgs(call)

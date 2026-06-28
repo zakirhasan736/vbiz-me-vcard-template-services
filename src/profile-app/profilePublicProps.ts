@@ -22,7 +22,7 @@ import type {
 } from '@/types/vcard'
 import type { VCardDisplaySettings } from '@/types/vcardDisplaySettings'
 
-const DEFAULT_COVER = 'https://app.vbizme.com/storage/ecard/backgroundVideos/91/Untitled%20design-36.mp4'
+export const DEFAULT_COVER = 'https://app.vbizme.com/storage/ecard/backgroundVideos/91/Untitled%20design-36.mp4'
 /** Demo / fallback intro played in the avatar circle when no profile image is set. */
 export const DEFAULT_INTRO_VIDEO = 'https://app.vbizme.com/storage/ecard/profileimages/91/mc%20vbizme.mp4'
 
@@ -70,6 +70,7 @@ export type VBizProfileAppProps = {
   /** Controlled theme for live preview chrome (optional). */
   previewTheme?: 'light' | 'dark'
   onPreviewThemeChange?: (theme: 'light' | 'dark') => void
+  profileViews?: number
 }
 
 export function buildProfileShareUrl(slug: string): string {
@@ -142,10 +143,13 @@ export function vCardRecordToProfileProps(
   record: VCardRecord,
   designSettings: DesignSettingsState
 ): VBizProfileAppProps {
-  return vCardDataToProfileProps(record, designSettings, {
-    id: record.id,
-    avatarImageUrl: record.avatarImageUrl,
-  })
+  return {
+    ...vCardDataToProfileProps(record, designSettings, {
+      id: record.id,
+      avatarImageUrl: record.avatarImageUrl,
+    }),
+    profileViews: record.views,
+  }
 }
 
 export const DEMO_PROFILE_PROPS: VBizProfileAppProps = {

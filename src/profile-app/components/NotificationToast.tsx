@@ -1,8 +1,8 @@
 'use client'
 
+import { isSubscribedAnywhere, PLATFORM_UPDATE_EVENT } from '@/lib/push/notificationExperience'
 import { initialsFromName, isVideoAvatarSrc } from '@/lib/push/resolveNotificationAvatar'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
-import { readFollowState } from '@/profile-app/lib/pushNotifications'
 import { ChevronRight, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -10,23 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 const AUTO_DISMISS_MS = 12000
 const DISMISSED_STORAGE_KEY = 'vbiz_dismissed_notifications'
 const MAX_DISMISSED_KEYS = 50
-
-function isSubscribedAnywhere(): boolean {
-  if (typeof window === 'undefined') return false
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (!key?.startsWith('vbiz_push_follow_')) continue
-    const slug = key.replace('vbiz_push_follow_', '')
-    if (readFollowState(slug)?.following) return true
-  }
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key?.startsWith('vbiz_notification_choice_') && localStorage.getItem(key) === 'subscribed') {
-      return true
-    }
-  }
-  return localStorage.getItem('vbiz_notification_choice') === 'subscribed'
-}
 
 function notificationKey(detail: PlatformUpdateDetail): string {
   return [detail.slug ?? '', detail.title ?? '', detail.message ?? ''].join('|')
@@ -75,15 +58,7 @@ function NotificationAvatar({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={staticSrc} alt={businessName} className="h-full w-full object-cover" />
         ) : showVideo ? (
-          <video
-            src={videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="h-full w-full object-cover"
-            aria-hidden
-          />
+          <video src={videoSrc} autoPlay loop muted playsInline className="h-full w-full object-cover" aria-hidden />
         ) : (
           <span className="text-base font-bold text-zinc-100">{initials}</span>
         )}
@@ -138,9 +113,9 @@ export const NotificationToast = () => {
       }, AUTO_DISMISS_MS)
     }
 
-    window.addEventListener('vbiz_platform_update', handlePlatformUpdate)
+    window.addEventListener(PLATFORM_UPDATE_EVENT, handlePlatformUpdate)
     return () => {
-      window.removeEventListener('vbiz_platform_update', handlePlatformUpdate)
+      window.removeEventListener(PLATFORM_UPDATE_EVENT, handlePlatformUpdate)
       clearAutoDismiss()
     }
   }, [clearAutoDismiss, dismiss])
@@ -164,7 +139,7 @@ export const NotificationToast = () => {
   return (
     <AnimatePresence>
       {notification ? (
-        <div className="pointer-events-none fixed inset-x-3 top-3 z-[200] flex justify-center sm:inset-x-auto sm:top-auto sm:right-8 sm:bottom-24 sm:justify-end">
+        <div className="pointer-events-none fixed inset-x-3 top-3 z-200 flex justify-center sm:inset-x-auto sm:top-auto sm:right-8 sm:bottom-24 sm:justify-end">
           <motion.div
             initial={{ opacity: 0, x: 80, y: -40, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
@@ -198,11 +173,7 @@ export const NotificationToast = () => {
               transition={{ duration: 1.1, ease: 'easeInOut', delay: 0.15 }}
             />
 
-            <span
-              aria-hidden
-              className="absolute inset-y-0 left-0 w-1"
-              style={{ backgroundColor: accentColor }}
-            />
+            <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: accentColor }} />
 
             <button
               type="button"
@@ -217,17 +188,10 @@ export const NotificationToast = () => {
             </button>
 
             <div className="relative flex items-center gap-3">
-              <NotificationAvatar
-                businessName={businessName}
-                imageUrl={imageUrl}
-                videoUrl={videoUrl}
-              />
+              <NotificationAvatar businessName={businessName} imageUrl={imageUrl} videoUrl={videoUrl} />
 
               <div className="min-w-0 flex-1">
-                <p
-                  className="truncate text-[11px] font-bold tracking-wide uppercase"
-                  style={{ color: accentColor }}
-                >
+                <p className="truncate text-[11px] font-bold tracking-wide uppercase" style={{ color: accentColor }}>
                   {businessName}
                 </p>
                 <p className="mt-0.5 truncate text-sm font-semibold text-zinc-100">{title}</p>

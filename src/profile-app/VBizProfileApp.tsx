@@ -1,6 +1,7 @@
 'use client'
 
 import { isVideoUrl } from '@/lib/mediaUrl'
+import { hasContactFlowBeenAsked, writeContactFlowAsked } from '@/lib/push/config'
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
 import {
   buttonStyleClasses,
@@ -19,11 +20,12 @@ import { DoneModal } from './components/DoneModal'
 import { LeaveMessageModal } from './components/LeaveMessageModal'
 import { LiveAgent } from './components/LiveAgent'
 import { NotificationAskModal } from './components/NotificationAskModal'
-import { NotificationModal } from './components/NotificationModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
 import { ProfileBackgroundAudio } from './components/ProfileBackgroundAudio'
 import { ProfileCoverMedia } from './components/ProfileCoverMedia'
 import { ProfileIntroPreloader } from './components/ProfileIntroPreloader'
+import { ProfileLanguageButton } from './components/ProfileLanguageButton'
+import { ProfileNavScrollArrows } from './components/ProfileNavScrollArrows'
 import { ProfileSectionOutlet } from './components/ProfileSectionOutlet'
 import { SaveContactModal } from './components/SaveContactModal'
 import { SaveToWalletModal } from './components/SaveToWalletModal'
@@ -88,11 +90,13 @@ export function VBizProfileApp({
   )
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
   const [messageModalOpen, setMessageModalOpen] = useState(false)
-  const { scrollRef: navScrollRef, scrollClassName: navScrollClassName } = useProfileNavScroll(
-    slugForPersistence,
-    'v2',
-    activeSectionId
-  )
+  const {
+    scrollRef: navScrollRef,
+    scrollClassName: navScrollClassName,
+    canScrollLeft,
+    canScrollRight,
+    scrollToEdge,
+  } = useProfileNavScroll(slugForPersistence, 'v2', activeSectionId, 'tab')
   const avatarVideoRef = useRef<HTMLVideoElement>(null)
   const { showPreloader, introAllowed, endPreloader, hasVideo } = useProfileIntroContext()
   const coverPersistenceId = slugForPersistence?.trim() || 'profile'
@@ -182,14 +186,17 @@ export function VBizProfileApp({
       <CursorTrail />
 
       {!embedded && (
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="fixed top-4 right-4 z-100 flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 p-2 text-zinc-200 transition-colors dark:bg-zinc-200 dark:text-zinc-800"
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        <div className="fixed top-4 right-4 z-100 flex items-center gap-2">
+          <ProfileLanguageButton className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 p-2 text-zinc-200 transition-colors dark:bg-zinc-200 dark:text-zinc-800"
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
       )}
 
       {/* Abstract Animated Soft Background Waves */}
@@ -356,6 +363,13 @@ export function VBizProfileApp({
           <div
             className={`vbiz-floating-nav-inner relative flex w-full max-w-full min-w-0 rounded-4xl border border-zinc-200/80 bg-white/80 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:rounded-full dark:border-zinc-700/50 dark:bg-zinc-900/80 dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] ${embedded ? 'max-w-[calc(100%-0.5rem)]' : ''}`}
           >
+            <ProfileNavScrollArrows
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              onScroll={scrollToEdge}
+              variant="v2"
+              theme={theme}
+            />
             <div className="min-w-0 flex-1 overflow-hidden">
               <div
                 ref={navScrollRef}
@@ -436,7 +450,7 @@ export function VBizProfileApp({
           id={`panel-${activeSectionId}`}
           aria-labelledby={`tab-${activeSectionId}`}
         >
-          <ProfileSectionOutlet sectionId={activeSectionId} />
+          <ProfileSectionOutlet sectionId={activeSectionId} template="v2" />
         </main>
       </div>
 
@@ -454,8 +468,8 @@ export function VBizProfileApp({
       </AnimatePresence>
 
       <LiveAgent
-        variant="v2"
         embedded={embedded}
+        accentColor={design.accentColor}
         cardData={liveAgentCardData}
         systemInstruction={liveAgentSystemPrompt}
         readyToConnect={introAllowed}
@@ -472,19 +486,12 @@ export function VBizProfileApp({
 
       {!embedded && (
         <>
-          <NotificationModal
-            cardOwnerId={cardOwnerId ?? '91'}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
-            ownerName={liveAgentCardData?.ownerName ?? ownerName ?? 'Guest'}
-            enabled={introAllowed}
-          />
           <SaveContactModal
             isOpen={activeModal === 'contact'}
             onClose={() => setActiveModal(null)}
             profileId={cardOwnerId}
             onSuccess={() => {
-              const pref = localStorage.getItem(`vbizme_notif_${cardOwnerId}`)
-              if (pref) {
+              if (hasContactFlowBeenAsked(cardOwnerId ?? '91')) {
                 setActiveModal('done')
               } else {
                 setActiveModal('wallet')
@@ -502,16 +509,13 @@ export function VBizProfileApp({
           <NotificationAskModal
             isOpen={activeModal === 'notification'}
             onClose={() => {
-              localStorage.setItem(`vbizme_notif_${cardOwnerId}`, JSON.stringify({ asked: true, accepted: false }))
+              writeContactFlowAsked(cardOwnerId ?? '91', false)
               setActiveModal(null)
             }}
             cardOwnerId={cardOwnerId ?? '91'}
             cardSlug={profileSlug ?? shareSlug ?? 'preview'}
             onAccept={(preferences) => {
-              localStorage.setItem(
-                `vbizme_notif_${cardOwnerId}`,
-                JSON.stringify({ asked: true, accepted: true, preferences })
-              )
+              writeContactFlowAsked(cardOwnerId ?? '91', true, preferences)
               setActiveModal('done')
             }}
           />

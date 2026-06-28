@@ -1,4 +1,6 @@
 import type {
+  AboutMeFooter,
+  AboutMeHighlight,
   AboutMeItem,
   AboutMeListItem,
   AboutMePillar,
@@ -24,32 +26,96 @@ function toPlainDescription(description: string | null): { plain: string; html: 
   return { plain: stripHtml(html), html }
 }
 
-function extractPillars(html: string): AboutMePillar[] {
-  const h3Matches = html.match(/<h3[^>]*>[\s\S]*?<\/h3>/gi) ?? []
-  const pillars: AboutMePillar[] = []
+function extractH3InnerBlocks(html: string): string[] {
+  return (html.match(/<h3[^>]*>[\s\S]*?<\/h3>/gi) ?? []).map((block) => block.replace(/<\/?h3[^>]*>/gi, '').trim())
+}
 
-  for (const match of h3Matches) {
-    const inner = match.replace(/<\/?h3[^>]*>/gi, '')
-    const plain = stripHtml(inner)
-    if (!plain.includes('🔹')) continue
+function extractStrongText(html: string): string {
+  const match = html.match(/<strong[^>]*>([\s\S]*?)<\/strong>/i)
+  return match ? stripHtml(match[1]) : ''
+}
 
-    const cleaned = plain.replace(/^🔹\s*/, '').trim()
-    const dashSplit = cleaned.split(/\s*[–—-]\s*/)
-    if (dashSplit.length >= 2) {
-      pillars.push({
-        title: dashSplit[0].trim(),
-        description: dashSplit.slice(1).join(' - ').trim(),
-      })
-    } else {
-      pillars.push({ title: cleaned, description: '' })
+function removeFirstStrong(html: string): string {
+  return html
+    .replace(/<strong[^>]*>[\s\S]*?<\/strong>/i, '')
+    .replace(/^[\s\u00a0]+/i, '')
+    .trim()
+}
+
+function parsePillar(inner: string): AboutMePillar | null {
+  const plain = stripHtml(inner)
+  if (!plain.includes('🔹')) return null
+
+  const cleaned = plain.replace(/^🔹\s*/, '').trim()
+  const dashSplit = cleaned.split(/\s*[–—-]\s*/)
+  if (dashSplit.length >= 2) {
+    return {
+      title: dashSplit[0].trim(),
+      description: dashSplit.slice(1).join(' - ').trim(),
     }
   }
 
-  return pillars
+  return { title: cleaned, description: '' }
 }
 
-function extractIntroHtml(html: string): string {
-  return html.replace(/<h3[^>]*>[\s\S]*?🔹[\s\S]*?<\/h3>/gi, '').trim()
+function parseHighlightBlock(html: string): AboutMeHighlight | null {
+  const trimmed = html.trim()
+  if (!trimmed) return null
+
+  const title = extractStrongText(trimmed)
+  const bodyHtml = removeFirstStrong(trimmed) || trimmed
+  const plain = stripHtml(bodyHtml)
+
+  return {
+    title: title || stripHtml(trimmed).split(/\s+/).slice(0, 3).join(' '),
+    html: bodyHtml,
+    plain,
+  }
+}
+
+function parseFooterBlocks(blocks: string[]): AboutMeFooter | null {
+  if (blocks.length === 0) return null
+
+  return {
+    headline: stripHtml(blocks[0] ?? ''),
+    subheadline: stripHtml(blocks[1] ?? ''),
+    tagline: stripHtml(blocks[2] ?? ''),
+  }
+}
+
+function parseAboutMeDescription(html: string): {
+  introHtml: string
+  pillars: AboutMePillar[]
+  highlight: AboutMeHighlight | null
+  footer: AboutMeFooter | null
+} {
+  const h3Blocks = extractH3InnerBlocks(html)
+  if (h3Blocks.length === 0) {
+    return {
+      introHtml: html.trim(),
+      pillars: [],
+      highlight: null,
+      footer: null,
+    }
+  }
+
+  const pillars: AboutMePillar[] = []
+  const contentBlocks: string[] = []
+
+  for (const inner of h3Blocks) {
+    const pillar = parsePillar(inner)
+    if (pillar) {
+      pillars.push(pillar)
+      continue
+    }
+    contentBlocks.push(inner)
+  }
+
+  const introHtml = contentBlocks[0]?.trim() ?? ''
+  const highlight = contentBlocks[1] ? parseHighlightBlock(contentBlocks[1]) : null
+  const footer = parseFooterBlocks(contentBlocks.slice(2))
+
+  return { introHtml, pillars, highlight, footer }
 }
 
 function resolveFeaturedImage(item: AboutMeItem): string {
@@ -62,17 +128,18 @@ function resolveFeaturedImage(item: AboutMeItem): string {
 
 export function mapAboutMeItemToListItem(item: AboutMeItem): AboutMeListItem {
   const { plain, html } = toPlainDescription(item.description)
-  const pillars = extractPillars(html)
-  const introHtml = extractIntroHtml(html)
+  const parsed = parseAboutMeDescription(html)
 
   return {
     id: item.id,
     title: item.title.trim() || 'About Me',
     plainDescription: plain,
     htmlDescription: html,
-    introHtml: introHtml || html,
+    introHtml: parsed.introHtml || html,
     featuredImage: resolveFeaturedImage(item),
-    pillars,
+    pillars: parsed.pillars,
+    highlight: parsed.highlight,
+    footer: parsed.footer,
   }
 }
 

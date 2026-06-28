@@ -1,8 +1,8 @@
 'use client'
 
+import { isPushSupported, registerServiceWorker } from '@/lib/push/config'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
 import { useEffect } from 'react'
-import { isPushSupported, registerServiceWorker } from '@/profile-app/lib/pushNotifications'
 
 function dispatchPlatformUpdate(detail: PlatformUpdateDetail) {
   window.dispatchEvent(new CustomEvent('vbiz_platform_update', { detail }))

@@ -47,6 +47,18 @@ export type AboutMePillar = {
   description: string
 }
 
+export type AboutMeHighlight = {
+  title: string
+  html: string
+  plain: string
+}
+
+export type AboutMeFooter = {
+  headline: string
+  subheadline: string
+  tagline: string
+}
+
 export type AboutMeListItem = {
   id: number
   title: string
@@ -55,6 +67,8 @@ export type AboutMeListItem = {
   introHtml: string
   featuredImage: string
   pillars: AboutMePillar[]
+  highlight: AboutMeHighlight | null
+  footer: AboutMeFooter | null
 }
 
 export type AboutMeQueryResult = {

@@ -1,5 +1,6 @@
 'use client'
 
+import { hasContactFlowBeenAsked, writeContactFlowAsked } from '@/lib/push/config'
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
 import { designToCssVars, resolveProfileDesign } from '@/lib/resolvedProfileDesign'
 import { getNavDisplayLabel } from '@/lib/vcardNavbar'
@@ -10,16 +11,17 @@ import { CursorTrail } from './components/CursorTrail'
 import { DoneModal } from './components/DoneModal'
 import { LiveAgent } from './components/LiveAgent'
 import { NotificationAskModal } from './components/NotificationAskModal'
-import { NotificationModal } from './components/NotificationModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
 import { ProfileBackgroundAudio } from './components/ProfileBackgroundAudio'
 import { ProfileIntroPreloader } from './components/ProfileIntroPreloader'
+import { ProfileLanguageButton } from './components/ProfileLanguageButton'
+import { ProfileNavScrollArrows } from './components/ProfileNavScrollArrows'
 import { ProfileSectionOutlet } from './components/ProfileSectionOutlet'
 import { SaveContactModal } from './components/SaveContactModal'
 import { SaveToWalletModal } from './components/SaveToWalletModal'
 import { SiteGeometricGrid } from './components/SiteGeometricGrid'
-import { useProfileNavScroll } from './hooks/useProfileNavScroll'
 import { useLiveAgentProfileActions } from './hooks/useLiveAgentProfileActions'
+import { useProfileNavScroll } from './hooks/useProfileNavScroll'
 import { useProfileDisplay } from './lib/profileDisplayContext'
 import { PROFILE_NAV_MAX_WIDTH_CLASS } from './profileLayout'
 import type { VBizProfileAppProps } from './profilePublicProps'
@@ -33,7 +35,6 @@ type ModalState = 'none' | 'contact' | 'wallet' | 'notification' | 'settings' | 
 export function VBizProfileAppV1({
   explainerVideoUrl,
   cardOwnerId = DEMO_PROFILE_PROPS.cardOwnerId,
-  ownerName = DEMO_PROFILE_PROPS.ownerName,
   liveAgentCardData = DEMO_PROFILE_PROPS.liveAgentCardData,
   liveAgentSystemPrompt,
   design: designProp,
@@ -69,11 +70,13 @@ export function VBizProfileAppV1({
   })
   const theme = embedded && previewTheme !== undefined ? previewTheme : internalTheme
   const [activeModal, setActiveModal] = useState<ModalState>('none')
-  const { scrollRef: v1NavScrollRef, scrollClassName: v1NavScrollClassName } = useProfileNavScroll(
-    slugForNav,
-    'v1',
-    activeSectionId
-  )
+  const {
+    scrollRef: v1NavScrollRef,
+    scrollClassName: v1NavScrollClassName,
+    canScrollLeft: v1CanScrollLeft,
+    canScrollRight: v1CanScrollRight,
+    scrollToEdge: v1ScrollToEdge,
+  } = useProfileNavScroll(slugForNav, 'v1', activeSectionId)
   const { showPreloader, introAllowed, endPreloader, hasVideo } = useProfileIntroContext()
 
   const openSaveContactModal = useCallback(() => setActiveModal('contact'), [])
@@ -117,6 +120,7 @@ export function VBizProfileAppV1({
     return (
       <button
         key={tab.id}
+        id={`tab-btn-${tab.id}`}
         type="button"
         onClick={() => goToSection(tab.id)}
         className={className}
@@ -185,34 +189,44 @@ export function VBizProfileAppV1({
       <CursorTrail />
 
       {!embedded && (
-        <motion.button
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          whileHover={{ scale: 1.05, x: -2 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={toggleTheme}
-          type="button"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="pointer-events-auto fixed top-1/2 right-4 z-60 flex h-20 w-12 -translate-y-1/2 flex-col items-center justify-between rounded-4xl border border-black/5 bg-white p-2 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] sm:right-6 sm:h-24 sm:w-14 lg:p-3 dark:border-white/10 dark:bg-black/20 dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)]"
-        >
-          <div
-            className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'light' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-black/5 text-white/30 dark:bg-white/5'}`}
-            style={theme === 'light' ? { backgroundColor: accent } : undefined}
+        <div className="pointer-events-auto fixed top-1/2 right-4 z-60 flex -translate-y-1/2 flex-col gap-2 sm:right-6">
+          <ProfileLanguageButton className="flex h-12 w-12 items-center justify-center rounded-full border border-black/5 bg-white text-zinc-700 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] dark:border-white/10 dark:bg-black/20 dark:text-zinc-200" />
+          <motion.button
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            whileHover={{ scale: 1.05, x: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            type="button"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="pointer-events-auto fixed top-1/2 right-4 z-60 flex h-20 w-12 -translate-y-1/2 flex-col items-center justify-between rounded-4xl border border-black/5 bg-white p-2 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] sm:right-6 sm:h-24 sm:w-14 lg:p-3 dark:border-white/10 dark:bg-black/20 dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)]"
           >
-            <Sun size={20} className="sm:h-6 sm:w-6" />
-          </div>
-          <div
-            className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'dark' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-gray-50 text-gray-500 dark:text-white/20'}`}
-            style={theme === 'dark' ? { backgroundColor: accent } : undefined}
-          >
-            <Moon size={20} className="sm:h-6 sm:w-6" />
-          </div>
-        </motion.button>
+            <div
+              className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'light' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-black/5 text-white/30 dark:bg-white/5'}`}
+              style={theme === 'light' ? { backgroundColor: accent } : undefined}
+            >
+              <Sun size={20} className="sm:h-6 sm:w-6" />
+            </div>
+            <div
+              className={`flex aspect-square w-full items-center justify-center rounded-full transition-all duration-500 ${theme === 'dark' ? 'text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'bg-gray-50 text-gray-500 dark:text-white/20'}`}
+              style={theme === 'dark' ? { backgroundColor: accent } : undefined}
+            >
+              <Moon size={20} className="sm:h-6 sm:w-6" />
+            </div>
+          </motion.button>
+        </div>
       )}
 
       {embedded ? (
         <header className={v1NavClass}>
           <div className={v1NavInnerClass}>
+            <ProfileNavScrollArrows
+              canScrollLeft={v1CanScrollLeft}
+              canScrollRight={v1CanScrollRight}
+              onScroll={v1ScrollToEdge}
+              variant="v1"
+              theme={theme}
+            />
             <div className="min-w-0 flex-1 overflow-hidden">
               <div
                 ref={v1NavScrollRef}
@@ -229,7 +243,7 @@ export function VBizProfileAppV1({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.05),transparent_50%)]" />
         <div className={v1MainInnerClass}>
           <div className="relative isolate w-full contain-[layout]">
-            <ProfileSectionOutlet sectionId={activeSectionId} />
+            <ProfileSectionOutlet sectionId={activeSectionId} template="v1" />
           </div>
         </div>
       </main>
@@ -237,6 +251,13 @@ export function VBizProfileAppV1({
       {!embedded ? (
         <header className={v1NavClass}>
           <div className={v1NavInnerClass}>
+            <ProfileNavScrollArrows
+              canScrollLeft={v1CanScrollLeft}
+              canScrollRight={v1CanScrollRight}
+              onScroll={v1ScrollToEdge}
+              variant="v1"
+              theme={theme}
+            />
             <div className="min-w-0 flex-1 overflow-hidden">
               <div
                 ref={v1NavScrollRef}
@@ -250,7 +271,6 @@ export function VBizProfileAppV1({
       ) : null}
 
       <LiveAgent
-        variant="v1"
         embedded={embedded}
         accentColor={design.accentColor}
         cardData={liveAgentCardData}
@@ -260,19 +280,12 @@ export function VBizProfileAppV1({
 
       {!embedded && (
         <>
-          <NotificationModal
-            cardOwnerId={cardOwnerId ?? '91'}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
-            ownerName={liveAgentCardData?.ownerName ?? ownerName ?? 'Guest'}
-            enabled={introAllowed}
-          />
           <SaveContactModal
             isOpen={activeModal === 'contact'}
             onClose={() => setActiveModal('none')}
             profileId={cardOwnerId}
             onSuccess={() => {
-              const pref = localStorage.getItem(`vbizme_notif_${cardOwnerId}`)
-              if (pref) {
+              if (hasContactFlowBeenAsked(cardOwnerId ?? '91')) {
                 setActiveModal('done')
               } else {
                 setActiveModal('wallet')
@@ -287,16 +300,13 @@ export function VBizProfileAppV1({
           <NotificationAskModal
             isOpen={activeModal === 'notification'}
             onClose={() => {
-              localStorage.setItem(`vbizme_notif_${cardOwnerId}`, JSON.stringify({ asked: true, accepted: false }))
+              writeContactFlowAsked(cardOwnerId ?? '91', false)
               setActiveModal('none')
             }}
             cardOwnerId={cardOwnerId ?? '91'}
             cardSlug={profileSlug ?? shareSlug ?? 'preview'}
             onAccept={(preferences) => {
-              localStorage.setItem(
-                `vbizme_notif_${cardOwnerId}`,
-                JSON.stringify({ asked: true, accepted: true, preferences })
-              )
+              writeContactFlowAsked(cardOwnerId ?? '91', true, preferences)
               setActiveModal('done')
             }}
           />

@@ -1,17 +1,23 @@
 'use client'
 
-import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { ProfileNavSection } from '@/profile-app/lib/profileNavContent'
+import type { ProfileTemplateVariant } from '@/profile-app/sections'
+import { ProfileNavSection } from '@/profile-app/sections'
 import { AnimatePresence, motion } from 'motion/react'
+
+type HomeHeroProps = {
+  theme: 'light' | 'dark'
+  onAction: (action: string) => void
+  toggleTheme: () => void
+}
 
 type Props = {
   sectionId: string
+  template?: ProfileTemplateVariant
+  homeHeroProps?: HomeHeroProps
 }
 
 /** Animated section pane — only this subtree updates on nav / route changes. */
-export function ProfileSectionOutlet({ sectionId }: Props) {
-  const { design } = useProfileDisplay()
-  const template = design?.profileTemplate === 'v1' ? 'v1' : 'v2'
+export function ProfileSectionOutlet({ sectionId, template = 'v2', homeHeroProps }: Props) {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
@@ -22,7 +28,7 @@ export function ProfileSectionOutlet({ sectionId }: Props) {
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="relative w-full"
       >
-        <ProfileNavSection tabId={sectionId} template={template} />
+        <ProfileNavSection tabId={sectionId} template={template} homeHeroProps={homeHeroProps} />
       </motion.div>
     </AnimatePresence>
   )

@@ -2,15 +2,16 @@
 
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
+  FORCE_ASK_PREFERENCE_OPTIONS,
   isPushSupported,
-  NOTIFICATION_PREFERENCE_OPTIONS,
   subscribeToCard,
-} from '@/profile-app/lib/pushNotifications'
+} from '@/lib/push/config'
 import type { NotificationPreferenceKey } from '@/lib/push/types'
 import { Bell, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 
+/** Post-contact notification preference modal — v3 UI, central push API, all templates. */
 export const NotificationAskModal = ({
   isOpen,
   onClose,
@@ -27,7 +28,7 @@ export const NotificationAskModal = ({
   cardSlug: string
 }) => {
   const [preferences, setPreferences] = useState<NotificationPreferenceKey[]>(
-    NOTIFICATION_PREFERENCE_OPTIONS.map((item) => item.id)
+    FORCE_ASK_PREFERENCE_OPTIONS.map((item) => item.id)
   )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +39,7 @@ export const NotificationAskModal = ({
 
   const toPreferenceRecord = () => {
     const record = { ...DEFAULT_NOTIFICATION_PREFERENCES }
-    for (const option of NOTIFICATION_PREFERENCE_OPTIONS) {
+    for (const option of FORCE_ASK_PREFERENCE_OPTIONS) {
       record[option.id] = preferences.includes(option.id)
     }
     return record
@@ -70,12 +71,12 @@ export const NotificationAskModal = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-sm rounded-[1.5rem] border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+            className="relative w-full max-w-sm rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
           >
             <button
               onClick={onClose}
@@ -93,7 +94,7 @@ export const NotificationAskModal = ({
               <p className="mb-6 text-sm text-zinc-400">Choose what to get notified about:</p>
 
               <div className="mb-6 w-full space-y-2 rounded-xl bg-zinc-950/50 p-4 text-left text-sm text-zinc-300">
-                {NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
+                {FORCE_ASK_PREFERENCE_OPTIONS.map((p) => (
                   <label key={p.id} className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"

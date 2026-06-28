@@ -2,7 +2,7 @@ import type { DynamicPostsQueryResult, DynamicPostsSectionResponse } from '@/int
 import { normalizeDynamicPostsResponse } from '@/lib/api/dynamicPosts/mapDynamicPosts'
 import { api } from './api'
 
-const CERTIFICATIONS_LICENSING_SECTION = 'Certifications Licensing'
+const CERTIFICATIONS_LICENSING_SECTION = 'Certificates Licenses'
 
 export const certificationsLicensingApi = api.injectEndpoints({
   endpoints: (build) => ({

@@ -208,7 +208,7 @@ export function createDefaultVCardData(overrides?: Partial<VCardData>): VCardDat
 }
 
 export const DEFAULT_VCARD_APPEARANCE: VCardAppearance = {
-  profileTemplate: 'v2',
+  profileTemplate: 'v3',
   layoutStyle: 'classic',
   buttonStyle: 'solid',
   cornerStyle: 'round',

@@ -1,16 +1,12 @@
 'use client'
 
+import { DEFAULT_NOTIFICATION_PREFERENCES, isPushSupported, readFollowState, subscribeToCard } from '@/lib/push/config'
 import {
-  DEFAULT_NOTIFICATION_PREFERENCES,
-  isPushSupported,
-  NOTIFICATION_PREFERENCE_OPTIONS,
-  readFollowState,
-  subscribeToCard,
-  unsubscribeFromCard,
-  updateCardPreferences,
-} from '@/profile-app/lib/pushNotifications'
-import type { NotificationPreferences } from '@/lib/push/types'
-import { hasNotificationChoice, notificationChoiceKey, notifyProfileExperienceSettled } from '@/profile-app/lib/notificationPrefs'
+  FORCE_NOTIFICATION_DELAY_MS,
+  hasNotificationChoice,
+  notifyProfileExperienceSettled,
+  writeNotificationChoice,
+} from '@/lib/push/notificationExperience'
 import { ArrowRight, Bell, Check, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
@@ -19,10 +15,11 @@ type NotificationModalProps = {
   cardOwnerId?: string
   cardSlug?: string
   ownerName?: string
-  /** Start the 2s first-visit timer only after preloader / intro is done */
+  /** Start the first-visit timer only after preloader / intro is done */
   enabled?: boolean
 }
 
+/** Force notification follow prompt — v3 UI, central push subscribe, all templates. */
 export function NotificationModal({
   cardOwnerId = '91',
   cardSlug = 'preview',
@@ -33,7 +30,6 @@ export function NotificationModal({
   const [showSuccess, setShowSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const choiceKey = notificationChoiceKey(cardOwnerId)
 
   const settle = useCallback(() => {
     notifyProfileExperienceSettled()
@@ -49,7 +45,7 @@ export function NotificationModal({
 
     const timer = window.setTimeout(() => {
       setIsOpen(true)
-    }, 2000)
+    }, FORCE_NOTIFICATION_DELAY_MS)
 
     return () => window.clearTimeout(timer)
   }, [enabled, cardOwnerId, cardSlug, settle])
@@ -69,15 +65,14 @@ export function NotificationModal({
         preferences: readFollowState(cardSlug)?.preferences ?? DEFAULT_NOTIFICATION_PREFERENCES,
       })
 
-      localStorage.setItem(choiceKey, 'subscribed')
+      writeNotificationChoice(cardOwnerId, 'subscribed')
       setShowSuccess(true)
       window.setTimeout(() => {
         setIsOpen(false)
         settle()
       }, 2000)
     } catch (subscribeError) {
-      const message =
-        subscribeError instanceof Error ? subscribeError.message : 'Could not enable notifications.'
+      const message = subscribeError instanceof Error ? subscribeError.message : 'Could not enable notifications.'
       setError(message)
     } finally {
       setSubmitting(false)
@@ -85,7 +80,7 @@ export function NotificationModal({
   }
 
   const handleDecline = () => {
-    localStorage.setItem(choiceKey, 'declined')
+    writeNotificationChoice(cardOwnerId, 'declined')
     setIsOpen(false)
     settle()
   }
@@ -95,12 +90,12 @@ export function NotificationModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-sm overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-zinc-950 shadow-xl"
+            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 shadow-xl"
           >
             <div className="relative z-10 p-6">
               <button
@@ -114,7 +109,7 @@ export function NotificationModal({
                 <>
                   <div className="mt-2 mb-6 flex justify-center">
                     <div className="relative">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[1rem] border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-sm">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-sm">
                         <Bell size={28} className="animate-bounce" />
                       </div>
                       <div className="absolute -top-1.5 -right-1.5 rounded-full border border-zinc-800 bg-zinc-950 p-1 text-zinc-100 shadow-sm">
@@ -124,10 +119,12 @@ export function NotificationModal({
                   </div>
 
                   <div className="mb-8 text-center">
-                    <h3 className="mb-2 text-xl font-bold tracking-tight text-zinc-100">Follow {firstName}</h3>
+                    <h3 className="notranslate mb-2 text-xl font-bold tracking-tight text-zinc-100">
+                      Follow {firstName}
+                    </h3>
                     <p className="text-sm leading-relaxed font-medium text-zinc-400">
-                      Be the first to know when {ownerName}&apos;s card is updated. Get instant notifications for new
-                      links, services, and media.
+                      Be the first to know when <span className="notranslate">{ownerName}</span>&apos;s card is updated.
+                      Get instant notifications for new links, services, and media.
                     </p>
                   </div>
 
@@ -158,7 +155,7 @@ export function NotificationModal({
                       disabled={submitting}
                       className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 text-sm font-bold text-zinc-950 shadow-sm transition-all hover:bg-white active:scale-[0.98] disabled:opacity-60"
                     >
-                      {submitting ? 'Enabling…' : 'Follow Updates'}
+                      {submitting ? 'Enabling…' : 'Enable Notifications'}
                       <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                     </button>
                     <button
@@ -182,9 +179,9 @@ export function NotificationModal({
                   >
                     <Check size={36} strokeWidth={3} />
                   </motion.div>
-                  <h3 className="mb-2 text-xl font-bold text-zinc-100">Following ✓</h3>
+                  <h3 className="mb-2 text-xl font-bold text-zinc-100">You&apos;re All Set!</h3>
                   <p className="text-sm font-medium text-zinc-400">
-                    You&apos;ll be notified when this card is updated.
+                    We&apos;ll notify you the moment an update is published.
                   </p>
                 </div>
               )}

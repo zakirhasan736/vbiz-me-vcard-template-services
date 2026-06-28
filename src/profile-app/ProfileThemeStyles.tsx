@@ -1,14 +1,17 @@
 'use client'
 
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
+import { buildV3ThemeCss } from '@/lib/v3Theme'
 
 /** Overrides hardcoded accent classes inside the profile app shell. */
 export function ProfileThemeStyles({ design }: { design: ResolvedProfileDesign }) {
   const { primaryColor, accentColor } = design
+  const v3Css = design.profileTemplate === 'v3' ? buildV3ThemeCss(design) : ''
 
   const css = `
     .vbiz-profile-root .text-\\[\\#eab308\\],
-    .vbiz-profile-root .text-\\[\\#ca8a04\\] {
+    .vbiz-profile-root .text-\\[\\#ca8a04\\],
+    .vbiz-profile-root .text-\\[\\#eed677\\] {
       color: ${accentColor} !important;
     }
     .vbiz-profile-root .bg-\\[\\#eab308\\],
@@ -94,6 +97,7 @@ export function ProfileThemeStyles({ design }: { design: ResolvedProfileDesign }
     .vbiz-profile-root .selection\\:bg-\\[\\#dcc969\\]\\/30::selection {
       background-color: color-mix(in srgb, ${accentColor} 30%, transparent) !important;
     }
+    ${v3Css}
   `
 
   return <style dangerouslySetInnerHTML={{ __html: css }} />

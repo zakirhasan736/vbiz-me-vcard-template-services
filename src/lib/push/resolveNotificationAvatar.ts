@@ -51,8 +51,7 @@ export function resolveNotificationAvatar(blocks: {
 }): ResolvedNotificationAvatar {
   const companyLogo = resolveCompanyLogoUrl(blocks.companyIcon)
   const ownerImage = mediaBlockImageUrl(blocks.profileMedia)
-  const ownerVideo =
-    mediaBlockVideoUrl(blocks.profileMedia) || mediaBlockVideoUrl(blocks.introVideo)
+  const ownerVideo = mediaBlockVideoUrl(blocks.profileMedia) || mediaBlockVideoUrl(blocks.introVideo)
 
   const imageUrl = companyLogo || ownerImage
   const videoUrl = imageUrl ? '' : ownerVideo

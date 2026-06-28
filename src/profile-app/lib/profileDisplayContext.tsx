@@ -45,6 +45,7 @@ export type ProfileDisplayContextValue = {
   homeMedia: ReturnType<typeof getHomeMediaUrls>
   embedded: boolean
   cardOwnerId?: string
+  profileViews: number
 }
 
 const FALLBACK_PERSONAL: VCardPersonal = {
@@ -83,6 +84,7 @@ const defaultValue: ProfileDisplayContextValue = {
   homeMedia: getHomeMediaUrls(resolveDisplaySettings(), FALLBACK_PERSONAL),
   embedded: false,
   cardOwnerId: undefined,
+  profileViews: 0,
 }
 
 const ProfileDisplayContext = createContext<ProfileDisplayContextValue>(defaultValue)
@@ -104,6 +106,7 @@ export function ProfileDisplayProvider({
   /** Editor phone preview: show all sections regardless of Card Settings visibility. */
   embedded = false,
   cardOwnerId,
+  profileViews = 0,
 }: {
   children: React.ReactNode
   personal?: VCardPersonal
@@ -119,6 +122,7 @@ export function ProfileDisplayProvider({
   avatarMediaUrl?: string
   embedded?: boolean
   cardOwnerId?: string
+  profileViews?: number
 }) {
   const value = useMemo<ProfileDisplayContextValue>(() => {
     const settings = resolveDisplaySettings(displaySettings)
@@ -154,6 +158,7 @@ export function ProfileDisplayProvider({
       })(),
       embedded,
       cardOwnerId,
+      profileViews,
     }
   }, [
     personal,
@@ -169,6 +174,7 @@ export function ProfileDisplayProvider({
     avatarMediaUrl,
     embedded,
     cardOwnerId,
+    profileViews,
   ])
 
   return <ProfileDisplayContext.Provider value={value}>{children}</ProfileDisplayContext.Provider>

@@ -6,7 +6,7 @@ import {
   sendTestNotification,
   unsubscribeFromCard,
   updateCardPreferences,
-} from '@/profile-app/lib/pushNotifications'
+} from '@/lib/push/config'
 import type { NotificationPreferenceKey, NotificationPreferences } from '@/lib/push/types'
 import { Bell, Save, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -25,13 +25,7 @@ function readInitialPreferences(cardSlug: string): NotificationPreferences {
   }
 }
 
-const NotificationSettingsForm = ({
-  cardSlug,
-  onClose,
-}: {
-  cardSlug: string
-  onClose: () => void
-}) => {
+const NotificationSettingsForm = ({ cardSlug, onClose }: { cardSlug: string; onClose: () => void }) => {
   const [preferences, setPreferences] = useState<NotificationPreferences>(() => readInitialPreferences(cardSlug))
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)

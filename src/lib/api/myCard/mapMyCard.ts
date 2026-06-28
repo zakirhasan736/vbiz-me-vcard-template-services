@@ -233,7 +233,7 @@ function resolveTemplate(card: MyCardData): ProfileTemplateId {
   if (card.template === 'dynamic' || card.features.dynamic_template === true) {
     return 'v1'
   }
-  return 'v2'
+  return 'v3'
 }
 
 function resolveTheme(card: MyCardData) {

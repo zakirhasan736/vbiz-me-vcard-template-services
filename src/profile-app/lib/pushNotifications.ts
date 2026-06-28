@@ -36,10 +36,7 @@ export const NOTIFICATION_PREFERENCE_OPTIONS: Array<{ id: NotificationPreference
 
 export function isPushSupported() {
   return (
-    typeof window !== 'undefined' &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
+    typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
   )
 }
 
@@ -217,6 +214,12 @@ export async function subscribeToCard(options: {
     preferences,
     subscribedAt: new Date().toISOString(),
   })
+
+  // Mirror legacy choice key (reference: vbiz_notification_choice) for all subscribe paths.
+  if (options.cardOwnerId) {
+    localStorage.setItem(`vbiz_notification_choice_${options.cardOwnerId}`, 'subscribed')
+    localStorage.setItem('vbiz_notification_choice', 'subscribed')
+  }
 
   return { subscription, preferences }
 }

@@ -3,6 +3,7 @@
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import { useSectionAccent, V3EmptyState, V3ErrorState, V3LoadingSkeleton, V3SectionShell } from '@/profile-app/sections'
 import { useGetMissionStatementQuery } from '@/redux/api'
 import { ArrowUpRight, BookOpen, Quote } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -13,14 +14,6 @@ function resolveMissionImage(item: DynamicPostListItem): string {
   if (featured) return featured
 
   return item.attachments.find((attachment) => attachment.url?.trim())?.url?.trim() ?? ''
-}
-
-function MissionSectionSkeleton() {
-  return (
-    <div className="w-full pb-20">
-      <div className="min-h-[360px] animate-pulse rounded-3xl border border-zinc-200 bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-800" />
-    </div>
-  )
 }
 
 type MissionContentCardProps = {
@@ -105,10 +98,9 @@ function MissionContentCard({ item, sectionTitle, accent, idx = 0 }: MissionCont
 }
 
 export const MissionSection = () => {
-  const { cardOwnerId, design } = useProfileDisplay()
+  const { cardOwnerId } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
-  const template = design?.profileTemplate === 'v1' ? 'v1' : 'v2'
-  const accent = design?.accentColor ?? (template === 'v1' ? '#dcc969' : '#eab308')
+  const accent = useSectionAccent()
 
   const { data, isLoading, isError } = useGetMissionStatementQuery(profileId, { skip: !profileId })
 
@@ -120,40 +112,30 @@ export const MissionSection = () => {
   if (!profileId) return null
 
   if (showInitialLoader) {
-    return <MissionSectionSkeleton />
+    return <V3LoadingSkeleton />
   }
 
   if (isError) {
-    return (
-      <div className="w-full pb-20">
-        <div className="rounded-3xl border border-red-200 bg-red-50/80 px-6 py-8 text-center text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-          Unable to load {sectionTitle.toLowerCase()} right now. Please try again later.
-        </div>
-      </div>
-    )
+    return <V3ErrorState sectionTitle={sectionTitle} />
   }
 
   if (showEmptyState) {
     return (
-      <div className="w-full pb-20">
-        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-200 bg-white/40 p-10 text-center dark:border-zinc-800/80 dark:bg-zinc-900/30">
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/80">
-            <BookOpen size={24} style={{ color: accent }} />
-          </div>
-          <h2 className="mb-3 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{sectionTitle}</h2>
-          <p className="max-w-md text-sm leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
-            No mission statement has been published yet. Add content from the vCard editor Mission Statement tab.
-          </p>
-        </div>
-      </div>
+      <V3EmptyState
+        icon={BookOpen}
+        title={sectionTitle}
+        message="No mission statement has been published yet. Add content from the vCard editor Mission Statement tab."
+      />
     )
   }
 
   return (
-    <div className="flex w-full flex-col gap-4 pb-20">
-      {items.map((item, idx) => (
-        <MissionContentCard key={item.id} item={item} sectionTitle={sectionTitle} accent={accent} idx={idx} />
-      ))}
-    </div>
+    <V3SectionShell>
+      <div className="flex w-full flex-col gap-4 md:gap-6">
+        {items.map((item, idx) => (
+          <MissionContentCard key={item.id} item={item} sectionTitle={sectionTitle} accent={accent} idx={idx} />
+        ))}
+      </div>
+    </V3SectionShell>
   )
 }

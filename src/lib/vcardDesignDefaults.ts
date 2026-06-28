@@ -5,7 +5,7 @@ import { createDefaultDisplaySettings } from '@/types/vcardDisplaySettings'
 
 export function appearanceFromDesignSettings(design: DesignSettingsState): VCardAppearance {
   return {
-    profileTemplate: design.profileTemplate ?? 'v2',
+    profileTemplate: design.profileTemplate ?? 'v3',
     layoutStyle: design.layoutStyle || 'classic',
     buttonStyle: design.buttonStyle || 'solid',
     cornerStyle: design.cornerStyle || 'round',

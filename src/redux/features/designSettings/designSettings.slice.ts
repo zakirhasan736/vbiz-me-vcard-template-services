@@ -2,8 +2,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 export type DashboardAccentId = 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky'
 
-/** Profile shell: v1 = classic geometric, v2 = link-in-bio (default). */
-export type ProfileTemplateId = 'v1' | 'v2'
+/** Profile shell: v1 = classic geometric, v2 = link-in-bio, v3 = ocean/gold dashboard (default). */
+export type ProfileTemplateId = 'v1' | 'v2' | 'v3'
 
 export type DesignSettingsState = {
   vcardPrimaryColor: string
@@ -21,7 +21,7 @@ const initialState: DesignSettingsState = {
   vcardAccentColor: '#f43f5e',
   dashboardAccent: 'indigo',
   fontFamily: 'inter',
-  profileTemplate: 'v2',
+  profileTemplate: 'v3',
   layoutStyle: 'classic',
   buttonStyle: 'solid',
   cornerStyle: 'round',
