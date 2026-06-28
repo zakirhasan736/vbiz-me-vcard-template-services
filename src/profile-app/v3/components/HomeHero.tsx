@@ -3,23 +3,22 @@
 import { LANGUAGE_LABELS } from '@/lib/i18n/translation'
 import { useTranslation } from '@/lib/i18n/translationData'
 import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
+import { ProfileActionButtons } from '@/profile-app/components/ProfileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import {
   buildProfileContactItems,
   cleanProfileFieldValue,
   formatProfileViewCount,
-  resolveWhatsappHref,
 } from '@/profile-app/lib/profileHomeData'
+import { filterSocialItemsWithLinks, resolveSocialLinkHref } from '@/profile-app/lib/profileSocialLinks'
 import { DEFAULT_COVER, DEFAULT_INTRO_VIDEO, resolveProfileAvatarSrc } from '@/profile-app/profilePublicProps'
 import {
   Bell,
   CreditCard,
-  Download,
   Eye,
   Facebook,
   FileText,
   Globe,
-  Info,
   Instagram,
   Linkedin,
   MessageCircle,
@@ -29,6 +28,7 @@ import {
   Share2,
   Sun,
   VolumeX,
+  Youtube,
   type LucideIcon,
 } from 'lucide-react'
 import React, { useMemo } from 'react'
@@ -59,11 +59,15 @@ const V3_SOCIAL_ITEMS: V3SocialItem[] = [
   { label: 'LinkedIn', title: 'LinkedIn', icon: Linkedin },
   { label: 'Whatsapp', title: 'WhatsApp', icon: MessageCircle },
   { label: 'TikTok', title: 'TikTok', icon: TikTokIcon, isSvg: true },
+  { label: 'Youtube', title: 'YouTube', icon: Youtube },
+  { label: 'Pinterest', title: 'Pinterest', icon: Globe },
+  { label: 'Rumble', title: 'Rumble', icon: Globe },
+  { label: 'Truth', title: 'Truth Social', icon: Globe },
+  { label: 'Website', title: 'Website', icon: Globe },
 ]
 
-function resolveSocialHref(label: string, socialHref: (displayLabel: string) => string, whatsapp: string): string {
-  if (label === 'Whatsapp') return resolveWhatsappHref(whatsapp)
-  return socialHref(label)
+function contactColSpan(label: string): 1 | 2 {
+  return label === 'Email' || label === 'Address' ? 2 : 1
 }
 
 function ProfileMedia({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -72,10 +76,6 @@ function ProfileMedia({ src, alt, className }: { src: string; alt: string; class
     return <video src={encoded} autoPlay loop muted playsInline className={className} />
   }
   return <img src={encoded} alt={alt} className={className} />
-}
-
-function contactColSpan(label: string): 1 | 2 {
-  return label === 'Email' || label === 'Address' ? 2 : 1
 }
 
 export const HomeHero: React.FC<{
@@ -95,10 +95,7 @@ export const HomeHero: React.FC<{
   const profileIsVideo = isVideoUrl(profileSrc)
   const showName = isVisible('MyInfo section Name') && Boolean(personal.fullName?.trim())
   const showShare = isVisible('Share Btn')
-  const showSaveContact = isVisible('Save Contact')
-  const showMyVcard = isVisible('My vCard Btn')
-  const showGetVcard = isVisible('Get your VCard Now')
-  const showViewCounter = isVisible('Vcard View Counter') && profileViews > 0
+  const showViewCounter = isVisible('Vcard View Counter')
 
   const designationLine =
     isVisible('MyInfo Designation') && personal.designation?.trim() ? cleanProfileFieldValue(personal.designation) : ''
@@ -113,11 +110,8 @@ export const HomeHero: React.FC<{
   )
 
   const visibleSocials = useMemo(
-    () =>
-      V3_SOCIAL_ITEMS.filter(
-        (item) => isVisible(item.label) && Boolean(resolveSocialHref(item.label, socialHref, personal.whatsapp))
-      ),
-    [isVisible, socialHref, personal.whatsapp]
+    () => filterSocialItemsWithLinks(V3_SOCIAL_ITEMS, socialHref, personal.whatsapp),
+    [socialHref, personal.whatsapp]
   )
 
   const viewCountLabel = formatProfileViewCount(profileViews)
@@ -223,7 +217,7 @@ export const HomeHero: React.FC<{
           {visibleSocials.length > 0 && (
             <div className="absolute top-8 left-2 z-30 flex flex-col gap-2">
               {visibleSocials.map((item) => {
-                const href = resolveSocialHref(item.label, socialHref, personal.whatsapp)
+                const href = resolveSocialLinkHref(item.label, socialHref, personal.whatsapp)
                 return (
                   <a
                     key={item.label}
@@ -319,71 +313,7 @@ export const HomeHero: React.FC<{
             </p>
           )}
 
-          {(showMyVcard || showSaveContact) && (
-            <div className="relative z-20 mb-2 flex w-[90%] max-w-[340px] flex-col gap-2 shadow-xl">
-              <div className="flex gap-3">
-                {showSaveContact && (
-                  <button
-                    className={`flex h-[40px] flex-1 flex-row items-center justify-center gap-2 rounded-xl border text-[11px] font-bold transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(238,214,119,0.65)] ${theme === 'dark' ? 'border-gold/40 bg-ocean-dark hover:border-gold hover:bg-ocean-light/70 text-white' : 'border-gold hover:bg-gold/10 bg-white text-zinc-900'}`}
-                    onClick={() => {
-                      triggerHaptic(10)
-                      onAction?.('info')
-                    }}
-                  >
-                    <Info size={18} className="text-gold" strokeWidth={1.5} /> MY INFO
-                  </button>
-                )}
-                {showMyVcard && (
-                  <button
-                    className="from-gold flex h-[40px] flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-linear-to-br to-yellow-500 text-[11px] font-extrabold text-black shadow-lg transition-all hover:scale-[1.03] hover:shadow-[0_0_18px_rgba(250,204,21,0.7)] hover:brightness-110"
-                    onClick={() => {
-                      triggerHaptic(10)
-                      onAction?.('contact')
-                    }}
-                  >
-                    <CreditCard size={18} strokeWidth={1.5} /> MY VCARD
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {showSaveContact && (
-            <div className="relative z-20 mb-2 flex w-[90%] max-w-[340px] justify-between gap-2">
-              <button
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-3 text-[10px] font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(238,214,119,0.55)] ${theme === 'dark' ? 'border-white/5 bg-white/10 text-white hover:bg-white/20' : 'border-zinc-900/10 bg-zinc-900/15 text-zinc-900 hover:bg-zinc-900/20'}`}
-                onClick={() => {
-                  triggerHaptic(10)
-                  onAction?.('contact')
-                }}
-              >
-                <Download size={14} className={theme === 'dark' ? 'text-gold' : 'text-amber-800'} /> SAVE MY INFO
-              </button>
-              <button
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-3 text-[10px] font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(238,214,119,0.55)] ${theme === 'dark' ? 'border-white/5 bg-white/10 text-white hover:bg-white/20' : 'border-zinc-900/10 bg-zinc-900/15 text-zinc-900 hover:bg-zinc-900/20'}`}
-                onClick={() => {
-                  triggerHaptic(10)
-                  onAction?.('wallet')
-                }}
-              >
-                GOOGLE WALLET
-              </button>
-            </div>
-          )}
-
-          {showGetVcard && (
-            <div className="from-gold relative z-20 mx-auto mt-auto mb-[100px] w-[90%] max-w-[340px] overflow-hidden rounded-xl bg-linear-to-r to-yellow-500 shadow-[0_10px_30px_rgba(238,214,119,0.3)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_22px_rgba(238,214,119,0.85)]">
-              <button
-                className="flex h-[45px] w-full items-center justify-center gap-2 text-[12px] font-black text-black transition-all hover:brightness-110 active:scale-95"
-                onClick={() => {
-                  triggerHaptic(10)
-                  onAction?.('contact')
-                }}
-              >
-                <Download size={20} strokeWidth={2.5} /> GET YOUR VCARD NOW
-              </button>
-            </div>
-          )}
+          <ProfileActionButtons variant="v3-mobile" theme={theme} onAction={onAction} />
         </div>
 
         {/* Desktop View */}
@@ -468,7 +398,7 @@ export const HomeHero: React.FC<{
               {visibleSocials.length > 0 && (
                 <div className="ml-1 flex gap-3">
                   {visibleSocials.map((item) => {
-                    const href = resolveSocialHref(item.label, socialHref, personal.whatsapp)
+                    const href = resolveSocialLinkHref(item.label, socialHref, personal.whatsapp)
                     return (
                       <a
                         key={item.label}
@@ -489,58 +419,7 @@ export const HomeHero: React.FC<{
 
           <div className="mt-auto mb-16 flex w-full items-end justify-between xl:mb-20">
             <div className="flex w-full items-end justify-between gap-12 xl:gap-24">
-              {(showSaveContact || showMyVcard || showGetVcard) && (
-                <div className="flex w-full max-w-[420px] flex-col gap-3 xl:max-w-[480px]">
-                  {(showSaveContact || showMyVcard) && (
-                    <div className="grid grid-cols-2 gap-3">
-                      {showSaveContact && (
-                        <button
-                          className={`h-[52px] rounded-2xl border text-[13px] font-bold shadow-lg transition-all hover:scale-[1.02] ${theme === 'dark' ? 'border-gold/40 bg-ocean-dark text-gold hover:border-gold hover:bg-ocean-light/50 hover:shadow-[0_0_20px_rgba(238,214,119,0.6)]' : 'border-gold hover:bg-gold/10 bg-white text-zinc-900 hover:shadow-[0_0_18px_rgba(238,214,119,0.45)]'}`}
-                          onClick={() => {
-                            triggerHaptic(10)
-                            onAction?.('contact')
-                          }}
-                        >
-                          SAVE MY INFO
-                        </button>
-                      )}
-                      {showMyVcard && (
-                        <button
-                          className="from-gold flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-linear-to-r to-yellow-500 text-[13px] font-extrabold text-black shadow-lg transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(238,214,119,0.7)] hover:brightness-110"
-                          onClick={() => {
-                            triggerHaptic(10)
-                            onAction?.('contact')
-                          }}
-                        >
-                          <CreditCard size={18} /> MY VCARD
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {showSaveContact && (
-                    <button
-                      className={`flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl border text-[13px] font-bold shadow-lg transition-all hover:scale-[1.01] ${theme === 'dark' ? 'border-gold/30 bg-ocean-dark hover:border-gold hover:bg-ocean-light/50 text-white hover:shadow-[0_0_20px_rgba(238,214,119,0.65)]' : 'border-gold hover:bg-gold/10 bg-white text-zinc-950 hover:shadow-[0_0_18px_rgba(238,214,119,0.4)]'}`}
-                      onClick={() => {
-                        triggerHaptic(10)
-                        onAction?.('wallet')
-                      }}
-                    >
-                      <Download size={16} /> SAVE TO GOOGLE WALLET
-                    </button>
-                  )}
-                  {showGetVcard && (
-                    <button
-                      className="bg-gold h-[52px] w-full rounded-2xl text-[12px] font-black tracking-wide text-black shadow-[0_10px_30px_rgba(238,214,119,0.3)] transition-all hover:scale-[1.02] hover:bg-yellow-400 hover:shadow-[0_0_25px_rgba(238,214,119,0.85)]"
-                      onClick={() => {
-                        triggerHaptic(10)
-                        onAction?.('contact')
-                      }}
-                    >
-                      GET YOUR VCARD NOW
-                    </button>
-                  )}
-                </div>
-              )}
+              <ProfileActionButtons variant="v3-desktop" theme={theme} onAction={onAction} />
 
               {contactItems.length > 0 && (
                 <div className="mt-auto grid max-w-[480px] flex-1 shrink-0 grid-cols-2 gap-x-3 gap-y-2">

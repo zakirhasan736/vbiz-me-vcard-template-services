@@ -4,14 +4,14 @@ import { cornerStyleToRadius } from '@/lib/resolvedProfileDesign'
 import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import {
-  ArrowRight,
   ArrowUpRight,
   Briefcase,
-  Download,
   Eye,
   Facebook,
+  Globe,
   Instagram,
   Linkedin,
+  MessageCircle,
   PlaySquare,
   QrCode,
   Share2,
@@ -26,9 +26,11 @@ import { auth, db, isFirebaseAvailable } from '../lib/firebase'
 import { handleFirestoreError, OperationType } from '../lib/firebaseUtils'
 import { useProfileDisplay } from '../lib/profileDisplayContext'
 import { buildExtraFieldContactItems, buildProfileContactItems, splitDisplayName } from '../lib/profileHomeData'
+import { filterSocialItemsWithLinks } from '../lib/profileSocialLinks'
 import { resolveProfileAvatarSrc } from '../profilePublicProps'
 import { CustomVideoPlayer } from './CustomVideoPlayer'
 import { LeaveMessageModal } from './LeaveMessageModal'
+import { ProfileActionButtons } from './ProfileActionButtons'
 import { SectionContainer } from './SectionContainer'
 
 const DEFAULT_COVER = 'https://app.vbizme.com/storage/ecard/backgroundVideos/91/Untitled%20design-36.mp4'
@@ -38,7 +40,13 @@ const V1_SOCIAL_GRID = [
   { label: 'FaceBook', icon: Facebook },
   { label: 'Instagram', icon: Instagram },
   { label: 'LinkedIn', icon: Linkedin },
+  { label: 'Whatsapp', icon: MessageCircle },
+  { label: 'TikTok', icon: Globe },
   { label: 'Youtube', icon: PlaySquare },
+  { label: 'Pinterest', icon: Globe },
+  { label: 'Rumble', icon: Globe },
+  { label: 'Truth', icon: Globe },
+  { label: 'Website', icon: Globe },
 ] as const
 
 const TypewriterText = ({ text, delay = 0, speed = 100 }: { text: string; delay?: number; speed?: number }) => {
@@ -212,7 +220,6 @@ type PublishUser = Pick<User, 'uid'> & {
 export const HomeSection = () => {
   const { personal, isVisible, field, pageColors, homeMedia, design, socialHref, extraFields, embedded, cardOwnerId } =
     useProfileDisplay()
-  const showSaveContact = isVisible('Save Contact')
   const showShare = isVisible('Share Btn')
   const nameStyle = field('MyInfo section Name')
   const accent = design?.accentColor ?? '#dcc969'
@@ -238,7 +245,7 @@ export const HomeSection = () => {
     return [...base, ...extra]
   }, [personal, isVisible, field, extraFields])
 
-  const visibleSocials = V1_SOCIAL_GRID.filter((s) => isVisible(s.label) && Boolean(socialHref(s.label)))
+  const visibleSocials = filterSocialItemsWithLinks(V1_SOCIAL_GRID, socialHref, personal.whatsapp)
 
   const [messageModalOpen, setMessageModalOpen] = useState(false)
   const messageOwnerName = personal.fullName?.trim() || 'the card owner'
@@ -487,30 +494,7 @@ export const HomeSection = () => {
               <div className="from-yellow-primary/10 absolute inset-0 bg-linear-to-tr via-transparent to-black/1 opacity-0 transition-opacity duration-700 group-hover:opacity-100 dark:to-white/2" />
 
               <div className="relative z-10 flex flex-col gap-4">
-                {showSaveContact && (
-                  <motion.button
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('open-save-contact-flow'))
-                    }}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor: accent,
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group/btn from-yellow-primary hover:to-yellow-primary flex w-full items-center justify-between rounded-2xl bg-linear-to-r to-[#c2b05c] px-6 py-4.5 text-[10px] font-black tracking-[0.2em] text-black uppercase shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] transition-all hover:from-[#ebd675] hover:shadow-[0_25px_50px_-10px_rgba(234,179,8,0.6)] sm:text-xs dark:shadow-[0_20px_40px_-10px_rgba(234,179,8,0.4)]"
-                    style={{
-                      borderRadius: cornerRadius,
-                      background: `linear-gradient(to right, ${accent}, color-mix(in srgb, ${accent} 80%, black))`,
-                    }}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Download size={18} strokeWidth={2.5} /> Add to Contacts
-                    </span>
-                    <div className="rounded-lg bg-gray-50 p-1.5">
-                      <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
-                    </div>
-                  </motion.button>
-                )}
+                <ProfileActionButtons variant="v1" />
 
                 <div className="grid grid-cols-2 gap-3">
                   <motion.button

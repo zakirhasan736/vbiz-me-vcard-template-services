@@ -12,7 +12,7 @@ type ProfileNavScrollArrowsProps = {
 }
 
 const arrowBase =
-  'absolute z-30 flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-90'
+  'absolute top-1/2 z-30 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-90'
 
 function arrowClassName(variant: 'v1' | 'v2', theme: 'light' | 'dark'): string {
   if (variant === 'v1') {

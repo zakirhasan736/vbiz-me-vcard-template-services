@@ -18,12 +18,12 @@ type Props = {
 
 /** Stable per-slug layout. Cover video is detached in `ProfileApp` (`ProfileCoverHost`). */
 export default function PublicProfileLayout({ slug, liveAgentCardData, liveAgentSystemPrompt }: Props) {
-  const { record, isLoading, isError, error } = useProfile(slug)
+  const { record, isLoading, isError, error, actionButtons } = useProfile(slug)
   const designSettings = useAppSelector((s) => s.designSettings)
 
   const profileProps = useMemo(
-    () => (record ? vCardRecordToProfileProps(record, designSettings) : null),
-    [record, designSettings]
+    () => (record ? vCardRecordToProfileProps(record, designSettings, actionButtons) : null),
+    [record, designSettings, actionButtons]
   )
 
   if (isLoading) {

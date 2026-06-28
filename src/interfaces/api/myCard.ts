@@ -72,6 +72,7 @@ export type MyCardActionButton = {
   background_color?: string
   text_color?: string
   count?: number
+  link?: string
   data?: Record<string, string>
 }
 

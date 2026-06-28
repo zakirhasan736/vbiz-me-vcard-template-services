@@ -7,6 +7,7 @@ import { normalizeGeneralPostList } from '@/lib/vcardGeneralPosts'
 import { normalizeServiceList } from '@/lib/vcardServices'
 import { createDefaultVCardSocial } from '@/lib/vcardSocial'
 import { DEFAULT_LIVE_AGENT_CARD, type LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
+import { cleanProfileFieldValue } from '@/profile-app/lib/profileHomeData'
 import type { DesignSettingsState } from '@/redux/features/designSettings/designSettings.slice'
 import type {
   VCardData,
@@ -21,6 +22,7 @@ import type {
   VCardSocial,
 } from '@/types/vcard'
 import type { VCardDisplaySettings } from '@/types/vcardDisplaySettings'
+import type { MyCardActionButtons } from '@interfaces/api/myCard'
 
 export const DEFAULT_COVER = 'https://app.vbizme.com/storage/ecard/backgroundVideos/91/Untitled%20design-36.mp4'
 /** Demo / fallback intro played in the avatar circle when no profile image is set. */
@@ -71,6 +73,7 @@ export type VBizProfileAppProps = {
   previewTheme?: 'light' | 'dark'
   onPreviewThemeChange?: (theme: 'light' | 'dark') => void
   profileViews?: number
+  actionButtons?: MyCardActionButtons | null
 }
 
 export function buildProfileShareUrl(slug: string): string {
@@ -104,7 +107,7 @@ export function vCardDataToProfileProps(
   const taglineParts: string[] = []
   if (showTagline) {
     if (isFieldVisible(display, 'MyInfo Designation') && data.personal.designation) {
-      taglineParts.push(data.personal.designation)
+      taglineParts.push(cleanProfileFieldValue(data.personal.designation))
     }
     if (isFieldVisible(display, 'MyInfo Profession') && data.personal.profession) {
       taglineParts.push(data.personal.profession)
@@ -141,7 +144,8 @@ export function vCardDataToProfileProps(
 
 export function vCardRecordToProfileProps(
   record: VCardRecord,
-  designSettings: DesignSettingsState
+  designSettings: DesignSettingsState,
+  actionButtons?: MyCardActionButtons | null
 ): VBizProfileAppProps {
   return {
     ...vCardDataToProfileProps(record, designSettings, {
@@ -149,6 +153,7 @@ export function vCardRecordToProfileProps(
       avatarImageUrl: record.avatarImageUrl,
     }),
     profileViews: record.views,
+    actionButtons: actionButtons ?? null,
   }
 }
 

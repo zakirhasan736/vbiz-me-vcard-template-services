@@ -22,6 +22,7 @@ import type {
   VCardSocial,
 } from '@/types/vcard'
 import type { VCardDisplaySettings } from '@/types/vcardDisplaySettings'
+import type { MyCardActionButtons } from '@interfaces/api/myCard'
 import React, { createContext, useContext, useMemo } from 'react'
 
 export type ProfileDisplayContextValue = {
@@ -46,6 +47,7 @@ export type ProfileDisplayContextValue = {
   embedded: boolean
   cardOwnerId?: string
   profileViews: number
+  actionButtons?: MyCardActionButtons | null
 }
 
 const FALLBACK_PERSONAL: VCardPersonal = {
@@ -85,6 +87,7 @@ const defaultValue: ProfileDisplayContextValue = {
   embedded: false,
   cardOwnerId: undefined,
   profileViews: 0,
+  actionButtons: null,
 }
 
 const ProfileDisplayContext = createContext<ProfileDisplayContextValue>(defaultValue)
@@ -107,6 +110,7 @@ export function ProfileDisplayProvider({
   embedded = false,
   cardOwnerId,
   profileViews = 0,
+  actionButtons = null,
 }: {
   children: React.ReactNode
   personal?: VCardPersonal
@@ -123,6 +127,7 @@ export function ProfileDisplayProvider({
   embedded?: boolean
   cardOwnerId?: string
   profileViews?: number
+  actionButtons?: MyCardActionButtons | null
 }) {
   const value = useMemo<ProfileDisplayContextValue>(() => {
     const settings = resolveDisplaySettings(displaySettings)
@@ -159,6 +164,7 @@ export function ProfileDisplayProvider({
       embedded,
       cardOwnerId,
       profileViews,
+      actionButtons,
     }
   }, [
     personal,
@@ -175,6 +181,7 @@ export function ProfileDisplayProvider({
     embedded,
     cardOwnerId,
     profileViews,
+    actionButtons,
   ])
 
   return <ProfileDisplayContext.Provider value={value}>{children}</ProfileDisplayContext.Provider>

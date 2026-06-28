@@ -34,6 +34,7 @@ export const DEFAULT_EN_TRANSLATIONS: Record<string, string> = {
   'hero.my_info': 'MY INFO',
   'hero.my_vcard': 'MY VCARD',
   'hero.save_my_info': 'SAVE MY INFO',
+  'hero.save_to_google_wallet': 'SAVE TO GOOGLE WALLET',
   'hero.google_wallet': 'GOOGLE WALLET',
   'hero.get_your_vcard_now': 'GET YOUR VCARD NOW',
   'hero.premium': 'PREMIUM',

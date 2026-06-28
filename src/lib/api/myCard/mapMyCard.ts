@@ -3,6 +3,7 @@ import { createDefaultVCardSocial } from '@/lib/vcardSocial'
 import type { ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import type { VCardData, VCardExtraField, VCardPersonal, VCardRecord, VCardSocial } from '@/types/vcard'
 import type { VCardDisplaySettings } from '@/types/vcardDisplaySettings'
+import { createDefaultFieldConfig } from '@/types/vcardDisplaySettings'
 import type { MyCardData } from '@interfaces/api/myCard'
 
 const CHECKBOX_ON = new Set(['1', 'true'])
@@ -110,10 +111,42 @@ function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
     }
   }
 
+  for (const label of new Set(Object.values(API_FIELD_TO_LABEL))) {
+    if (!fields[label]) {
+      fields[label] = createDefaultFieldConfig()
+    }
+  }
+
   for (const [apiKey, label] of Object.entries(API_FIELD_TO_LABEL)) {
-    if (!fields[label]) continue
     const visible = isEnabled(settings[apiKey]) || isEnabled(features[apiKey.replace('_checkbox', '')])
     fields[label] = { ...fields[label], visible }
+  }
+
+  const ACTION_BUTTON_TO_LABEL: Record<string, string> = {
+    my_info: 'My Info Btn',
+    save_contact: 'Save Contact',
+    share: 'Share Btn',
+    language: 'Language',
+    view_counter: 'Vcard View Counter',
+  }
+
+  for (const [key, label] of Object.entries(ACTION_BUTTON_TO_LABEL)) {
+    const button = card.action_buttons[key]
+    if (button?.enabled === undefined) continue
+
+    fields[label] = {
+      ...fields[label],
+      visible: button.enabled === true,
+      ...(button.background_color ? { backgroundColor: button.background_color } : {}),
+      ...(button.text_color ? { textColor: button.text_color } : {}),
+    }
+  }
+
+  const viewCounter = card.action_buttons.view_counter
+  if (viewCounter?.enabled === true) {
+    fields['Vcard View Counter'] = { ...fields['Vcard View Counter'], visible: true }
+  } else if (viewCounter?.enabled === false) {
+    fields['Vcard View Counter'] = { ...fields['Vcard View Counter'], visible: false }
   }
 
   if (settings.pageHeader_text_color) {
