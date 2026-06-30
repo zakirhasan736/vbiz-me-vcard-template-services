@@ -1,7 +1,7 @@
 'use client'
 
 import { setTranslationCardScope } from '@/lib/i18n/cardScope'
-import { initTranslation } from '@/lib/i18n/translation'
+import { initTranslation, maybeResetTranslationForNewCard } from '@/lib/i18n/translation'
 import { LanguageModal } from '@/profile-app/components/LanguageModal'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
@@ -27,7 +27,11 @@ export function TranslationProvider({
   const [languageModalOpen, setLanguageModalOpen] = useState(false)
 
   useEffect(() => {
-    setTranslationCardScope(cardOwnerId ?? profileSlug ?? null)
+    const cardKey = cardOwnerId ?? profileSlug ?? null
+    setTranslationCardScope(cardKey)
+    // Switching to a different card with no saved language resets any leftover
+    // translation to English (one clean reload). Skip init if a reload fired.
+    if (maybeResetTranslationForNewCard(cardKey)) return
     void initTranslation()
   }, [cardOwnerId, profileSlug])
 

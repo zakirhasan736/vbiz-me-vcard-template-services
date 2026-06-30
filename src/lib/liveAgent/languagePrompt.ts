@@ -65,8 +65,32 @@ export function getLiveAgentInitialPromptForLanguage(langCode: string, company =
   return `The user has just opened the site. Please say: 'Welcome to ${company}! How can I help you?' and offer a quick guided tour of the card.`
 }
 
+/**
+ * Active language from the domain-wide `googtrans` cookie (format `/source/target`).
+ * This persists across cards, so a newly opened card is already translated even
+ * though its per-card `selectedLanguage_<id>` key is empty.
+ */
+function readGoogTransLanguage(): string | null {
+  if (typeof document === 'undefined') return null
+  const cookie = document.cookie
+    .split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith('googtrans='))
+  if (!cookie) return null
+
+  const value = decodeURIComponent(cookie.split('=').slice(1).join('='))
+  const target = value.split('/')[2]
+  return target && target !== 'en' ? target : null
+}
+
 export function getSelectedLanguageForLiveAgent(cardId?: string): string {
   if (typeof window === 'undefined') return 'en'
   const id = cardId ?? resolveCardOwnerId()
-  return localStorage.getItem(`selectedLanguage_${id}`) || 'en'
+
+  // Per-card explicit choice wins (non-English).
+  const stored = localStorage.getItem(`selectedLanguage_${id}`)
+  if (stored && stored !== 'en') return stored
+
+  // Otherwise follow the site-wide Google translation actually shown on screen.
+  return readGoogTransLanguage() || stored || 'en'
 }

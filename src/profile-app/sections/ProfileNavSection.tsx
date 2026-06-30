@@ -1,6 +1,7 @@
 'use client'
 
 import { getNavDisplayLabel } from '@/lib/vcardNavbar'
+import { useActiveSectionDataReporter } from '@/profile-app/hooks/useActiveSectionDataReporter'
 import { useProfileNavigation } from '@/profile-app/providers/ProfileNavigationProvider'
 import {
   renderProfileSection,
@@ -23,6 +24,8 @@ export function ProfileNavSection({ tabId, template = 'v3', homeHeroProps }: Pro
   const item = getNavItem(tabId)
   const contentKey = item?.profileContent ?? 'empty'
   const title = item ? getNavDisplayLabel(item) : tabId
+
+  useActiveSectionDataReporter(contentKey)
 
   return renderProfileSection({
     contentKey,

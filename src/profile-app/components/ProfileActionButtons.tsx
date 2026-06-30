@@ -24,8 +24,11 @@ function CtaButtonContent({ button, iconSize }: { button: ResolvedHomeCtaButton;
   const Icon = button.icon
   return (
     <>
-      <Icon size={iconSize} />
-      {button.label}
+      <Icon size={iconSize} className="shrink-0" />
+      {/* Clamp translated labels to one line so longer languages never break the button height. */}
+      <span className="min-w-0 truncate" title={button.label}>
+        {button.label}
+      </span>
     </>
   )
 }
@@ -38,7 +41,7 @@ function getCtaButtonClasses(
 ): string {
   const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[46px] min-h-[46px] w-full shrink-0 rounded-xl'
 
-  const base = `flex items-center justify-center gap-2 transition-all active:scale-95 ${size}`
+  const base = `flex min-w-0 items-center justify-center gap-2 overflow-hidden whitespace-nowrap transition-all active:scale-95 ${size}`
 
   if (template === 'v1') {
     return `${base} px-4 text-[11px] font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em] ${

@@ -5,7 +5,7 @@ import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
 import { mapNavBarLinks } from '@/lib/api/navbar/mapNavBarLinks'
 import { orderAndDedupeNavItems } from '@/lib/api/navbar/orderNavTabs'
 import { DEFAULT_PROFILE_SECTION } from '@/lib/profileRoutes'
-import { getNavItemById, type NavBarNavItem } from '@/lib/vcardNavbar'
+import { getNavItemById, type NavBarNavItem, type ProfileNavContentKey } from '@/lib/vcardNavbar'
 import { useNavTabsWithSectionData } from '@/profile-app/hooks/useNavTabsWithSectionData'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetNavBarLinksQuery } from '@/redux/api'
@@ -19,6 +19,8 @@ type ProfileNavigationContextValue = {
   goToSection: (tabId: string) => void
   getNavItem: (tabId: string) => NavBarNavItem | undefined
   isNavLoading: boolean
+  /** Called when an opened section confirms it has no published content. */
+  markSectionEmpty: (contentKey: ProfileNavContentKey) => void
 }
 
 const ProfileNavigationContext = createContext<ProfileNavigationContextValue | null>(null)
@@ -38,8 +40,8 @@ type Props = {
 
 /**
  * Client-side section nav — no URL / route changes.
- * Shows every active backend tab immediately; empty sections are removed in the
- * background after load (does not extend the preloader).
+ * Shows every active backend tab immediately. Section data is fetched via RTK
+ * only when a tab is opened; empty tabs are hidden after the user visits them.
  */
 export function ProfileNavigationProvider({
   children,
@@ -48,8 +50,7 @@ export function ProfileNavigationProvider({
   initialNavBarLinks = null,
 }: Props) {
   const dispatch = useAppDispatch()
-  const { settings: displaySettings, cardOwnerId, education, experience } = useProfileDisplay()
-  const profileId = cardOwnerId?.trim() ?? ''
+  const { settings: displaySettings, education, experience } = useProfileDisplay()
 
   const hasPrefetchedNavLinks = Boolean(initialNavBarLinks)
 
@@ -71,18 +72,15 @@ export function ProfileNavigationProvider({
     return mapNavBarLinks(navBarLinks)
   }, [navBarLinks, isNavError])
 
-  const { tabsWithData, isCheckingSectionData } = useNavTabsWithSectionData(navItems, {
-    profileId,
+  const { tabsWithData, markSectionEmpty } = useNavTabsWithSectionData(navItems, {
     education,
     experience,
   })
 
   const visibleTabs = useMemo(() => {
     if (!displaySettings.globalEnabled) return []
-    const allBackendTabs = orderAndDedupeNavItems(navItems)
-    if (isCheckingSectionData) return allBackendTabs
     return orderAndDedupeNavItems(tabsWithData)
-  }, [displaySettings.globalEnabled, isCheckingSectionData, navItems, tabsWithData])
+  }, [displaySettings.globalEnabled, tabsWithData])
 
   const isNavLoading = hasPrefetchedNavLinks ? false : isNavLinksLoading
 
@@ -115,8 +113,9 @@ export function ProfileNavigationProvider({
       goToSection,
       getNavItem,
       isNavLoading,
+      markSectionEmpty,
     }),
-    [navItems, visibleTabs, activeSectionId, goToSection, getNavItem, isNavLoading]
+    [navItems, visibleTabs, activeSectionId, goToSection, getNavItem, isNavLoading, markSectionEmpty]
   )
 
   return <ProfileNavigationContext.Provider value={value}>{children}</ProfileNavigationContext.Provider>

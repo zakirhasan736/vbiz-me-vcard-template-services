@@ -234,3 +234,61 @@ export function applyTranslation(langCode: string, fallback: string = I18N_CONFI
 export function getActiveLanguage(fallback: string = I18N_CONFIG.fallback): string {
   return readPersistedLanguage(resolveCardOwnerId(), fallback)
 }
+
+/** Tracks the last card we scoped to so we can detect a soft-nav card switch. */
+let lastScopedCardKey: string | null = null
+
+function urlSlug(): string | null {
+  if (typeof window === 'undefined') return null
+  const match = window.location.pathname.match(/^\/([^/]+)/)
+  return match?.[1] ? decodeURIComponent(match[1]) : null
+}
+
+/** True when this card has an explicit, non-English saved language preference. */
+function cardHasExplicitLanguage(cardKey: string | null, fallback: string): boolean {
+  const candidates = [cardKey, urlSlug()].filter((value): value is string => Boolean(value))
+  return candidates.some((key) => {
+    const saved = readPersistedLanguage(key, fallback)
+    return Boolean(saved) && saved !== fallback
+  })
+}
+
+/** A translation is currently rendered on screen (leftover from a previous card). */
+function hasActiveTranslation(): boolean {
+  if (typeof document === 'undefined') return false
+  if (getAllCookies('googtrans').length > 0) return true
+  return document.body.classList.contains('translated-ltr') || document.body.classList.contains('translated-rtl')
+}
+
+/**
+ * Reset translation to English when navigating (soft-nav) to a *different* card
+ * that has no explicit language choice. The `googtrans` cookie + Google Translate
+ * engine persist across client-side navigations, so a previously translated card
+ * leaves the next card translated on screen while its AI agent speaks English.
+ * A single clean reload guarantees both the screen and the agent are in English.
+ *
+ * Returns true when a reset reload was triggered (caller should stop init).
+ */
+export function maybeResetTranslationForNewCard(cardKey: string | null): boolean {
+  if (typeof window === 'undefined') return false
+
+  const previous = lastScopedCardKey
+  lastScopedCardKey = cardKey
+
+  // First mount (full page load) or same card → nothing to reset.
+  // (After our reload the module re-initializes, so `previous` is null and we
+  // never loop.)
+  if (previous === null || !cardKey || previous === cardKey) return false
+
+  const fallback = I18N_CONFIG.fallback
+
+  // Respect a card that the user explicitly set to a non-English language.
+  if (cardHasExplicitLanguage(cardKey, fallback)) return false
+
+  // Only reload if a stale translation is actually active.
+  if (!hasActiveTranslation()) return false
+
+  clearGoogleTransCookies()
+  reloadForTranslation()
+  return true
+}
