@@ -9,7 +9,7 @@ type V3SectionShellProps = {
 }
 
 export function V3SectionShell({ children, className = '' }: V3SectionShellProps) {
-  return <div className={`mx-auto w-full max-w-6xl px-4 pb-24 md:px-5 lg:px-6 ${className}`}>{children}</div>
+  return <div className={`mx-auto w-full max-w-6xl px-0 pb-24 md:px-5 lg:px-6 ${className}`}>{children}</div>
 }
 
 type V3SectionHeaderProps = {

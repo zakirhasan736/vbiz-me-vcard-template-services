@@ -9,13 +9,15 @@ import {
   type ResolvedHomeCtaButton,
 } from '@/profile-app/lib/profileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import type { ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import { useMemo } from 'react'
 
 type ProfileActionButtonsProps = {
-  variant: 'v2' | 'v3-mobile' | 'v3-desktop' | 'v1'
   theme?: string
   onAction?: (action: string) => void
   className?: string
+  /** Use when buttons sit in separate mobile/desktop layout slots (e.g. v3 hero). */
+  visibleOn?: 'both' | 'mobile' | 'desktop'
 }
 
 function CtaButtonContent({ button, iconSize }: { button: ResolvedHomeCtaButton; iconSize: number }) {
@@ -28,194 +30,114 @@ function CtaButtonContent({ button, iconSize }: { button: ResolvedHomeCtaButton;
   )
 }
 
-function V2CtaButton({
-  button,
-  accentColor,
-  fullWidth,
-  onClick,
-}: {
-  button: ResolvedHomeCtaButton
-  accentColor: string
-  fullWidth?: boolean
-  onClick: () => void
-}) {
-  const inlineStyle = buildHomeCtaInlineStyle(button, accentColor)
-  const isFilled = button.variant === 'accent' || button.variant === 'cta'
+function getCtaButtonClasses(
+  template: ProfileTemplateId,
+  theme: string | undefined,
+  isFilled: boolean,
+  isDesktop: boolean
+): string {
+  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[46px] min-h-[46px] w-full shrink-0 rounded-xl'
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-xs font-bold tracking-wide whitespace-nowrap shadow-sm transition-all active:scale-95 sm:text-sm md:h-[46px] md:py-0 ${
-        fullWidth ? 'w-full' : 'flex-1'
-      } ${
-        isFilled
-          ? 'text-zinc-950 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
-          : 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
-      }`}
-      style={inlineStyle}
-    >
-      <CtaButtonContent button={button} iconSize={16} />
-    </button>
-  )
-}
+  const base = `flex items-center justify-center gap-2 transition-all active:scale-95 ${size}`
 
-function V3CtaButton({
-  button,
-  theme,
-  desktop,
-  accentColor,
-  onClick,
-}: {
-  button: ResolvedHomeCtaButton
-  theme?: string
-  desktop?: boolean
-  accentColor: string
-  onClick: () => void
-}) {
-  const inlineStyle = buildHomeCtaInlineStyle(button, accentColor)
-  const isFilled = button.variant === 'accent' || button.variant === 'cta'
-
-  if (desktop) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-[13px] font-bold shadow-lg transition-all hover:scale-[1.02] ${
-          isFilled
-            ? 'font-extrabold text-black'
-            : theme === 'dark'
-              ? 'border-gold/40 bg-ocean-dark text-gold hover:border-gold hover:bg-ocean-light/50 border hover:shadow-[0_0_20px_rgba(238,214,119,0.6)]'
-              : 'border-gold hover:bg-gold/10 border bg-white text-zinc-900 hover:shadow-[0_0_18px_rgba(238,214,119,0.45)]'
-        }`}
-        style={inlineStyle}
-      >
-        <CtaButtonContent button={button} iconSize={16} />
-      </button>
-    )
+  if (template === 'v1') {
+    return `${base} px-4 text-[11px] font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em] ${
+      isFilled
+        ? 'text-black shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)]'
+        : theme === 'dark'
+          ? 'border-yellow-primary/30 text-yellow-primary hover:border-yellow-primary/50 border bg-gray-900/70'
+          : 'border border-black/10 bg-white text-gray-900 shadow-sm hover:bg-gray-50'
+    }`
   }
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex h-[40px] flex-1 flex-row items-center justify-center gap-2 rounded-xl text-[11px] font-bold transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_15px_rgba(238,214,119,0.65)] ${
-        isFilled
-          ? 'font-extrabold text-black shadow-lg'
-          : theme === 'dark'
-            ? 'border-gold/40 bg-ocean-dark hover:border-gold hover:bg-ocean-light/70 border text-white'
-            : 'border-gold hover:bg-gold/10 border bg-white text-zinc-900'
-      }`}
-      style={inlineStyle}
-    >
-      <CtaButtonContent button={button} iconSize={18} />
-    </button>
-  )
+  if (template === 'v2') {
+    return `${base} text-[13px] font-bold tracking-wide shadow-sm sm:text-sm ${
+      isFilled
+        ? 'text-zinc-950 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
+        : 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+    }`
+  }
+
+  // v3
+  return `${base} text-[13px] font-bold duration-300 hover:scale-[1.02] ${
+    isFilled
+      ? 'font-extrabold text-black shadow-lg'
+      : theme === 'dark'
+        ? 'border-gold/40 bg-ocean-dark hover:border-gold hover:bg-ocean-light/70 border text-white'
+        : 'border-gold hover:bg-gold/10 border bg-white text-zinc-900'
+  }`
 }
 
-function V1CtaButton({
+function HomeCtaButton({
   button,
-  accentColor,
+  template,
   theme,
+  accentColor,
+  isDesktop,
   onClick,
 }: {
   button: ResolvedHomeCtaButton
-  accentColor: string
+  template: ProfileTemplateId
   theme?: string
+  accentColor: string
+  isDesktop: boolean
   onClick: () => void
 }) {
-  const inlineStyle = buildHomeCtaInlineStyle(button, accentColor)
   const isFilled = button.variant === 'accent' || button.variant === 'cta'
-  const isDark = theme === 'dark'
+  const iconSize = template === 'v1' ? 18 : isDesktop ? 16 : 18
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group/btn flex w-full items-center justify-center gap-3 rounded-2xl px-6 py-4.5 text-[10px] font-black tracking-[0.2em] uppercase transition-all sm:text-xs ${
-        isFilled
-          ? 'text-black shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] hover:shadow-[0_25px_50px_-10px_rgba(234,179,8,0.6)]'
-          : isDark
-            ? 'border-yellow-primary/30 text-yellow-primary hover:border-yellow-primary/50 border bg-gray-900/70 shadow-none hover:bg-gray-900'
-            : 'border border-black/10 bg-white text-gray-900 shadow-sm hover:bg-gray-50'
-      }`}
-      style={inlineStyle}
+      className={getCtaButtonClasses(template, theme, isFilled, isDesktop)}
+      style={buildHomeCtaInlineStyle(button, accentColor)}
     >
-      <CtaButtonContent button={button} iconSize={18} />
+      <CtaButtonContent button={button} iconSize={iconSize} />
     </button>
   )
 }
 
-function renderV2Layout(layout: HomeCtaLayout, accentColor: string, onClick: (button: ResolvedHomeCtaButton) => void) {
+function CtaButtonGrid({
+  layout,
+  template,
+  theme,
+  accentColor,
+  isDesktop,
+  onClick,
+}: {
+  layout: HomeCtaLayout
+  template: ProfileTemplateId
+  theme?: string
+  accentColor: string
+  isDesktop: boolean
+  onClick: (button: ResolvedHomeCtaButton) => void
+}) {
+  const gap = template === 'v1' ? 'gap-4' : isDesktop ? 'gap-3' : 'gap-3'
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className={`flex gap-3 sm:gap-4 ${layout.row1.length === 1 ? '' : ''}`}>
+    <div className={`flex flex-col ${gap}`}>
+      <div className={layout.row1.length === 2 ? 'grid grid-cols-2 gap-3' : 'flex'}>
         {layout.row1.map((button) => (
-          <V2CtaButton
+          <HomeCtaButton
             key={button.key}
             button={button}
+            template={template}
+            theme={theme}
             accentColor={accentColor}
-            fullWidth={layout.row1.length === 1}
+            isDesktop={isDesktop}
             onClick={() => onClick(button)}
           />
         ))}
       </div>
-      <V2CtaButton button={layout.row2} accentColor={accentColor} fullWidth onClick={() => onClick(layout.row2)} />
-      <V2CtaButton button={layout.row3} accentColor={accentColor} fullWidth onClick={() => onClick(layout.row3)} />
-    </div>
-  )
-}
-
-function renderV3Layout(
-  layout: HomeCtaLayout,
-  accentColor: string,
-  onClick: (button: ResolvedHomeCtaButton) => void,
-  theme?: string,
-  desktop?: boolean,
-  className?: string
-) {
-  const Button = ({ button }: { button: ResolvedHomeCtaButton; fullWidth?: boolean }) => (
-    <V3CtaButton
-      button={button}
-      theme={theme}
-      desktop={desktop}
-      accentColor={accentColor}
-      onClick={() => onClick(button)}
-    />
-  )
-
-  return (
-    <div className={className}>
-      <div className={`${layout.row1.length === 2 ? 'grid grid-cols-2 gap-3' : 'flex'}`}>
-        {layout.row1.map((button) => (
-          <Button key={button.key} button={button} />
-        ))}
-      </div>
-      <div className={desktop ? 'mt-3' : 'mt-2'}>
-        <Button button={layout.row2} />
-      </div>
-      <div className={desktop ? 'mt-3' : 'mt-2'}>
-        <Button button={layout.row3} />
-      </div>
-    </div>
-  )
-}
-
-function renderV1Layout(
-  layout: HomeCtaLayout,
-  accentColor: string,
-  onClick: (button: ResolvedHomeCtaButton) => void,
-  theme?: string
-) {
-  const buttons = [...layout.row1, layout.row2, layout.row3]
-  return (
-    <div className="relative z-10 flex flex-col gap-4">
-      {buttons.map((button) => (
-        <V1CtaButton
+      {layout.stacked.map((button) => (
+        <HomeCtaButton
           key={button.key}
           button={button}
-          accentColor={accentColor}
+          template={template}
           theme={theme}
+          accentColor={accentColor}
+          isDesktop={isDesktop}
           onClick={() => onClick(button)}
         />
       ))}
@@ -223,42 +145,67 @@ function renderV1Layout(
   )
 }
 
-export function ProfileActionButtons({ variant, theme, onAction, className }: ProfileActionButtonsProps) {
+/** Shared home CTA grid for v1, v2, and v3 — mobile [2,1,1,1], desktop [2,1,1]. */
+export function ProfileActionButtons({ theme, onAction, className, visibleOn = 'both' }: ProfileActionButtonsProps) {
   const { t } = useTranslation()
-  const { actionButtons, design } = useProfileDisplay()
+  const { actionButtons, design, cardSlug } = useProfileDisplay()
   const accentColor = design?.accentColor ?? '#eab308'
+  const template = (design?.profileTemplate ?? 'v3') as ProfileTemplateId
 
-  const layout = useMemo(
-    () =>
-      resolveHomeCtaLayout({
-        actionButtons,
-        accentColor,
-        labels: {
-          save_my_info: t('hero.save_my_info', 'SAVE MY INFO'),
-          my_vcard: t('hero.my_vcard', 'MY VCARD'),
-          google_wallet: t('hero.save_to_google_wallet', 'SAVE TO GOOGLE WALLET'),
-          get_vcard_now: t('hero.get_your_vcard_now', 'GET YOUR VCARD NOW'),
-        },
-      }),
-    [actionButtons, accentColor, t]
+  const labels = useMemo(
+    () => ({
+      my_info: t('hero.my_info', 'MY INFO'),
+      save_my_info: t('hero.save_my_info', 'SAVE MY INFO'),
+      my_vcard: t('hero.my_vcard', 'MY VCARD'),
+      google_wallet: t('hero.save_to_google_wallet', 'SAVE TO GOOGLE WALLET'),
+      get_vcard_now: t('hero.get_your_vcard_now', 'GET YOUR VCARD NOW'),
+    }),
+    [t]
+  )
+
+  const desktopLayout = useMemo(
+    () => resolveHomeCtaLayout({ actionButtons, accentColor, labels }),
+    [actionButtons, accentColor, labels]
+  )
+
+  const mobileLayout = useMemo(
+    () => resolveHomeCtaLayout({ actionButtons, accentColor, includeMyInfo: true, labels }),
+    [actionButtons, accentColor, labels]
   )
 
   const click = (button: ResolvedHomeCtaButton) => {
-    handleHomeCtaClick(button.key, { onAction })
+    handleHomeCtaClick(button.key, { onAction, cardSlug })
   }
 
-  if (variant === 'v1') {
-    return <div className={className}>{renderV1Layout(layout, accentColor, click, theme)}</div>
-  }
+  const showMobile = visibleOn === 'both' || visibleOn === 'mobile'
+  const showDesktop = visibleOn === 'both' || visibleOn === 'desktop'
 
-  if (variant === 'v2') {
-    return <div className={className}>{renderV2Layout(layout, accentColor, click)}</div>
-  }
-
-  const containerClass =
-    variant === 'v3-desktop'
-      ? `flex w-full max-w-[420px] flex-col gap-3 xl:max-w-[480px] ${className ?? ''}`
-      : `relative z-20 mb-2 flex w-[90%] max-w-[340px] flex-col gap-2 shadow-xl ${className ?? ''}`
-
-  return renderV3Layout(layout, accentColor, click, theme, variant === 'v3-desktop', containerClass)
+  return (
+    <div className={className}>
+      {showMobile ? (
+        <div className={visibleOn === 'both' ? 'md:hidden' : undefined}>
+          <CtaButtonGrid
+            layout={mobileLayout}
+            template={template}
+            theme={theme}
+            accentColor={accentColor}
+            isDesktop={false}
+            onClick={click}
+          />
+        </div>
+      ) : null}
+      {showDesktop ? (
+        <div className={visibleOn === 'both' ? 'hidden md:block' : undefined}>
+          <CtaButtonGrid
+            layout={desktopLayout}
+            template={template}
+            theme={theme}
+            accentColor={accentColor}
+            isDesktop
+            onClick={click}
+          />
+        </div>
+      ) : null}
+    </div>
+  )
 }

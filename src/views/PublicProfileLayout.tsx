@@ -1,24 +1,36 @@
 'use client'
 
 import { useAppSelector } from '@/hooks/redux'
+import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
 import { CardScopeProvider } from '@/lib/card-scope'
 import { ProfileApp } from '@/profile-app/ProfileApp'
 import '@/profile-app/profile-app.css'
 import { vCardRecordToProfileProps } from '@/profile-app/profilePublicProps'
 import { useProfile } from '@/redux/features/myCard'
+import type { MyCardData } from '@interfaces/api/myCard'
 import { useMemo } from 'react'
 
 import type { LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
 
 type Props = {
   slug: string
+  /** Server-prefetched profile — skips client loading screen on first visit. */
+  initialMyCard?: MyCardData | null
+  /** Server-prefetched navbar catalog. */
+  initialNavBarLinks?: NavBarLinksData | null
   liveAgentCardData?: LiveAgentCardData
   liveAgentSystemPrompt?: string
 }
 
 /** Stable per-slug layout. Cover video is detached in `ProfileApp` (`ProfileCoverHost`). */
-export default function PublicProfileLayout({ slug, liveAgentCardData, liveAgentSystemPrompt }: Props) {
-  const { record, isLoading, isError, error, actionButtons } = useProfile(slug)
+export default function PublicProfileLayout({
+  slug,
+  initialMyCard,
+  initialNavBarLinks,
+  liveAgentCardData,
+  liveAgentSystemPrompt,
+}: Props) {
+  const { record, isLoading, isError, error, actionButtons } = useProfile(slug, { initialMyCard })
   const designSettings = useAppSelector((s) => s.designSettings)
 
   const profileProps = useMemo(
@@ -55,6 +67,7 @@ export default function PublicProfileLayout({ slug, liveAgentCardData, liveAgent
       <ProfileApp
         {...profileProps}
         profileSlug={slug}
+        initialNavBarLinks={initialNavBarLinks}
         liveAgentCardData={liveAgentCardData}
         liveAgentSystemPrompt={liveAgentSystemPrompt}
       />

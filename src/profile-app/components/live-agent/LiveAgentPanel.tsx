@@ -66,6 +66,8 @@ export type LiveAgentPanelProps = {
   embedded?: boolean
   /** Card theme accent — falls back to `--vbiz-accent` on the profile root. */
   accentColor?: string
+  /** Overrides the floating wrapper position classes (e.g. per-template placement). */
+  wrapperClassName?: string
 }
 
 const DEFAULT_CARD = DEFAULT_LIVE_AGENT_CARD
@@ -77,6 +79,7 @@ export function LiveAgentPanel({
   readyToConnect = true,
   embedded = false,
   accentColor = 'var(--vbiz-accent, #ebd675)',
+  wrapperClassName,
 }: LiveAgentPanelProps) {
   const [panelDismissed, setPanelDismissed] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -475,7 +478,9 @@ export function LiveAgentPanel({
     <motion.div
       drag
       dragMomentum={false}
-      className={`${embedded ? 'absolute' : 'fixed'} pointer-events-none right-4 bottom-4 z-100 flex flex-col items-end gap-2 md:right-6 md:bottom-6 md:gap-4 lg:right-10 lg:bottom-10`}
+      className={`${embedded ? 'absolute' : 'fixed'} pointer-events-none z-100 flex flex-col items-end gap-2 md:gap-4 ${
+        wrapperClassName ?? 'right-4 bottom-24 md:right-6 md:bottom-6 lg:right-10 lg:bottom-10'
+      }`}
     >
       <AnimatePresence>
         {isOpen && (
@@ -529,57 +534,6 @@ export function LiveAgentPanel({
                 <span>{error}</span>
               </div>
             )}
-
-            <div className="relative z-10 w-full">
-              <input
-                type="text"
-                placeholder="Type a command..."
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none md:px-4 md:py-3 md:text-sm"
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = accentColor
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = ''
-                }}
-                onKeyDown={async (e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim() !== '') {
-                    const cmd = e.currentTarget.value.trim()
-                    e.currentTarget.value = ''
-                    try {
-                      const res = await fetch(LIVE_AGENT_CONFIG.commandApiPath, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ command: cmd }),
-                      })
-                      const data = await res.json()
-
-                      // Speak response optionally or show toast
-                      if (data.action === 'CALL') {
-                        const phoneDigits = cardData.phone?.replace(/[^\d+]/g, '') ?? ''
-                        window.location.href = phoneDigits ? `tel:${phoneDigits}` : `tel:+18607709893`
-                      } else if (data.action === 'EMAIL') {
-                        window.location.href = cardData.email
-                          ? `mailto:${cardData.email}`
-                          : `mailto:mcasanova@vbizme.com`
-                      } else if (data.action === 'OPEN_VIDEO') {
-                        window.open(
-                          `https://www.youtube.com/results?search_query=${encodeURIComponent(data.target || 'mc intro videos')}`,
-                          '_blank'
-                        )
-                      } else if (data.action === 'SEARCH_WEB') {
-                        window.open(`https://google.com/search?q=${encodeURIComponent(data.target || cmd)}`, '_blank')
-                      } else if (data.action === 'OPEN_NOTEPAD') {
-                        window.dispatchEvent(new CustomEvent(LIVE_AGENT_CONFIG.events.openNotepad))
-                      }
-
-                      alert(data.responseMessage)
-                    } catch (err) {
-                      console.error(err)
-                    }
-                  }
-                }}
-              />
-            </div>
 
             <div className="z-10 mt-1 flex items-center justify-center gap-2 md:mt-2 md:gap-3">
               {isConnected ? (

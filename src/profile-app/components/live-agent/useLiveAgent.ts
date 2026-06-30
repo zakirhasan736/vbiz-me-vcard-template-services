@@ -1,6 +1,7 @@
 'use client'
 
 import { getGeminiApiKey } from '@/lib/gemini'
+import { LIVE_AGENT_CONFIG } from '@/lib/liveAgent/config'
 import {
   buildLiveAgentSystemPrompt,
   DEFAULT_LIVE_AGENT_CARD,
@@ -176,6 +177,7 @@ export function useLiveAgent({
   const micFallbackTimerRef = useRef<number | null>(null)
   const agentSilenceTimerRef = useRef<number | null>(null)
   const sessionWakeTimerRef = useRef<number | null>(null)
+  const scheduleSessionWakeRef = useRef<(() => void) | null>(null)
   const lastUserSpeechAtRef = useRef(0)
   const lastAgentAudioAtRef = useRef(0)
   const lastNudgeAtRef = useRef(0)
@@ -306,9 +308,13 @@ export function useLiveAgent({
         )
       }
 
-      scheduleSessionWake()
+      scheduleSessionWakeRef.current?.()
     }, SESSION_WAKE_INTERVAL_MS)
   }, [clearSessionWakeTimer, sendRecoveryNudge])
+
+  useEffect(() => {
+    scheduleSessionWakeRef.current = scheduleSessionWake
+  }, [scheduleSessionWake])
 
   const disconnect = useCallback(() => {
     connectionGenRef.current += 1
@@ -499,7 +505,7 @@ export function useLiveAgent({
               },
             },
             speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } },
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: LIVE_AGENT_CONFIG.voice } },
             },
             systemInstruction: systemInstructionRef.current,
             tools: buildLiveAgentTools(),

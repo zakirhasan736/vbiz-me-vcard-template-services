@@ -2,7 +2,7 @@ import { mapMyCardToVCardRecord } from '@/lib/api/myCard/mapMyCard'
 import { myCardApi } from '@/redux/api/myCardApi'
 import type { VCardRecord } from '@/types/vcard'
 import type { MyCardData } from '@interfaces/api/myCard'
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 export type MyCardCacheEntry = {
   slug: string
@@ -43,6 +43,13 @@ const myCardSlice = createSlice({
       state.activeSlug = null
       state.bySlug = {}
     },
+    /** Hydrate from server-prefetched payload without a network round-trip. */
+    hydrateMyCard(state, action: PayloadAction<{ slug: string; raw: MyCardData }>) {
+      const slug = action.payload.slug.trim()
+      if (!slug) return
+      state.activeSlug = slug
+      state.bySlug[slug] = cacheEntry(slug, action.payload.raw)
+    },
   },
   extraReducers: (builder) => {
     builder.addMatcher(myCardApi.endpoints.getMyCardBySlug.matchFulfilled, (state, action) => {
@@ -54,5 +61,5 @@ const myCardSlice = createSlice({
   },
 })
 
-export const { setActiveProfileSlug, clearMyCardCache } = myCardSlice.actions
+export const { setActiveProfileSlug, clearMyCardCache, hydrateMyCard } = myCardSlice.actions
 export default myCardSlice.reducer

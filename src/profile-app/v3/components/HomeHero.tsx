@@ -3,10 +3,12 @@
 import { LANGUAGE_LABELS } from '@/lib/i18n/translation'
 import { useTranslation } from '@/lib/i18n/translationData'
 import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
+import { CustomVideoPlayer } from '@/profile-app/components/CustomVideoPlayer'
 import { ProfileActionButtons } from '@/profile-app/components/ProfileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import { openVbizmeHome, openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
 import {
-  buildProfileContactItems,
+  buildBentoContactItems,
   cleanProfileFieldValue,
   formatProfileViewCount,
 } from '@/profile-app/lib/profileHomeData'
@@ -23,11 +25,8 @@ import {
   Linkedin,
   MessageCircle,
   Moon,
-  MoreVertical,
-  Play,
   Share2,
   Sun,
-  VolumeX,
   Youtube,
   type LucideIcon,
 } from 'lucide-react'
@@ -66,14 +65,12 @@ const V3_SOCIAL_ITEMS: V3SocialItem[] = [
   { label: 'Website', title: 'Website', icon: Globe },
 ]
 
-function contactColSpan(label: string): 1 | 2 {
-  return label === 'Email' || label === 'Address' ? 2 : 1
-}
-
 function ProfileMedia({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const encoded = encodeMediaUrl(src)
   if (isVideoUrl(encoded)) {
-    return <video src={encoded} autoPlay loop muted playsInline className={className} />
+    return (
+      <CustomVideoPlayer src={encoded} imageAlt={alt} controlsMode="owner" showSeekBar={false} className={className} />
+    )
   }
   return <img src={encoded} alt={alt} className={className} />
 }
@@ -100,14 +97,7 @@ export const HomeHero: React.FC<{
   const designationLine =
     isVisible('MyInfo Designation') && personal.designation?.trim() ? cleanProfileFieldValue(personal.designation) : ''
 
-  const contactItems = useMemo(
-    () =>
-      buildProfileContactItems(personal, isVisible, field).map((item) => ({
-        ...item,
-        colSpan: contactColSpan(item.label),
-      })),
-    [personal, isVisible, field]
-  )
+  const contactItems = useMemo(() => buildBentoContactItems(personal, isVisible, field), [personal, isVisible, field])
 
   const visibleSocials = useMemo(
     () => filterSocialItemsWithLinks(V3_SOCIAL_ITEMS, socialHref, personal.whatsapp),
@@ -145,10 +135,10 @@ export const HomeHero: React.FC<{
             loop
             muted
             playsInline
-            className="absolute inset-0 aspect-video h-full w-full object-cover opacity-[0.78] mix-blend-screen md:aspect-auto dark:mix-blend-lighten"
+            className="absolute inset-0 aspect-video h-full w-full object-cover opacity-90 mix-blend-normal md:aspect-auto dark:opacity-[0.78] dark:mix-blend-lighten"
           />
           <div
-            className={`absolute inset-0 bg-linear-to-b ${theme === 'dark' ? 'from-[#030914]/15 via-[#031327]/30 to-[#031327]' : 'from-white/10 via-white/20 to-white'}`}
+            className={`absolute inset-0 bg-linear-to-b ${theme === 'dark' ? 'from-[#030914]/15 via-[#031327]/30 to-[#031327]' : 'from-white/5 via-white/10 to-white'}`}
           />
         </div>
       </div>
@@ -158,7 +148,13 @@ export const HomeHero: React.FC<{
           <div className="relative h-0 w-full max-w-[1032px]">
             <div className="pointer-events-auto absolute top-8 right-2 flex flex-col gap-3 md:right-6">
               {showViewCounter && (
-                <div className="group relative transition-transform hover:scale-105" onClick={() => triggerHaptic(10)}>
+                <div
+                  className="group relative transition-transform hover:scale-105"
+                  onClick={() => {
+                    triggerHaptic(10)
+                    openVbizmeLogin()
+                  }}
+                >
                   <div className="absolute -top-2 -right-2 z-10 rounded-full border border-red-800 bg-[#e3342f] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                     {viewCountLabel}
                   </div>
@@ -170,7 +166,10 @@ export const HomeHero: React.FC<{
                 </div>
               )}
               <div
-                onClick={() => triggerHaptic(10)}
+                onClick={() => {
+                  triggerHaptic(10)
+                  openVbizmeHome()
+                }}
                 className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
               >
                 <Globe size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
@@ -213,7 +212,7 @@ export const HomeHero: React.FC<{
         </div>
 
         {/* Mobile View */}
-        <div className="relative flex flex-1 flex-col items-center pt-[25px] pb-4 md:hidden">
+        <div className="relative flex flex-1 flex-col items-center pt-[25px] pb-[70px] md:hidden">
           {visibleSocials.length > 0 && (
             <div className="absolute top-8 left-2 z-30 flex flex-col gap-2">
               {visibleSocials.map((item) => {
@@ -240,20 +239,6 @@ export const HomeHero: React.FC<{
               alt={personal.fullName ? `${personal.fullName} profile` : 'Profile'}
               className="h-full w-full object-cover"
             />
-            {profileIsVideo && (
-              <div className="absolute right-0 bottom-2 left-0 px-3">
-                <div className="mb-2 h-1 w-full rounded-full bg-white/30">
-                  <div className="h-full w-1/3 rounded-full bg-white" />
-                </div>
-                <div className="flex items-center justify-between text-white drop-shadow-md">
-                  <Play size={18} fill="currentColor" />
-                  <div className="flex gap-2">
-                    <VolumeX size={18} />
-                    <MoreVertical size={18} />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="relative z-20 mt-1.5 flex justify-center gap-2">
@@ -274,7 +259,7 @@ export const HomeHero: React.FC<{
               className={`group relative flex items-center justify-center rounded-xl border p-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_16px_rgba(238,214,119,0.75)] ${theme === 'dark' ? 'border-gold/45 bg-ocean-dark/60 hover:border-gold hover:bg-ocean-light/60 text-white' : 'border-gold/50 hover:border-gold hover:bg-gold/20 bg-white text-zinc-950'}`}
               onClick={() => {
                 triggerHaptic(10)
-                onAction?.('notification')
+                onAction?.('settings')
               }}
             >
               <Bell size={20} />
@@ -313,7 +298,12 @@ export const HomeHero: React.FC<{
             </p>
           )}
 
-          <ProfileActionButtons variant="v3-mobile" theme={theme} onAction={onAction} />
+          <ProfileActionButtons
+            theme={theme}
+            onAction={onAction}
+            visibleOn="mobile"
+            className="relative z-20 mb-2 flex w-[90%] max-w-[340px] shrink-0 flex-col gap-3 shadow-xl"
+          />
         </div>
 
         {/* Desktop View */}
@@ -377,7 +367,7 @@ export const HomeHero: React.FC<{
                   className={`group relative flex items-center justify-center rounded-full border p-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_16px_rgba(238,214,119,0.75)] ${theme === 'dark' ? 'border-gold/35 bg-ocean-dark/65 hover:border-gold hover:bg-ocean-light/65 text-white' : 'border-gold/45 hover:border-gold hover:bg-gold/20 bg-white text-zinc-950'}`}
                   onClick={() => {
                     triggerHaptic(10)
-                    onAction?.('notification')
+                    onAction?.('settings')
                   }}
                 >
                   <Bell size={18} />
@@ -419,7 +409,12 @@ export const HomeHero: React.FC<{
 
           <div className="mt-auto mb-16 flex w-full items-end justify-between xl:mb-20">
             <div className="flex w-full items-end justify-between gap-12 xl:gap-24">
-              <ProfileActionButtons variant="v3-desktop" theme={theme} onAction={onAction} />
+              <ProfileActionButtons
+                theme={theme}
+                onAction={onAction}
+                visibleOn="desktop"
+                className="flex w-full max-w-[420px] flex-col gap-3 xl:max-w-[480px]"
+              />
 
               {contactItems.length > 0 && (
                 <div className="mt-auto grid max-w-[480px] flex-1 shrink-0 grid-cols-2 gap-x-3 gap-y-2">

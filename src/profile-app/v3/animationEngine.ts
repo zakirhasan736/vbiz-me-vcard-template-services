@@ -1,5 +1,13 @@
 export type V3AnimationPreset =
-  'dynamic' | 'flip-left' | 'flip-right' | 'slide-left' | 'slide-right' | 'slide-top' | 'slide-bottom' | 'fade' | 'zoom'
+  | 'dynamic'
+  | 'flip-left'
+  | 'flip-right'
+  | 'slide-left'
+  | 'slide-right'
+  | 'slide-top'
+  | 'slide-bottom'
+  | 'fade'
+  | 'zoom'
 
 export type V3AnimationProps = {
   initial: Record<string, number | string>
@@ -7,6 +15,14 @@ export type V3AnimationProps = {
   exit: Record<string, number | string>
   transition: Record<string, unknown>
   style?: Record<string, string | number>
+}
+
+/** No-op animation — used on first paint to avoid blocking content with motion work. */
+export const STATIC_ANIMATION_PROPS: V3AnimationProps = {
+  initial: { opacity: 1 },
+  animate: { opacity: 1 },
+  exit: { opacity: 1 },
+  transition: { duration: 0 },
 }
 
 export function getV3AnimationProps(

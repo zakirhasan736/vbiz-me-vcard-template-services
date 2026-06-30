@@ -22,7 +22,7 @@ export const STATIC_PROFILE_THEMES: Record<ProfileTemplateId, VCardTheme & { acc
     primaryColor: '#eed677',
     accentColor: '#eed677',
     accentDark: '#cca43b',
-    darkMode: false,
+    darkMode: true,
     fontFamily: 'inter',
   },
 }

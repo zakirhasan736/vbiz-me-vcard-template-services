@@ -15,7 +15,11 @@ export type ResolvedLiveAgentPrompt = {
 export async function resolveLiveAgentPrompt(slug: string): Promise<ResolvedLiveAgentPrompt | null> {
   const profileId = await fetchMyCardProfileId(slug)
   if (!profileId) return null
+  return resolveLiveAgentPromptFromProfileId(profileId)
+}
 
+/** Builds live agent prompt when profile id is already known (avoids duplicate slug fetch). */
+export async function resolveLiveAgentPromptFromProfileId(profileId: number): Promise<ResolvedLiveAgentPrompt | null> {
   const cardData = await fetchProfileAiData(profileId)
   if (!cardData) return null
 

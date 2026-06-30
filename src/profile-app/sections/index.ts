@@ -6,5 +6,5 @@ export {
   V3SectionShell,
 } from './primitives/V3SectionStates'
 export { ProfileNavSection } from './ProfileNavSection'
-export { renderProfileSection, type ProfileTemplateVariant } from './sectionRegistry'
+export { renderProfileSection, type HomeHeroProps, type ProfileTemplateVariant } from './sectionRegistry'
 export { useSectionAccent } from './useSectionAccent'

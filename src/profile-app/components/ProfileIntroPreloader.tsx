@@ -1,10 +1,15 @@
 'use client'
 
-import { Volume2, VolumeX } from 'lucide-react'
+import { Loader2, Volume2, VolumeX } from 'lucide-react'
+import { motion } from 'motion/react'
 import { type MouseEvent, useEffect, useRef, useState } from 'react'
 import { ProfileIntroVideo } from './ProfileIntroVideo'
 
 const DEFAULT_UNMUTE_VOLUME = 0.5
+/** Require nearly full buffer before revealing (smooth playback, no mid-stream stalls). */
+const READY_BUFFER_FRACTION = 0.98
+/** Safety net for very slow networks only — prefer full buffer / canplaythrough. */
+const READY_MAX_WAIT_MS = 12000
 
 type Props = {
   videoUrl: string
@@ -17,6 +22,8 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isMuted, setIsMuted] = useState(true)
   const [volume, setVolume] = useState(0)
+  const [ready, setReady] = useState(false)
+  const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
     const html = document.documentElement
@@ -32,6 +39,60 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
       body.style.overflow = prevBodyOverflow
     }
   }, [])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setReady(false)
+      setRevealed(false)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [src])
+
+  // Buffer fully, then reveal and play — avoids flicker from partial loads.
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+
+    let done = false
+    const markReady = () => {
+      if (done) return
+      done = true
+      setReady(true)
+    }
+
+    const onProgress = () => {
+      try {
+        if (el.duration > 0 && el.buffered.length > 0) {
+          const bufferedEnd = el.buffered.end(el.buffered.length - 1)
+          if (bufferedEnd / el.duration >= READY_BUFFER_FRACTION) markReady()
+        }
+      } catch {
+        /* buffered ranges not ready yet */
+      }
+    }
+
+    el.addEventListener('canplaythrough', markReady)
+    el.addEventListener('progress', onProgress)
+    el.addEventListener('loadeddata', onProgress)
+    const timer = window.setTimeout(markReady, READY_MAX_WAIT_MS)
+
+    return () => {
+      el.removeEventListener('canplaythrough', markReady)
+      el.removeEventListener('progress', onProgress)
+      el.removeEventListener('loadeddata', onProgress)
+      window.clearTimeout(timer)
+    }
+  }, [src])
+
+  useEffect(() => {
+    if (!ready) return
+    const el = videoRef.current
+    if (!el) return
+
+    void el.play().catch(() => undefined)
+    const revealTimer = window.setTimeout(() => setRevealed(true), 50)
+    return () => window.clearTimeout(revealTimer)
+  }, [ready])
 
   const applyVolume = (nextVolume: number) => {
     const el = videoRef.current
@@ -77,26 +138,31 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
   const volumePercent = Math.round(volume * 100)
 
   return (
-    <div className="fixed inset-0 z-200 overflow-hidden bg-black/95 text-white">
-      <div className="flex h-full w-full items-center justify-center px-4">
-        <ProfileIntroVideo
-          ref={videoRef}
-          src={src}
-          className="max-h-[72vh] w-full max-w-3xl rounded-2xl border border-white/10 bg-black shadow-2xl"
-          onEnded={onSkip}
-        />
-      </div>
+    <motion.div
+      className="fixed inset-0 z-200 overflow-hidden bg-black text-white"
+      style={{ width: '100dvw', height: '100dvh' }}
+      initial={false}
+      animate={{ clipPath: revealed ? 'inset(0 0 0% 0)' : 'inset(0 0 100% 0)' }}
+      transition={{ duration: revealed ? 0.65 : 0, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <ProfileIntroVideo
+        ref={videoRef}
+        src={src}
+        shouldPlay={ready}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 md:object-contain ${
+          revealed ? 'opacity-100' : 'opacity-0'
+        }`}
+        onEnded={onSkip}
+      />
 
-      <div className="absolute bottom-6 left-6 z-10 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={toggleMute}
-          aria-label={isMuted ? 'Unmute intro video' : 'Mute intro video'}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20"
-        >
-          {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
+      {!revealed ? (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
+          <Loader2 size={32} className="animate-spin text-white/70" />
+          <p className="text-xs font-medium tracking-wide text-white/50">Loading intro…</p>
+        </div>
+      ) : null}
 
+      <div className="absolute right-4 bottom-4 z-20 flex items-center gap-3 sm:right-6 sm:bottom-6">
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${isMuted ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100 sm:max-w-48'}`}
           aria-hidden={isMuted}
@@ -131,12 +197,22 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
 
         <button
           type="button"
+          onClick={toggleMute}
+          disabled={!revealed}
+          aria-label={isMuted ? 'Unmute intro video' : 'Mute intro video'}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 disabled:opacity-40"
+        >
+          {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+        </button>
+
+        <button
+          type="button"
           onClick={onSkip}
-          className="shrink-0 rounded-full border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
+          className="shrink-0 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
         >
           {skipLabel}
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }

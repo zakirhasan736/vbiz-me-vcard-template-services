@@ -1,3 +1,5 @@
+import type { BackendNotificationPreferences } from '@/lib/push/preferenceMapping'
+
 export type NotificationPreferenceKey = 'contact' | 'video' | 'blog' | 'company' | 'services'
 
 export type NotificationPreferences = Record<NotificationPreferenceKey, boolean>
@@ -21,10 +23,29 @@ export type PushSubscriptionPayload = {
   keys: PushSubscriptionKeys
 }
 
+export type PushSubscriptionStatusResponse = {
+  success?: boolean
+  subscribed: boolean
+  preferences: Partial<BackendNotificationPreferences> | null
+  message?: string
+}
+
+export type PushPreferencesUpdateResponse = {
+  success?: boolean
+  message?: string
+  preferences?: Partial<BackendNotificationPreferences>
+}
+
+export type UpdatePreferencesResult = {
+  message: string
+  preferences: BackendNotificationPreferences
+}
+
 export type PushStatusResponse = {
   following: boolean
   permission: NotificationPermission | 'unsupported'
   preferences: NotificationPreferences | null
+  backendPreferences: BackendNotificationPreferences | null
   endpoint: string | null
 }
 

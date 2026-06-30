@@ -46,6 +46,7 @@ export type ProfileDisplayContextValue = {
   homeMedia: ReturnType<typeof getHomeMediaUrls>
   embedded: boolean
   cardOwnerId?: string
+  cardSlug?: string
   profileViews: number
   actionButtons?: MyCardActionButtons | null
 }
@@ -86,6 +87,7 @@ const defaultValue: ProfileDisplayContextValue = {
   homeMedia: getHomeMediaUrls(resolveDisplaySettings(), FALLBACK_PERSONAL),
   embedded: false,
   cardOwnerId: undefined,
+  cardSlug: undefined,
   profileViews: 0,
   actionButtons: null,
 }
@@ -109,6 +111,7 @@ export function ProfileDisplayProvider({
   /** Editor phone preview: show all sections regardless of Card Settings visibility. */
   embedded = false,
   cardOwnerId,
+  cardSlug,
   profileViews = 0,
   actionButtons = null,
 }: {
@@ -126,6 +129,7 @@ export function ProfileDisplayProvider({
   avatarMediaUrl?: string
   embedded?: boolean
   cardOwnerId?: string
+  cardSlug?: string
   profileViews?: number
   actionButtons?: MyCardActionButtons | null
 }) {
@@ -163,6 +167,7 @@ export function ProfileDisplayProvider({
       })(),
       embedded,
       cardOwnerId,
+      cardSlug,
       profileViews,
       actionButtons,
     }
@@ -180,6 +185,7 @@ export function ProfileDisplayProvider({
     avatarMediaUrl,
     embedded,
     cardOwnerId,
+    cardSlug,
     profileViews,
     actionButtons,
   ])

@@ -4,10 +4,8 @@
  * Shared Public Cards / Global Connections directory.
  * Used by v1, v2, and v3 profile shells — self-contained layout that fits any parent.
  */
-import { mapPublicCardProfileUrl } from '@/lib/api/publicCards/mapPublicCards'
-import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
+import { mapPublicCardProfileUrl, type PublicCardListItem } from '@/lib/api/publicCards/mapPublicCards'
 import { usePublicCardsDirectory } from '@/profile-app/hooks/usePublicCardsDirectory'
-import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import type { PublicCardsFilterOption } from '@interfaces/api/publicCards'
 import {
   Briefcase,
@@ -20,7 +18,6 @@ import {
   Monitor,
   RotateCcw,
   Search,
-  Share2,
   SlidersHorizontal,
   Users,
   X,
@@ -29,7 +26,8 @@ import {
 import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 function findOptionName(options: PublicCardsFilterOption[] | undefined, id: number | null): string | null {
   if (id == null) return null
@@ -58,26 +56,102 @@ function DesktopFilterSelect({ value, onChange, options, placeholder, Icon, disa
           const next = e.target.value
           onChange(next ? Number(next) : null)
         }}
-        className="h-full w-full cursor-pointer appearance-none rounded-xl border border-zinc-800 bg-zinc-950/60 py-3.5 pr-10 pl-11 text-xs font-semibold text-zinc-100 shadow-sm transition-all hover:border-zinc-700 hover:bg-zinc-900/80 focus:border-[#eab308] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 lg:text-sm"
+        className="h-full w-full cursor-pointer appearance-none rounded-xl border border-zinc-300 bg-white py-3 pr-10 pl-11 text-xs font-semibold text-zinc-900 shadow-sm transition-all hover:border-zinc-400 hover:bg-zinc-50 focus:border-[#eab308] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 lg:text-sm dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-100 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80"
       >
-        <option value="" className="bg-zinc-950 text-zinc-400">
+        <option value="" className="bg-white text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
           {placeholder}
         </option>
         {options.map((opt) => (
-          <option key={opt.id} value={opt.id} className="bg-zinc-950 text-zinc-100">
+          <option key={opt.id} value={opt.id} className="bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
             {opt.name}
           </option>
         ))}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500 transition-colors group-hover:text-zinc-300">
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300">
         <ChevronDown size={14} />
       </div>
     </div>
   )
 }
 
+type MobileFilterSelectProps = DesktopFilterSelectProps & { label: string }
+
+function MobileFilterSelect({ label, value, onChange, options, placeholder, Icon, disabled }: MobileFilterSelectProps) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">{label}</label>
+      <div className="group relative w-full">
+        <div className="pointer-events-none absolute top-1/2 left-4 z-10 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300">
+          <Icon size={15} />
+        </div>
+        <select
+          value={value ?? ''}
+          disabled={disabled}
+          onChange={(e) => {
+            const next = e.target.value
+            onChange(next ? Number(next) : null)
+          }}
+          className="w-full cursor-pointer appearance-none rounded-xl border border-zinc-800 bg-zinc-900/60 py-3 pr-10 pl-11 text-xs font-semibold text-zinc-100 shadow-sm transition-all focus:border-[#eab308] focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <option value="" className="bg-zinc-950 text-zinc-400">
+            {placeholder}
+          </option>
+          {options.map((opt) => (
+            <option key={opt.id} value={opt.id} className="bg-zinc-950 text-zinc-100">
+              {opt.name}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
+          <ChevronDown size={14} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Shared card shell — mobile uses rounded-xl, larger screens use a softer rounded-3xl. */
+const CONNECTION_CARD_SHELL =
+  'group/card relative flex flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-900 shadow-xl transition-colors duration-300 md:rounded-3xl'
+
+/** Single card design shared by both the grid and the 3D slider. */
+function ConnectionCardInner({ card }: { card: PublicCardListItem }) {
+  return (
+    <>
+      {/* Photo */}
+      <div className="relative min-h-0 flex-1 overflow-hidden bg-zinc-950">
+        <div className="absolute inset-0 z-10 bg-linear-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
+        <Image
+          src={card.img}
+          alt={card.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover grayscale-15 transition-all duration-700 group-hover/card:scale-105 group-hover/card:grayscale-0"
+        />
+      </div>
+
+      {/* Details */}
+      <div className="relative z-20 flex shrink-0 flex-col items-center gap-2.5 bg-zinc-900 px-4 pt-3 pb-4 text-center md:gap-3 md:px-5 md:pb-5">
+        <div className="w-full">
+          <h3 className="w-full truncate text-base font-bold text-zinc-100 md:text-lg" title={card.name}>
+            {card.name}
+          </h3>
+          <div className="mt-1.5 inline-flex max-w-full items-center gap-1.5 truncate rounded-md border border-zinc-800/80 bg-zinc-950/50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-[#eab308] uppercase">
+            <Briefcase size={10} /> {card.profession}
+          </div>
+        </div>
+        <Link
+          href={mapPublicCardProfileUrl(card.slug)}
+          className="flex w-full items-center justify-center rounded-xl border border-zinc-700/80 bg-zinc-800 py-2.5 text-xs font-bold text-zinc-100 shadow-sm transition-all group-hover/card:bg-zinc-100 group-hover/card:text-zinc-950 hover:bg-zinc-700 active:scale-95"
+        >
+          View Profile
+        </Link>
+      </div>
+    </>
+  )
+}
+
 export const PublicCardsSection = () => {
-  const { homeMedia, isVisible } = useProfileDisplay()
   const {
     cards,
     dropdowns,
@@ -96,27 +170,29 @@ export const PublicCardsSection = () => {
     loadMore,
   } = usePublicCardsDirectory()
 
-  const bannerVideoSrc = useMemo(() => {
-    const raw = homeMedia.bgMedia?.trim() ?? ''
-    if (!raw || !isVisible('Background Video/Image')) return ''
-    const encoded = encodeMediaUrl(raw)
-    return isVideoUrl(encoded) ? encoded : ''
-  }, [homeMedia.bgMedia, isVisible])
-
   const [viewMode, setViewMode] = useState<'grid' | 'slider'>('slider')
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const serviceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    handleResize()
+    const timer = window.setTimeout(handleResize, 0)
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   useEffect(() => {
@@ -183,37 +259,27 @@ export const PublicCardsSection = () => {
   return (
     <div className="vbiz-public-cards-section isolate w-full max-w-full overflow-hidden pb-20">
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
-        {/* Header Card / Cinematic Banner */}
-        <div className="bg-ocean-deep group relative flex min-h-[40vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl sm:min-h-[45vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[50vh] dark:border-[#eab308]/20">
-          {/* Background Video — only when profile has a background video configured */}
+        {/* Header Card / Banner — theme-aware solid background (no video) */}
+        <div className="group dark:bg-ocean-deep relative flex min-h-[40vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-200 bg-zinc-50 shadow-xl sm:min-h-[44vh] md:min-h-[38vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[38vh] dark:border-[#eab308]/20">
+          {/* Accessible background — subtle accent wash, adapts to light/dark theme */}
           <div className="absolute inset-0 z-0 h-full w-full">
-            {bannerVideoSrc ? (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                src={bannerVideoSrc}
-                className="h-full w-full scale-105 object-cover opacity-40 mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110"
-              />
-            ) : null}
-            <div className="from-ocean-deep via-ocean-deep/85 to-ocean-deep/30 absolute inset-0 bg-linear-to-t" />
-            <div className="from-ocean-deep via-ocean-deep/60 absolute inset-0 hidden bg-linear-to-r to-transparent md:block md:w-2/3" />
+            <div className="dark:from-ocean-deep dark:via-ocean-deep/85 dark:to-ocean-deep/30 absolute inset-0 bg-linear-to-t from-white via-white/85 to-white/40" />
+            <div className="dark:from-ocean-deep dark:via-ocean-deep/60 absolute inset-0 hidden bg-linear-to-r from-[#eab308]/10 to-transparent md:block md:w-2/3" />
           </div>
 
           {/* View Toggle on Banner Top Right */}
           <div className="absolute top-4 right-4 z-20 md:top-8 md:right-8 lg:top-10 lg:right-10">
-            <div className="inline-flex items-center rounded-xl border border-zinc-800/80 bg-black/60 p-1 shadow-2xl backdrop-blur-xl">
+            <div className="inline-flex items-center rounded-xl border border-zinc-200 bg-white/80 p-1 shadow-2xl backdrop-blur-xl dark:border-zinc-800/80 dark:bg-black/60">
               <button
                 onClick={() => setViewMode('slider')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all duration-300 md:px-4 md:py-2 md:text-xs ${viewMode === 'slider' ? 'bg-[#eab308] text-black shadow-sm' : 'text-zinc-300 hover:text-white'}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all duration-300 md:px-4 md:py-2 md:text-xs ${viewMode === 'slider' ? 'bg-[#eab308] text-black shadow-sm' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white'}`}
               >
                 <Monitor size={12} className="md:h-3.5 md:w-3.5" />
                 <span>Slider</span>
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all duration-300 md:px-4 md:py-2 md:text-xs ${viewMode === 'grid' ? 'bg-[#eab308] text-black shadow-sm' : 'text-zinc-300 hover:text-white'}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-black transition-all duration-300 md:px-4 md:py-2 md:text-xs ${viewMode === 'grid' ? 'bg-[#eab308] text-black shadow-sm' : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white'}`}
               >
                 <LayoutGrid size={12} className="md:h-3.5 md:w-3.5" />
                 <span>Grid</span>
@@ -222,32 +288,32 @@ export const PublicCardsSection = () => {
           </div>
 
           {/* Content overlay */}
-          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-8 md:p-10 lg:p-14">
-            <div className="mt-auto flex w-full max-w-7xl flex-col items-start justify-between gap-4 md:gap-8">
-              <div className="flex max-w-2xl flex-col gap-2 md:gap-4">
+          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-7 md:p-8 lg:px-12 lg:py-9">
+            <div className="mt-auto flex w-full max-w-7xl flex-col items-start justify-between gap-4 md:gap-5">
+              <div className="flex max-w-2xl flex-col gap-2 md:gap-2.5">
                 <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#eab308]/30 bg-[#eab308]/15 px-3 py-1 text-[9px] font-bold tracking-wider text-[#eab308] uppercase shadow-md backdrop-blur-md md:text-xs">
                   <Users size={12} className="text-[#eab308]" /> Global Connections Directory
                 </div>
 
-                <h2 className="text-2xl leading-[1.1] font-black tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                <h2 className="text-2xl leading-[1.05] font-black tracking-tight text-zinc-900 sm:text-3xl md:text-4xl lg:text-5xl dark:text-white">
                   Global{' '}
                   <span className="bg-linear-to-r from-[#eab308] to-yellow-500 bg-clip-text text-transparent italic">
                     Connections
                   </span>
                 </h2>
-                <p className="hidden text-[11px] leading-relaxed font-medium text-zinc-300 sm:block sm:text-xs md:text-lg">
+                <p className="hidden max-w-xl text-[11px] leading-relaxed font-medium text-zinc-600 sm:block sm:text-xs md:text-sm dark:text-zinc-300">
                   Discover and connect with top-tier verified professionals across the United States. Filter instantly
                   by state, city, and industry sector to find valuable prospects.
                 </p>
                 {total > 0 ? (
-                  <p className="mt-1 text-[10px] font-semibold text-zinc-400 sm:text-xs">
+                  <p className="text-[10px] font-semibold text-zinc-500 sm:text-xs dark:text-zinc-400">
                     {total.toLocaleString()} public {total === 1 ? 'profile' : 'profiles'} found
                   </p>
                 ) : null}
               </div>
 
               {/* Desktop Filter Bar (md and larger) */}
-              <div className="mt-4 hidden w-full items-center gap-3 border-t border-zinc-800/80 pt-6 md:flex">
+              <div className="hidden w-full items-center gap-3 border-t border-zinc-200 pt-4 md:flex dark:border-zinc-800/80">
                 <DesktopFilterSelect
                   value={draftFilters.stateId}
                   onChange={(value) => handleDesktopFilterChange('stateId', value)}
@@ -272,7 +338,7 @@ export const PublicCardsSection = () => {
                 />
 
                 <div className="group relative w-full min-w-[180px] flex-[1.5]">
-                  <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300">
+                  <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-zinc-600 dark:text-zinc-500 dark:group-focus-within:text-zinc-300">
                     <Search size={16} />
                   </div>
                   <input
@@ -280,7 +346,7 @@ export const PublicCardsSection = () => {
                     value={draftFilters.service}
                     onChange={(e) => handleDesktopServiceChange(e.target.value)}
                     placeholder="Search directory..."
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/60 py-3.5 pr-4 pl-11 text-xs font-medium text-zinc-100 shadow-sm transition-all placeholder:text-zinc-500 hover:border-zinc-700 hover:bg-zinc-900/80 focus:border-[#eab308] focus:outline-none lg:text-sm"
+                    className="w-full rounded-xl border border-zinc-300 bg-white py-3 pr-4 pl-11 text-xs font-medium text-zinc-900 shadow-sm transition-all placeholder:text-zinc-400 hover:border-zinc-400 hover:bg-zinc-50 focus:border-[#eab308] focus:outline-none lg:text-sm dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80"
                   />
                 </div>
 
@@ -288,7 +354,7 @@ export const PublicCardsSection = () => {
                   <button
                     onClick={handleClearFilters}
                     disabled={isSearching}
-                    className="hover:bg-zinc-850 flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3.5 text-xs font-bold text-zinc-300 transition-all hover:border-zinc-700 hover:text-white active:scale-95 disabled:opacity-50"
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3.5 text-xs font-bold text-zinc-600 transition-all hover:border-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-white"
                     title="Reset All Filters"
                   >
                     {isSearching ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
@@ -297,10 +363,10 @@ export const PublicCardsSection = () => {
               </div>
 
               {/* Mobile Search & Filter trigger (md:hidden) */}
-              <div className="mt-2 flex w-full gap-2 border-t border-zinc-800/50 pt-4 md:hidden">
+              <div className="mt-2 flex w-full gap-2 border-t border-zinc-200 pt-4 md:hidden dark:border-zinc-800/50">
                 <button
                   onClick={() => setIsFilterOpen(true)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-extrabold text-white shadow-md backdrop-blur-md transition-all active:scale-95"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-xs font-extrabold text-zinc-900 shadow-md backdrop-blur-md transition-all active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white"
                 >
                   <SlidersHorizontal size={14} className="text-[#eab308]" />
                   <span>Search & Filter Directory</span>
@@ -346,187 +412,124 @@ export const PublicCardsSection = () => {
         </div>
       )}
 
-      {/* Mobile Filter Overlay Modal - Ultra Cinematic Sliding Drawer */}
-      <AnimatePresence>
-        {isFilterOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center p-0">
-            {/* Backdrop Blur */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsFilterOpen(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-md"
-            />
-
-            {/* Dialog container - Beautiful modern bottom drawer with responsive height */}
-            <motion.div
-              initial={{ opacity: 0, y: '100%' }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative z-10 flex max-h-[85vh] w-full flex-col gap-4 overflow-hidden rounded-t-[2.5rem] border-t border-zinc-800 bg-zinc-950 p-6 shadow-2xl"
-            >
-              {/* Drag indicator bar */}
-              <div className="mx-auto -mt-2 mb-2 h-1 w-12 shrink-0 rounded-full bg-zinc-800" />
-
-              {/* Top bar */}
-              <div className="flex shrink-0 items-center justify-between border-b border-zinc-900 pb-3">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal size={16} className="text-[#eab308]" />
-                  <h3 className="text-base font-black text-white">Filter Connections</h3>
-                </div>
-                <button
+      {/* Mobile Filter Overlay Modal - bottom sheet rendered at viewport level via portal */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isFilterOpen && (
+              <div className="fixed inset-0 z-9999 flex items-end justify-center p-0">
+                {/* Backdrop Blur */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   onClick={() => setIsFilterOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 transition-all hover:text-white active:scale-95"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+                  className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                />
 
-              {/* Scrollable Filter Chips Area */}
-              <div className="flex-1 space-y-5 overflow-y-auto py-2 pr-1 select-none">
-                {/* Keyword Search */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">
-                    Keyword Search
-                  </label>
-                  <div className="group relative w-full">
-                    <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300">
-                      <Search size={15} />
+                {/* Dialog container - bottom drawer that slides up like a mobile app sheet */}
+                <motion.div
+                  initial={{ opacity: 0, y: '100%' }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: '100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                  className="relative z-10 flex max-h-[85vh] w-full flex-col gap-4 overflow-hidden rounded-t-[2.5rem] border-t border-zinc-800 bg-zinc-950 p-6 shadow-2xl"
+                >
+                  {/* Drag indicator bar */}
+                  <div className="mx-auto -mt-2 mb-2 h-1 w-12 shrink-0 rounded-full bg-zinc-800" />
+
+                  {/* Top bar */}
+                  <div className="flex shrink-0 items-center justify-between border-b border-zinc-900 pb-3">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal size={16} className="text-[#eab308]" />
+                      <h3 className="text-base font-black text-white">Filter Connections</h3>
                     </div>
-                    <input
-                      type="text"
-                      value={draftFilters.service}
-                      onChange={(e) => setDraftFilter('service', e.target.value)}
-                      placeholder="Search name, job profession..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-3 pr-4 pl-11 text-xs font-semibold text-zinc-100 shadow-sm transition-all placeholder:text-zinc-500 focus:border-[#eab308] focus:outline-none"
+                    <button
+                      onClick={() => setIsFilterOpen(false)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 transition-all hover:text-white active:scale-95"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Scrollable Filter Chips Area */}
+                  <div className="flex-1 space-y-5 overflow-y-auto py-2 pr-1 select-none">
+                    {/* Keyword Search */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">
+                        Keyword Search
+                      </label>
+                      <div className="group relative w-full">
+                        <div className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300">
+                          <Search size={15} />
+                        </div>
+                        <input
+                          type="text"
+                          value={draftFilters.service}
+                          onChange={(e) => setDraftFilter('service', e.target.value)}
+                          placeholder="Search name, job profession..."
+                          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-3 pr-4 pl-11 text-xs font-semibold text-zinc-100 shadow-sm transition-all placeholder:text-zinc-500 focus:border-[#eab308] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* State Select */}
+                    <MobileFilterSelect
+                      label="Filter by State"
+                      value={draftFilters.stateId}
+                      onChange={(value) => setDraftFilter('stateId', value)}
+                      options={dropdowns.states ?? []}
+                      placeholder="All States"
+                      Icon={MapPin}
+                    />
+
+                    {/* City Select */}
+                    <MobileFilterSelect
+                      label="Filter by City"
+                      value={draftFilters.cityId}
+                      onChange={(value) => setDraftFilter('cityId', value)}
+                      options={dropdowns.cities ?? []}
+                      placeholder="All Cities"
+                      Icon={MapPin}
+                      disabled={!draftFilters.stateId}
+                    />
+
+                    {/* Profession Select */}
+                    <MobileFilterSelect
+                      label="Filter by Profession"
+                      value={draftFilters.professionId}
+                      onChange={(value) => setDraftFilter('professionId', value)}
+                      options={dropdowns.professions ?? []}
+                      placeholder="All Professions"
+                      Icon={Briefcase}
                     />
                   </div>
-                </div>
 
-                {/* State Select */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">
-                    Filter by State
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
+                  {/* Bottom action bar */}
+                  <div className="flex shrink-0 gap-2 border-t border-zinc-900 pt-3">
                     <button
-                      onClick={() => setDraftFilter('stateId', null)}
-                      className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-                        draftFilters.stateId == null
-                          ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                          : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                      }`}
+                      onClick={handleClearFilters}
+                      className="hover:bg-zinc-850 flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 py-3.5 text-xs font-bold text-zinc-300 transition-all active:scale-95"
                     >
-                      All States
+                      <RotateCcw size={13} /> Reset
                     </button>
-                    {(dropdowns.states ?? []).map((st) => (
-                      <button
-                        key={st.id}
-                        onClick={() => setDraftFilter('stateId', st.id)}
-                        className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-                          draftFilters.stateId === st.id
-                            ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                            : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                        }`}
-                      >
-                        {st.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* City Select */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">
-                    Filter by City
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
                     <button
-                      onClick={() => setDraftFilter('cityId', null)}
-                      disabled={!draftFilters.stateId}
-                      className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 ${
-                        draftFilters.cityId == null
-                          ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                          : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                      }`}
+                      onClick={() => {
+                        handleApplyFilters()
+                        setIsFilterOpen(false)
+                      }}
+                      disabled={isSearching}
+                      className="flex flex-2 items-center justify-center gap-1.5 rounded-xl bg-[#eab308] py-3.5 text-xs font-black text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 disabled:opacity-60"
                     >
-                      All Cities
+                      {isSearching ? <Loader2 size={13} className="animate-spin" /> : `Apply (${cards.length} Cards)`}
                     </button>
-                    {(dropdowns.cities ?? []).map((ct) => (
-                      <button
-                        key={ct.id}
-                        onClick={() => setDraftFilter('cityId', ct.id)}
-                        disabled={!draftFilters.stateId}
-                        className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-40 ${
-                          draftFilters.cityId === ct.id
-                            ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                            : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                        }`}
-                      >
-                        {ct.name}
-                      </button>
-                    ))}
                   </div>
-                </div>
-
-                {/* Profession Select */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">
-                    Filter by Profession
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      onClick={() => setDraftFilter('professionId', null)}
-                      className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-                        draftFilters.professionId == null
-                          ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                          : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                      }`}
-                    >
-                      All Professions
-                    </button>
-                    {(dropdowns.professions ?? []).map((pr) => (
-                      <button
-                        key={pr.id}
-                        onClick={() => setDraftFilter('professionId', pr.id)}
-                        className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-                          draftFilters.professionId === pr.id
-                            ? 'border-[#eab308] bg-[#eab308]/15 font-black text-[#eab308]'
-                            : 'border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700'
-                        }`}
-                      >
-                        {pr.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                </motion.div>
               </div>
-
-              {/* Bottom action bar */}
-              <div className="flex shrink-0 gap-2 border-t border-zinc-900 pt-3">
-                <button
-                  onClick={handleClearFilters}
-                  className="hover:bg-zinc-850 flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 py-3.5 text-xs font-bold text-zinc-300 transition-all active:scale-95"
-                >
-                  <RotateCcw size={13} /> Reset
-                </button>
-                <button
-                  onClick={() => {
-                    handleApplyFilters()
-                    setIsFilterOpen(false)
-                  }}
-                  disabled={isSearching}
-                  className="flex flex-2 items-center justify-center gap-1.5 rounded-xl bg-[#eab308] py-3.5 text-xs font-black text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 disabled:opacity-60"
-                >
-                  {isSearching ? <Loader2 size={13} className="animate-spin" /> : `Apply (${cards.length} Cards)`}
-                </button>
-              </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
       {error ? (
         <motion.div
@@ -577,45 +580,9 @@ export const PublicCardsSection = () => {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: (idx % 8) * 0.08, ease: 'easeOut' }}
               key={card.id}
-              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-white/5 bg-zinc-950/30 shadow-sm backdrop-blur-3xl transition-colors duration-300 hover:bg-zinc-950/40"
+              className={`${CONNECTION_CARD_SHELL} h-[360px] cursor-pointer hover:border-zinc-700 sm:h-[380px]`}
             >
-              <div className="relative h-56 overflow-hidden bg-zinc-950">
-                <div className="absolute inset-0 z-10 bg-linear-to-t from-zinc-900 to-transparent" />
-                <Image
-                  src={card.img}
-                  alt={card.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover opacity-80 grayscale-20 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:grayscale-0"
-                />
-              </div>
-
-              <div className="relative z-20 -mt-6 flex flex-1 flex-col p-6">
-                <div className="flex flex-col items-center text-center">
-                  <h3 className="mb-1 w-full truncate text-lg leading-tight font-bold text-zinc-100 transition-colors group-hover:text-white">
-                    {card.name}
-                  </h3>
-                  <div className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md border border-zinc-800/80 bg-zinc-950/50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-[#eab308] uppercase">
-                    <Briefcase size={10} /> {card.profession}
-                  </div>
-                </div>
-
-                <div className="mt-8 flex w-full items-center justify-center gap-2">
-                  <Link
-                    href={mapPublicCardProfileUrl(card.slug)}
-                    className="bg-zinc-850 border-zinc-850 flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold text-zinc-100 shadow-sm transition-colors duration-300 group-hover:bg-zinc-100 group-hover:text-zinc-950"
-                  >
-                    View Profile
-                  </Link>
-                  <Link
-                    href={mapPublicCardProfileUrl(card.slug)}
-                    className="bg-zinc-850 border-zinc-850 flex h-10 w-10 items-center justify-center rounded-xl border text-zinc-300 transition-colors hover:bg-zinc-800"
-                    title="Share Profile"
-                  >
-                    <Share2 size={15} />
-                  </Link>
-                </div>
-              </div>
+              <ConnectionCardInner card={card} />
             </motion.div>
           ))}
         </div>
@@ -798,8 +765,8 @@ export const PublicCardsSection = () => {
             </AnimatePresence>
           </motion.div>
 
-          {/* Uniform Bottom Slider Controller (dots & responsive buttons) */}
-          <div className="mt-6 flex w-full max-w-[420px] shrink-0 items-center justify-between px-4 select-none">
+          {/* Uniform Slider Controller (dots & responsive buttons) — above cards on mobile, below on desktop */}
+          <div className="order-first mb-4 flex w-full max-w-[420px] shrink-0 items-center justify-between px-4 select-none md:order-none md:mt-6 md:mb-0">
             {/* Prev Button */}
             <button
               onClick={prevCard}

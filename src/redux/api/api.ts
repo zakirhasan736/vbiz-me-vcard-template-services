@@ -2,6 +2,8 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 export const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
+const ONE_HOUR_SECONDS = 60 * 60
+
 const baseQuery = fetchBaseQuery({
   baseUrl: baseUrl,
   credentials: 'omit',
@@ -14,6 +16,9 @@ const baseQuery = fetchBaseQuery({
 export const api = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQuery,
+  /** Public profile sections are mostly static — cache 1h to avoid repeat tab visits refetching. */
+  keepUnusedDataFor: ONE_HOUR_SECONDS,
+  refetchOnMountOrArgChange: false,
   tagTypes: [
     'user',
     'MyCard',

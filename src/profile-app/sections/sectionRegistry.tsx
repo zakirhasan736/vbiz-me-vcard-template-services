@@ -1,54 +1,56 @@
 'use client'
 
 import type { ProfileNavContentKey } from '@/lib/vcardNavbar'
-import { AboutSection } from '@/profile-app/components/AboutSection'
-import { AdditionalServicesSection } from '@/profile-app/components/AdditionalServicesSection'
-import { AnnouncementSection } from '@/profile-app/components/AnnouncementSection'
-import { BbbAccreditationSection } from '@/profile-app/components/BbbAccreditationSection'
-import { BlogSection } from '@/profile-app/components/BlogSection'
-import { BookingSection } from '@/profile-app/components/BookingSection'
-import { BreakfastSection } from '@/profile-app/components/BreakfastSection'
-import { CalendarSection } from '@/profile-app/components/CalendarSection'
-import { CertificationsLicensingSection } from '@/profile-app/components/CertificationsLicensingSection'
-import { ClientsSection } from '@/profile-app/components/ClientsSection'
-import { DcpSection } from '@/profile-app/components/DcpSection'
-import { DinnerSection } from '@/profile-app/components/DinnerSection'
-import { EducationSection } from '@/profile-app/components/EducationSection'
-import { EmptyNavSection } from '@/profile-app/components/EmptyNavSection'
-import { EventsSection } from '@/profile-app/components/EventsSection'
-import { ExperienceSection } from '@/profile-app/components/ExperienceSection'
-import { ExplainerSection } from '@/profile-app/components/ExplainerSection'
-import { FAQSection } from '@/profile-app/components/FAQSection'
-import { HomeSection as HomeSectionV1 } from '@/profile-app/components/HomeSection'
-import { HomeSectionV2 } from '@/profile-app/components/HomeSectionV2'
-import { HomeSolarSection } from '@/profile-app/components/HomeSolarSection'
-import { ImageGallerySection } from '@/profile-app/components/ImageGallerySection'
-import { InsuranceLicenseSection } from '@/profile-app/components/InsuranceLicenseSection'
-import { InventorySection } from '@/profile-app/components/InventorySection'
-import { JoinMyTeamSection } from '@/profile-app/components/JoinMyTeamSection'
-import { LicensingSection } from '@/profile-app/components/LicensingSection'
-import { LunchSection } from '@/profile-app/components/LunchSection'
-import { MediaPressSection } from '@/profile-app/components/MediaPressSection'
-import { MeetOurTeamSection } from '@/profile-app/components/MeetOurTeamSection'
-import { MenuSection } from '@/profile-app/components/MenuSection'
-import { MissionSection } from '@/profile-app/components/MissionSection'
-import { PostsSection } from '@/profile-app/components/PostsSection'
-import { PropertyListingSection } from '@/profile-app/components/PropertyListingSection'
-import { PublicCardsSection } from '@/profile-app/components/PublicCardsSection'
-import { ResiliencyProductsSection } from '@/profile-app/components/ResiliencyProductsSection'
-import { ReviewsSection } from '@/profile-app/components/ReviewsSection'
-import { SalesPersonSection } from '@/profile-app/components/SalesPersonSection'
-import { SeeProductsSection } from '@/profile-app/components/SeeProductsSection'
-import { ServicesSection } from '@/profile-app/components/ServicesSection'
-import { VideoLinksSection } from '@/profile-app/components/VideoLinksSection'
-import { VideosSection } from '@/profile-app/components/VideosSection'
-import { WhyChooseUsSection } from '@/profile-app/components/WhyChooseUsSection'
-import { HomeHero } from '@/profile-app/v3/components/HomeHero'
+import {
+  AboutSection,
+  AdditionalServicesSection,
+  AnnouncementSection,
+  BbbAccreditationSection,
+  BlogSection,
+  BookingSection,
+  BreakfastSection,
+  CalendarSection,
+  CertificationsLicensingSection,
+  ClientsSection,
+  DcpSection,
+  DinnerSection,
+  EducationSection,
+  EmptyNavSection,
+  EventsSection,
+  ExperienceSection,
+  ExplainerSection,
+  FAQSection,
+  HomeHero,
+  HomeSectionV1,
+  HomeSectionV2,
+  HomeSolarSection,
+  ImageGallerySection,
+  InsuranceLicenseSection,
+  InventorySection,
+  JoinMyTeamSection,
+  LicensingSection,
+  LunchSection,
+  MediaPressSection,
+  MeetOurTeamSection,
+  MenuSection,
+  MissionSection,
+  PostsSection,
+  PropertyListingSection,
+  PublicCardsSection,
+  ResiliencyProductsSection,
+  ReviewsSection,
+  SalesPersonSection,
+  SeeProductsSection,
+  ServicesSection,
+  VideoLinksSection,
+  VideosSection,
+  WhyChooseUsSection,
+} from '@/profile-app/sections/sectionLazyComponents'
 import type { ReactNode } from 'react'
 
 export type ProfileTemplateVariant = 'v1' | 'v2' | 'v3'
 
-type HomeHeroProps = {
+export type HomeHeroProps = {
   theme: 'light' | 'dark'
   onAction: (action: string) => void
   toggleTheme: () => void
@@ -62,7 +64,7 @@ type RenderSectionOptions = {
   homeHeroProps?: HomeHeroProps
 }
 
-/** Maps profile nav content keys to shared, API-driven section components (v3 layout). */
+/** Maps profile nav content keys to lazy-loaded section components (one chunk per tab). */
 export function renderProfileSection({
   contentKey,
   tabId,

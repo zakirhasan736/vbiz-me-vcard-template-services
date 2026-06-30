@@ -1,7 +1,7 @@
 import { Briefcase, Building2, Globe, Mail, MapPin, Phone } from 'lucide-react'
 import React, { useMemo } from 'react'
 import { useProfileDisplay } from '../lib/profileDisplayContext'
-import { buildProfileContactItems, type ProfileContactItem } from '../lib/profileHomeData'
+import { buildBentoContactItems, type ProfileContactItem } from '../lib/profileHomeData'
 import { ProfileActionButtons } from './ProfileActionButtons'
 
 const CONTACT_ICON_MAP: Record<string, React.ElementType> = {
@@ -53,38 +53,22 @@ function ContactBentoCard({ item }: { item: ProfileContactItem }) {
 export const HomeSectionV2 = () => {
   const { personal, isVisible, field } = useProfileDisplay()
 
-  const contactItems = useMemo(() => buildProfileContactItems(personal, isVisible, field), [personal, isVisible, field])
-
-  const profession = contactItems.find((item) => item.label === 'Profession')
-  const company = contactItems.find((item) => item.label === 'Company')
-  const email = contactItems.find((item) => item.label === 'Email')
-  const phone = contactItems.find((item) => item.label === 'Phone')
-  const website = contactItems.find((item) => item.label === 'Website')
-  const address = contactItems.find((item) => item.label === 'Address')
+  const bentoContactItems = useMemo(
+    () => buildBentoContactItems(personal, isVisible, field),
+    [personal, isVisible, field]
+  )
 
   return (
-    <div className="grid w-full grid-cols-1 gap-6 pb-20 md:grid-cols-2">
-      <ProfileActionButtons variant="v2" />
+    <div className="grid w-full grid-cols-1 gap-6 pb-0 md:grid-cols-2">
+      <ProfileActionButtons />
 
-      {contactItems.length > 0 && (
-        <div className="hidden h-full flex-col gap-3 md:flex">
-          {(profession || company) && (
-            <div className="grid grid-cols-2 gap-3">
-              {profession ? <ContactBentoCard item={profession} /> : null}
-              {company ? <ContactBentoCard item={company} /> : null}
+      {bentoContactItems.length > 0 && (
+        <div className="hidden grid-cols-2 gap-3 md:grid">
+          {bentoContactItems.map((item) => (
+            <div key={item.label} className={item.colSpan === 2 ? 'col-span-2' : 'col-span-1'}>
+              <ContactBentoCard item={item} />
             </div>
-          )}
-
-          {email ? <ContactBentoCard item={email} /> : null}
-
-          {(phone || website) && (
-            <div className="grid grid-cols-2 gap-3">
-              {phone ? <ContactBentoCard item={phone} /> : null}
-              {website ? <ContactBentoCard item={website} /> : null}
-            </div>
-          )}
-
-          {address ? <ContactBentoCard item={address} /> : null}
+          ))}
         </div>
       )}
     </div>

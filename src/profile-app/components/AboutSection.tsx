@@ -1,10 +1,10 @@
 'use client'
 
+import { TruncatedClampText } from '@/profile-app/components/TruncatedClampText'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { V3EmptyState, V3ErrorState, V3LoadingSkeleton, V3SectionShell } from '@/profile-app/sections'
 import { useGetAboutMeQuery } from '@/redux/api'
 import { BookOpen, Flag, Lightbulb, Quote, Sparkles, Target, Users } from 'lucide-react'
-import { motion } from 'motion/react'
 import Image from 'next/image'
 
 const PILLAR_ICONS = [Lightbulb, Target, Users, Flag] as const
@@ -73,12 +73,7 @@ export const AboutSection = () => {
 
   return (
     <V3SectionShell>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="flex flex-col gap-4 md:gap-6"
-      >
+      <div className="flex flex-col gap-4 md:gap-6">
         <div className="bg-ocean-deep dark:border-gold/20 relative flex min-h-[280px] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl sm:min-h-[300px] md:min-h-[340px] md:rounded-[2.5rem]">
           <div className="absolute inset-0 z-0 h-full w-full">
             {heroImage ? (
@@ -132,15 +127,24 @@ export const AboutSection = () => {
 
               <div className="relative">
                 <Quote className="text-gold/10 absolute -top-3 -left-3 -rotate-12" size={32} />
-                {hasIntroHtml ? (
-                  <div
-                    className="prose prose-invert prose-sm md:prose-base relative z-10 max-w-2xl pl-2 leading-relaxed font-medium text-zinc-300 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-white [&_p]:mb-3 [&_strong]:text-white"
-                    dangerouslySetInnerHTML={{ __html: item.introHtml }}
+                {hasIntroHtml || item.plainDescription ? (
+                  <TruncatedClampText
+                    html={hasIntroHtml ? item.introHtml : undefined}
+                    plain={!hasIntroHtml ? item.plainDescription : undefined}
+                    maxLines={5}
+                    minLength={180}
+                    accentColor="#eed677"
+                    seeMoreLabel="See more"
+                    seeLessLabel="See less"
+                    readMoreLabel="See more"
+                    readLessLabel="See less"
+                    className="relative z-10"
+                    textClassName={
+                      hasIntroHtml
+                        ? 'prose prose-invert prose-sm md:prose-base relative max-w-2xl pl-2 leading-relaxed font-medium text-zinc-300 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-white [&_p]:mb-3 [&_strong]:text-white'
+                        : 'relative max-w-2xl pl-2 text-sm leading-relaxed font-medium text-zinc-300 md:text-lg'
+                    }
                   />
-                ) : item.plainDescription ? (
-                  <p className="relative z-10 max-w-2xl pl-2 text-sm leading-relaxed font-medium text-zinc-300 md:text-lg">
-                    {item.plainDescription}
-                  </p>
                 ) : null}
               </div>
             </div>
@@ -201,7 +205,7 @@ export const AboutSection = () => {
             ) : null}
 
             {footer && (footer.headline || footer.subheadline || footer.tagline) ? (
-              <div className="dark:bg-ocean-deep dark:border-gold/20 relative mt-2 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-4xl border border-zinc-800 bg-zinc-950 p-6 text-center shadow-2xl md:col-span-2 md:mt-0 md:flex-row md:gap-8 md:rounded-[2.5rem] md:p-10 lg:p-12">
+              <div className="dark:bg-ocean-deep dark:border-gold/20 relative mt-2 flex flex-col flex-col-reverse items-center justify-between gap-6 overflow-hidden rounded-4xl border border-zinc-800 bg-zinc-950 p-6 text-center shadow-2xl md:col-span-2 md:mt-0 md:flex-col md:gap-8 md:rounded-[2.5rem] md:p-10 lg:p-12">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(238,214,119,0.15)_0%,transparent_70%)]" />
                 <div className="via-gold/50 absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent to-transparent" />
 
@@ -227,7 +231,7 @@ export const AboutSection = () => {
             ) : null}
           </div>
         ) : null}
-      </motion.div>
+      </div>
     </V3SectionShell>
   )
 }

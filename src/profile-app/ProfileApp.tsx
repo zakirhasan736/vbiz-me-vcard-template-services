@@ -1,18 +1,31 @@
 'use client'
 
+import { CardThemeStyles } from '@/profile-app/components/CardThemeStyles'
+import { ProfileBrandPreloader } from '@/profile-app/components/ProfileBrandPreloader'
 import { ProfileForceNotification } from '@/profile-app/components/ProfileForceNotification'
+import { ProfileIntroOverlay } from '@/profile-app/components/ProfileIntroOverlay'
 import { ProfileDisplayProvider } from '@/profile-app/lib/profileDisplayContext'
 import type { VBizProfileAppProps } from '@/profile-app/profilePublicProps'
 import { ProfileIntroProvider } from '@/profile-app/providers/ProfileIntroProvider'
 import { ProfileNavigationProvider } from '@/profile-app/providers/ProfileNavigationProvider'
 import { TranslationProvider } from '@/profile-app/providers/TranslationProvider'
-import { VBizProfileApp } from '@/profile-app/VBizProfileApp'
-import { VBizProfileAppV1 } from '@/profile-app/VBizProfileAppV1'
-import { VBizProfileAppV3 } from '@/profile-app/VBizProfileAppV3'
+import dynamic from 'next/dynamic'
+
+/** Lazy-load only the active template shell to reduce initial JS. */
+const VBizProfileApp = dynamic(() =>
+  import('@/profile-app/VBizProfileApp').then((m) => ({ default: m.VBizProfileApp }))
+)
+const VBizProfileAppV1 = dynamic(() =>
+  import('@/profile-app/VBizProfileAppV1').then((m) => ({ default: m.VBizProfileAppV1 }))
+)
+const VBizProfileAppV3 = dynamic(() =>
+  import('@/profile-app/VBizProfileAppV3').then((m) => ({ default: m.VBizProfileAppV3 }))
+)
 
 /** Renders v1, v2, or v3 profile shell from resolved design settings. */
 export function ProfileApp(props: VBizProfileAppProps) {
   const template = props.design?.profileTemplate ?? 'v3'
+  const themeMode = props.themeConfig?.colors.defaultMode ?? (props.design?.darkMode === false ? 'light' : 'dark')
 
   const shell =
     template === 'v1' ? (
@@ -38,6 +51,7 @@ export function ProfileApp(props: VBizProfileAppProps) {
       avatarMediaUrl={props.avatarVideoUrl}
       embedded={props.embedded}
       cardOwnerId={props.cardOwnerId}
+      cardSlug={props.profileSlug ?? props.shareSlug}
       profileViews={props.profileViews}
       actionButtons={props.actionButtons}
     >
@@ -45,9 +59,12 @@ export function ProfileApp(props: VBizProfileAppProps) {
         cardOwnerId={props.cardOwnerId}
         profileSlug={props.profileSlug ?? props.shareSlug}
         theme={props.design?.profileTemplate === 'v1' ? (props.design.darkMode ? 'dark' : 'light') : undefined}
-        languageModalPresentation={template === 'v1' ? 'bottom-sheet' : 'default'}
       >
-        <ProfileNavigationProvider sectionId={props.sectionId} onSectionChange={props.onSectionChange}>
+        <ProfileNavigationProvider
+          sectionId={props.sectionId}
+          onSectionChange={props.onSectionChange}
+          initialNavBarLinks={props.initialNavBarLinks}
+        >
           <ProfileIntroProvider
             embedded={props.embedded}
             profileSlug={props.profileSlug}
@@ -60,6 +77,9 @@ export function ProfileApp(props: VBizProfileAppProps) {
               ownerName={props.liveAgentCardData?.ownerName ?? props.ownerName ?? 'Guest'}
               embedded={props.embedded}
             />
+            {!props.embedded && <ProfileBrandPreloader />}
+            {!props.embedded && <ProfileIntroOverlay explainerVideoUrl={props.explainerVideoUrl} />}
+            <CardThemeStyles config={props.themeConfig} mode={themeMode} />
             {shell}
           </ProfileIntroProvider>
         </ProfileNavigationProvider>

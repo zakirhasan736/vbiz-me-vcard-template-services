@@ -16,9 +16,7 @@ export const I18N_CONFIG = {
   fallback: 'en',
   scriptUrl: 'https://translate.google.com/translate_a/element.js',
   languagesApiPath: '/api/languages',
-  translateApiPath: '/api/translate',
   languageChangeEvent: 'vbiz_language_changed',
-  translationLoadingEvent: 'vbiz_translation_loading',
   googleTranslateElementId: 'google_translate_element',
 } as const
 

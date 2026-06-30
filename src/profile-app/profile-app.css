@@ -19,6 +19,18 @@
   --color-ocean-glass: rgba(5, 20, 41, 0.85);
 }
 
+/* Interactive elements use a pointer cursor (Tailwind v4 defaults buttons to the
+   browser default). Applies to every button, link, social icon, and role=button
+   inside the profile across all templates. */
+.vbiz-profile-root button:not(:disabled):not([aria-disabled='true']),
+.vbiz-profile-root a[href],
+.vbiz-profile-root label[for],
+.vbiz-profile-root [role='button']:not([aria-disabled='true']),
+.vbiz-profile-root summary,
+.vbiz-profile-root [data-clickable] {
+  cursor: pointer;
+}
+
 /* Visitor note — sticky notepad modal (themed via --vbiz-note-* vars from card design) */
 .vbiz-notepad {
   font-family: var(--vbiz-note-font, var(--font-notepad));

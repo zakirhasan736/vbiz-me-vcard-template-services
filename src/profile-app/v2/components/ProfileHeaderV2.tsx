@@ -1,8 +1,10 @@
 'use client'
 
 import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
+import { CustomVideoPlayer } from '@/profile-app/components/CustomVideoPlayer'
 import { isProfileActionButtonEnabled } from '@/profile-app/lib/profileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
+import { openVbizmeHome, openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
 import { cleanProfileFieldValue, formatProfileViewCount } from '@/profile-app/lib/profileHomeData'
 import { filterSocialItemsWithLinks, resolveSocialLinkHref } from '@/profile-app/lib/profileSocialLinks'
 import { resolveProfileAvatarSrc } from '@/profile-app/profilePublicProps'
@@ -13,19 +15,16 @@ import {
   FileEdit,
   Globe,
   Instagram,
+  Languages,
   Linkedin,
   MessageCircle,
-  Pause,
-  Play,
   Share2,
   Star,
-  Volume2,
-  VolumeX,
   Youtube,
   type LucideIcon,
 } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
+import { useMemo, type ReactElement } from 'react'
 
 const XIcon = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden className="md:h-4 md:w-4">
@@ -67,7 +66,7 @@ type ProfileHeaderV2Props = {
   headerTextColor?: string
   onShare?: () => void
   onNotificationSettings?: () => void
-  onSaveContact?: () => void
+  onOpenNotepad?: () => void
   onLanguage?: () => void
   embedded?: boolean
 }
@@ -80,14 +79,11 @@ export function ProfileHeaderV2({
   headerTextColor,
   onShare,
   onNotificationSettings,
-  onSaveContact,
+  onOpenNotepad,
   onLanguage,
   embedded,
 }: ProfileHeaderV2Props) {
   const { personal, isVisible, field, socialHref, profileViews, actionButtons } = useProfileDisplay()
-  const profileVideoRef = useRef<HTMLVideoElement>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [isMuted, setIsMuted] = useState(true)
 
   const avatarDisplaySrc = useMemo(
     () => resolveProfileAvatarSrc(avatarVideoUrl, explainerVideoUrl),
@@ -103,7 +99,6 @@ export function ProfileHeaderV2({
 
   const showShare = isProfileActionButtonEnabled('share', actionButtons, isVisible)
   const showViewCounter = isProfileActionButtonEnabled('view_counter', actionButtons, isVisible)
-  const showSaveContact = isProfileActionButtonEnabled('save_contact', actionButtons, isVisible)
   const showLanguage = isProfileActionButtonEnabled('language', actionButtons, isVisible)
   const viewCounterCount = actionButtons?.view_counter?.count ?? profileViews
 
@@ -111,36 +106,6 @@ export function ProfileHeaderV2({
     () => filterSocialItemsWithLinks(V2_SOCIAL_ITEMS, socialHref, personal.whatsapp),
     [socialHref, personal.whatsapp]
   )
-
-  useEffect(() => {
-    if (!avatarIsVideo) return
-    const el = profileVideoRef.current
-    if (!el) return
-    el.muted = isMuted
-    if (isPlaying && el.paused) {
-      void el.play().catch(() => undefined)
-    }
-  }, [avatarIsVideo, isMuted, isPlaying, encodedAvatarSrc])
-
-  const togglePlay = (e?: React.MouseEvent) => {
-    e?.stopPropagation()
-    const el = profileVideoRef.current
-    if (!el) return
-    if (isPlaying) {
-      el.pause()
-    } else {
-      void el.play().catch(() => undefined)
-    }
-    setIsPlaying(!isPlaying)
-  }
-
-  const toggleMute = (e?: React.MouseEvent) => {
-    e?.stopPropagation()
-    const el = profileVideoRef.current
-    if (!el) return
-    el.muted = !isMuted
-    setIsMuted(!isMuted)
-  }
 
   const renderSocialIcon = (item: V2SocialItem) => {
     if (item.isSvg) {
@@ -190,14 +155,12 @@ export function ProfileHeaderV2({
           className={`relative z-10 overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-900 shadow-xl transition-transform duration-500 group-hover:scale-[1.02] dark:border-zinc-800 ${embedded ? 'h-48 w-40' : 'h-60 w-48 md:h-64 md:w-56'}`}
         >
           {avatarIsVideo ? (
-            <video
-              ref={profileVideoRef}
+            <CustomVideoPlayer
               src={encodedAvatarSrc}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="h-full w-full object-cover"
+              imageAlt={displayName ? `${displayName} avatar` : 'Avatar'}
+              controlsMode="owner"
+              showSeekBar={false}
+              className="h-full w-full"
             />
           ) : encodedAvatarSrc ? (
             <Image
@@ -209,32 +172,7 @@ export function ProfileHeaderV2({
             />
           ) : null}
 
-          {avatarIsVideo && (
-            <div
-              className="absolute inset-0 z-20 flex cursor-pointer items-center justify-center gap-3 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              onClick={togglePlay}
-            >
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-lg backdrop-blur-md transition-transform hover:bg-white/30 active:scale-95"
-                title={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying ? (
-                  <Pause size={24} className="fill-white" />
-                ) : (
-                  <Play size={24} className="ml-1 fill-white" />
-                )}
-              </div>
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-lg backdrop-blur-md transition-transform hover:bg-white/30 active:scale-95"
-                onClick={toggleMute}
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
-              </div>
-            </div>
-          )}
-
-          <div className="pointer-events-none absolute right-3 bottom-3 z-30 flex items-center gap-1 rounded-md border border-[#eab308]/30 bg-zinc-900/80 px-2.5 py-1 text-[10px] font-bold text-[#eab308] backdrop-blur-md">
+          <div className="pointer-events-none absolute top-3 right-3 z-30 flex items-center gap-1 rounded-md border border-[#eab308]/30 bg-zinc-900/80 px-2.5 py-1 text-[10px] font-bold text-[#eab308] backdrop-blur-md">
             <Star size={10} fill="currentColor" /> PREMIUM
           </div>
         </div>
@@ -243,7 +181,7 @@ export function ProfileHeaderV2({
       <div className="mt-2 flex w-full flex-1 flex-col items-center text-center md:mt-4 md:items-start md:text-left">
         {displayName ? (
           <h1
-            className={`mb-0 leading-tight font-bold tracking-tight text-zinc-900 sm:mb-2 dark:text-zinc-100 ${embedded ? 'text-2xl' : 'text-3xl md:text-5xl'}`}
+            className={`mb-0 leading-tight font-bold tracking-tight text-zinc-900 [text-shadow:0_1px_3px_rgba(255,255,255,0.85),0_0_22px_rgba(255,255,255,0.6)] sm:mb-2 dark:text-zinc-100 dark:[text-shadow:0_1px_3px_rgba(0,0,0,0.9),0_0_22px_rgba(0,0,0,0.7)] ${embedded ? 'text-2xl' : 'text-3xl md:text-5xl'}`}
             style={nameStyle}
           >
             {displayName}
@@ -251,7 +189,7 @@ export function ProfileHeaderV2({
         ) : null}
         {designation ? (
           <p
-            className="mb-0 text-base font-bold text-[#d97706] sm:mb-4 md:text-lg dark:text-[#f59e0b]"
+            className="mb-0 text-base font-bold text-[#d97706] [text-shadow:0_1px_2px_rgba(255,255,255,0.8)] sm:mb-4 md:text-lg dark:text-[#f59e0b] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.85)]"
             style={designationStyle}
           >
             {designation}
@@ -281,13 +219,26 @@ export function ProfileHeaderV2({
 
       <div className="absolute top-0 right-0 z-30 flex flex-col gap-2 rounded-full border border-zinc-200 bg-white/50 p-1.5 shadow-sm backdrop-blur-md md:gap-4 md:p-2 dark:border-zinc-700/50 dark:bg-zinc-900/50">
         {showViewCounter && (
-          <div className="group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800">
+          <button
+            type="button"
+            onClick={() => openVbizmeLogin()}
+            className="group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+            aria-label="View analytics"
+          >
             <Eye size={14} className="text-[#eab308] md:h-4 md:w-4" />
             <span className="absolute -top-1 -right-1 rounded-full bg-red-500 px-1 py-0.5 text-[8px] font-bold text-white md:-top-2 md:-right-2 md:px-1 md:text-[9px]">
               {formatProfileViewCount(viewCounterCount)}
             </span>
-          </div>
+          </button>
         )}
+        <button
+          type="button"
+          onClick={() => openVbizmeHome()}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+          aria-label="Visit vBiz Me website"
+        >
+          <Globe size={14} className="text-[#eab308] md:h-4 md:w-4" />
+        </button>
         {showLanguage && (
           <button
             type="button"
@@ -295,7 +246,7 @@ export function ProfileHeaderV2({
             className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
             aria-label="Language"
           >
-            <Globe size={14} className="text-[#eab308] md:h-4 md:w-4" />
+            <Languages size={14} className="text-[#eab308] md:h-4 md:w-4" />
           </button>
         )}
         {showShare && (
@@ -317,16 +268,14 @@ export function ProfileHeaderV2({
           <Bell size={14} className="text-[#eab308] md:h-4 md:w-4" />
           <span className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-red-500 md:top-1 md:right-1" />
         </button>
-        {showSaveContact && (
-          <button
-            type="button"
-            onClick={onSaveContact}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-            aria-label="Save contact"
-          >
-            <FileEdit size={14} className="text-[#eab308] md:h-4 md:w-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onOpenNotepad}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+          aria-label="Open notepad"
+        >
+          <FileEdit size={14} className="text-[#eab308] md:h-4 md:w-4" />
+        </button>
       </div>
     </header>
   )

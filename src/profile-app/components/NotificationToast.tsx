@@ -1,7 +1,8 @@
 'use client'
 
 import { buildProfilePath } from '@/lib/profileRoutes'
-import { isSubscribedAnywhere, PLATFORM_UPDATE_EVENT } from '@/lib/push/notificationExperience'
+import { PLATFORM_UPDATE_EVENT } from '@/lib/push/notificationExperience'
+import { isSubscribedToCard } from '@/lib/push/notificationRouting'
 import { initialsFromName, isVideoAvatarSrc } from '@/lib/push/resolveNotificationAvatar'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
 import { ChevronRight, X } from 'lucide-react'
@@ -94,24 +95,27 @@ export const NotificationToast = () => {
 
   useEffect(() => {
     const handlePlatformUpdate = (e: Event) => {
-      if (!isSubscribedAnywhere()) return
       const detail = (e as CustomEvent<PlatformUpdateDetail>).detail
       if (!detail) return
 
-      const key = notificationKey(detail)
-      if (dismissedKeysRef.current.has(key)) return
-      if (currentKeyRef.current === key) return
+      void (async () => {
+        if (detail.slug && !(await isSubscribedToCard(detail.slug))) return
 
-      dismissedKeysRef.current.add(key)
-      persistDismissedKeys(dismissedKeysRef.current)
-      currentKeyRef.current = key
+        const key = notificationKey(detail)
+        if (dismissedKeysRef.current.has(key)) return
+        if (currentKeyRef.current === key) return
 
-      clearAutoDismiss()
-      setNotification(detail)
+        dismissedKeysRef.current.add(key)
+        persistDismissedKeys(dismissedKeysRef.current)
+        currentKeyRef.current = key
 
-      timeoutRef.current = window.setTimeout(() => {
-        dismiss()
-      }, AUTO_DISMISS_MS)
+        clearAutoDismiss()
+        setNotification(detail)
+
+        timeoutRef.current = window.setTimeout(() => {
+          dismiss()
+        }, AUTO_DISMISS_MS)
+      })()
     }
 
     window.addEventListener(PLATFORM_UPDATE_EVENT, handlePlatformUpdate)

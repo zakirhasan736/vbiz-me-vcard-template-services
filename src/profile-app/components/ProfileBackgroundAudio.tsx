@@ -1,9 +1,10 @@
 'use client'
 
+import { useAppSelector } from '@/hooks/redux'
 import { BackgroundAudio } from '@/profile-app/components/BackgroundAudio'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useProfileIntroContext } from '@/profile-app/providers/ProfileIntroProvider'
-import { useProfile } from '@/redux/features/myCard'
+import { selectProfileMediaBySlug } from '@/redux/features/myCard/myCard.selectors'
 
 type Props = {
   profileSlug?: string
@@ -12,9 +13,9 @@ type Props = {
 
 export function ProfileBackgroundAudio({ profileSlug, shareSlug }: Props) {
   const slug = (profileSlug ?? shareSlug ?? '').trim()
-  const { media } = useProfile(slug, { skip: !slug })
+  const audio = useAppSelector((state) => (slug ? selectProfileMediaBySlug(state, slug)?.audio : null))
   const { design, embedded } = useProfileDisplay()
   const { introAllowed } = useProfileIntroContext()
 
-  return <BackgroundAudio audio={media?.audio} design={design} embedded={embedded} readyToPlay={introAllowed} />
+  return <BackgroundAudio audio={audio} design={design} embedded={embedded} readyToPlay={introAllowed} />
 }

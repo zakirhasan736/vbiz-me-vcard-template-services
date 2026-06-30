@@ -1,11 +1,12 @@
 /**
  * Central push notification configuration shared across all profile templates (v1, v2, v3).
  */
-import type { NotificationPreferenceKey, NotificationPreferences } from '@/lib/push/types'
+import type { NotificationPreferences } from '@/lib/push/types'
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PREFERENCE_OPTIONS,
   SERVICE_WORKER_PATH,
+  fetchPushStatus,
   followStorageKey,
   getNotificationPermission,
   getReadyRegistration,
@@ -13,10 +14,13 @@ import {
   readFollowState,
   readStoredSubscription,
   registerServiceWorker,
+  resolvePushEndpoint,
+  resolvePushSubscriptionPayload,
   sendTestNotification,
   subscribeToCard,
   subscriptionStorageKey,
   unsubscribeFromCard,
+  updateCardBackendPreferences,
   updateCardPreferences,
   urlBase64ToUint8Array,
   writeFollowState,
@@ -26,6 +30,7 @@ export {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PREFERENCE_OPTIONS,
   SERVICE_WORKER_PATH,
+  fetchPushStatus,
   followStorageKey,
   getNotificationPermission,
   getReadyRegistration,
@@ -33,16 +38,19 @@ export {
   readFollowState,
   readStoredSubscription,
   registerServiceWorker,
+  resolvePushEndpoint,
+  resolvePushSubscriptionPayload,
   sendTestNotification,
   subscribeToCard,
   subscriptionStorageKey,
   unsubscribeFromCard,
+  updateCardBackendPreferences,
   updateCardPreferences,
   urlBase64ToUint8Array,
   writeFollowState,
 }
 
-export type { NotificationPreferenceKey, NotificationPreferences }
+export type { NotificationPreferenceKey, NotificationPreferences, UpdatePreferencesResult } from '@/lib/push/types'
 
 export {
   FORCE_NOTIFICATION_DELAY_MS,
@@ -50,11 +58,15 @@ export {
   PROFILE_EXPERIENCE_SETTLED_EVENT,
   hasContactFlowBeenAsked,
   hasNotificationChoice,
+  hasNotificationChoiceForCard,
+  isProfileExperienceSettled,
   isSubscribedAnywhere,
   notificationChoiceKey,
+  notificationChoiceKeyForCard,
   notifyProfileExperienceSettled,
   writeContactFlowAsked,
   writeNotificationChoice,
+  writeNotificationChoiceForCard,
 } from '@/lib/push/notificationExperience'
 
 /** Preference options shown in post-contact ask modal (v3 — four categories). */
@@ -84,6 +96,17 @@ export function getVapidPublicKey(): string {
 export function isVapidConfigured(): boolean {
   return Boolean(PUSH_CONFIG.vapidPublicKey.trim())
 }
+
+export {
+  getCardNotificationPreferences,
+  isSubscribedToCard,
+  markNotificationDeclined,
+  markNotificationSubscribed,
+  resolveNotificationModalTarget,
+  shouldAutoShowNotificationPrompt,
+  syncCardSubscriptionStatus,
+} from '@/lib/push/notificationRouting'
+export type { NotificationModalTarget } from '@/lib/push/notificationRouting'
 
 /** v3-compatible subscribe helper — delegates to central push API. */
 export async function subscribeUserToPush(options: {

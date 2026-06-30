@@ -1,11 +1,13 @@
+import { resolveProfileTemplateFromMyCard } from '@/lib/api/myCard/resolveProfileTemplate'
 import { getStaticProfileTheme } from '@/lib/staticProfileThemes'
+import { hasDynamicTheme, resolveCardThemeConfig } from '@/lib/theme/resolveCardTheme'
 import { createDefaultNavFieldConfig, NAV_BAR_FIELDS } from '@/lib/vcardNavbar'
 import { createDefaultVCardSocial } from '@/lib/vcardSocial'
 import type { ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import type { VCardData, VCardExtraField, VCardPersonal, VCardRecord, VCardSocial } from '@/types/vcard'
 import type { VCardDisplaySettings } from '@/types/vcardDisplaySettings'
 import { createDefaultFieldConfig } from '@/types/vcardDisplaySettings'
-import type { MyCardData } from '@interfaces/api/myCard'
+import type { MyCardData, MyCardMyInfoField } from '@interfaces/api/myCard'
 
 const CHECKBOX_ON = new Set(['1', 'true'])
 
@@ -90,6 +92,18 @@ const API_FIELD_TO_LABEL: Record<string, string> = {
   websiteIcon_checkbox: 'My Info Website Icon',
 }
 
+function readMyInfoFieldIcon(section: Record<string, MyCardMyInfoField> | undefined, fieldKeys: string[]): string {
+  if (!section) return ''
+  for (const key of fieldKeys) {
+    const icon = section[key]?.icon?.trim()
+    if (!icon) continue
+    if (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/') || icon.startsWith('data:')) {
+      return icon
+    }
+  }
+  return ''
+}
+
 function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
   const { settings, features } = card
   const fields: VCardDisplaySettings['fields'] = {}
@@ -168,6 +182,16 @@ function mapDisplaySettings(card: MyCardData): VCardDisplaySettings {
     }
   }
 
+  const companyIcon =
+    readMyInfoFieldIcon(card.my_info.professional, ['company_name', 'company', 'company_office']) ||
+    readMyInfoFieldIcon(card.my_info.personal, ['company_name', 'company'])
+  if (companyIcon) {
+    fields['Company/Office Icon'] = {
+      ...fields['Company/Office Icon'],
+      customValue: companyIcon,
+    }
+  }
+
   return { globalEnabled: true, fields }
 }
 
@@ -234,10 +258,7 @@ function mapExtraFields(card: MyCardData): VCardExtraField[] {
 }
 
 function resolveTemplate(card: MyCardData): ProfileTemplateId {
-  if (card.template === 'dynamic' || card.features.dynamic_template === true) {
-    return 'v1'
-  }
-  return 'v3'
+  return resolveProfileTemplateFromMyCard(card)
 }
 
 function resolveTheme(card: MyCardData) {
@@ -266,6 +287,7 @@ export function mapMyCardToVCardData(card: MyCardData): VCardData {
     education: [],
     experience: [],
     displaySettings: mapDisplaySettings(card),
+    themeConfig: hasDynamicTheme(card.theme_config) ? resolveCardThemeConfig(card.theme_config) : undefined,
   }
 }
 

@@ -1,13 +1,20 @@
+import { clearNotificationDeclinedForCard } from '@/lib/push/notificationExperience'
+import type { BackendNotificationPreferences } from '@/lib/push/preferenceMapping'
+import { fromBackendPreferences, normalizeBackendPreferences, toBackendPreferences } from '@/lib/push/preferenceMapping'
+import { invalidateCardPushStatus, setCachedCardPushStatus } from '@/lib/push/pushStatusCache'
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type NotificationPreferenceKey,
   type NotificationPreferences,
+  type PushPreferencesUpdateResponse,
   type PushStatusResponse,
   type PushSubscriptionPayload,
+  type PushSubscriptionStatusResponse,
+  type UpdatePreferencesResult,
 } from '@/lib/push/types'
 
 export { DEFAULT_NOTIFICATION_PREFERENCES }
-export type { NotificationPreferenceKey, NotificationPreferences }
+export type { NotificationPreferenceKey, NotificationPreferences, UpdatePreferencesResult }
 
 export const SERVICE_WORKER_PATH = '/sw.js'
 
@@ -145,13 +152,83 @@ export async function getExistingSubscription() {
   return registration.pushManager.getSubscription()
 }
 
-export async function fetchPushStatus(cardSlug: string, endpoint?: string | null): Promise<PushStatusResponse> {
-  const query = endpoint ? `?endpoint=${encodeURIComponent(endpoint)}` : ''
-  const response = await fetch(pushApiUrl(`/status/${encodeURIComponent(cardSlug)}${query}`))
-  const json = (await response.json()) as { success: boolean; data: PushStatusResponse }
+export async function resolvePushSubscriptionPayload(): Promise<PushSubscriptionPayload | null> {
+  const existing = await getExistingSubscription()
+  if (existing) {
+    return subscriptionToPayload(existing)
+  }
+  return null
+}
+
+export async function resolvePushEndpoint(): Promise<string | null> {
+  const payload = await resolvePushSubscriptionPayload()
+  return payload?.endpoint ?? null
+}
+
+function detectBrowser(): string {
+  if (typeof navigator === 'undefined') return 'Unknown'
+  const ua = navigator.userAgent
+  if (ua.includes('Edg/')) return 'Edge'
+  if (ua.includes('Chrome')) return 'Chrome'
+  if (ua.includes('Firefox')) return 'Firefox'
+  if (ua.includes('Safari')) return 'Safari'
+  return 'Unknown'
+}
+
+function detectPlatform(): string {
+  if (typeof navigator === 'undefined') return 'Unknown'
+  const ua = navigator.userAgent
+  if (ua.includes('Win')) return 'Windows'
+  if (ua.includes('Mac')) return 'macOS'
+  if (ua.includes('Android')) return 'Android'
+  if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS'
+  if (ua.includes('Linux')) return 'Linux'
+  return 'Unknown'
+}
+
+export async function fetchPushStatus(
+  cardSlug: string,
+  options?: { endpoint?: string | null; forceRefresh?: boolean }
+): Promise<PushStatusResponse> {
+  const resolvedEndpoint = options?.endpoint ?? (await resolvePushSubscriptionPayload())?.endpoint ?? null
+
+  if (!resolvedEndpoint) {
+    return {
+      following: false,
+      preferences: null,
+      backendPreferences: null,
+      permission: getNotificationPermission(),
+      endpoint: null,
+    }
+  }
+
+  const response = await fetch(
+    pushApiUrl(`/subscription-status/${encodeURIComponent(cardSlug)}?endpoint=${encodeURIComponent(resolvedEndpoint)}`)
+  )
+
+  if (!response.ok) {
+    return {
+      following: false,
+      preferences: null,
+      backendPreferences: null,
+      permission: getNotificationPermission(),
+      endpoint: resolvedEndpoint,
+    }
+  }
+
+  const json = (await response.json()) as PushSubscriptionStatusResponse
+  const backendPreferences = json.preferences ? normalizeBackendPreferences(json.preferences) : null
+  const preferences = backendPreferences ? fromBackendPreferences(backendPreferences) : null
+  const following = Boolean(json.subscribed)
+
+  setCachedCardPushStatus(cardSlug, { following, preferences })
+
   return {
-    ...json.data,
+    following,
+    preferences,
+    backendPreferences,
     permission: getNotificationPermission(),
+    endpoint: resolvedEndpoint,
   }
 }
 
@@ -164,9 +241,21 @@ export async function subscribeToCard(options: {
     throw new Error('Push notifications are not supported in this browser.')
   }
 
-  const permission = await Notification.requestPermission()
+  // Always (re)ask the browser when the user clicks Enable. If it was previously
+  // denied the browser will not re-prompt, so guide the user to re-enable it.
+  let permission: NotificationPermission = Notification.permission
   if (permission !== 'granted') {
-    throw new Error('Notification permission was not granted.')
+    permission = await Notification.requestPermission()
+  }
+
+  if (permission === 'denied') {
+    throw new Error(
+      'Notifications are blocked for this site. Tap the lock icon in your browser address bar, allow Notifications, then try again.'
+    )
+  }
+
+  if (permission !== 'granted') {
+    throw new Error('Please choose "Allow" on the notification prompt to enable updates.')
   }
 
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
@@ -187,7 +276,7 @@ export async function subscribeToCard(options: {
     })
   }
 
-  const payload = writeStoredSubscription(subscription)
+  const payload = subscriptionToPayload(subscription)
   const preferences = {
     ...DEFAULT_NOTIFICATION_PREFERENCES,
     ...options.preferences,
@@ -195,76 +284,97 @@ export async function subscribeToCard(options: {
 
   const response = await fetch(pushApiUrl('/subscribe'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({
-      cardSlug: options.cardSlug,
-      cardOwnerId: options.cardOwnerId,
-      subscription: payload,
-      preferences,
+      profile_slug: options.cardSlug,
+      endpoint: payload.endpoint,
+      keys: payload.keys,
+      browser: detectBrowser(),
+      platform: detectPlatform(),
     }),
   })
 
   if (!response.ok) {
-    const error = (await response.json().catch(() => null)) as { error?: string } | null
-    throw new Error(error?.error ?? 'Could not save subscription.')
+    let message = 'Could not save subscription.'
+    try {
+      const error = (await response.json()) as { message?: string; error?: string }
+      message = error.message || error.error || message
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message)
   }
 
-  writeFollowState(options.cardSlug, {
-    following: true,
-    preferences,
-    subscribedAt: new Date().toISOString(),
-  })
+  clearNotificationDeclinedForCard(options.cardSlug)
+  setCachedCardPushStatus(options.cardSlug, { following: true, preferences })
 
-  // Mirror legacy choice key (reference: vbiz_notification_choice) for all subscribe paths.
-  if (options.cardOwnerId) {
-    localStorage.setItem(`vbiz_notification_choice_${options.cardOwnerId}`, 'subscribed')
-    localStorage.setItem('vbiz_notification_choice', 'subscribed')
+  try {
+    await updateCardPreferences(options.cardSlug, preferences)
+  } catch {
+    /* subscription saved; preferences can be updated later in settings */
   }
 
   return { subscription, preferences }
 }
 
-export async function updateCardPreferences(cardSlug: string, preferences: NotificationPreferences) {
-  const stored = readStoredSubscription()
+export async function updateCardBackendPreferences(
+  cardSlug: string,
+  preferences: BackendNotificationPreferences
+): Promise<UpdatePreferencesResult> {
+  const stored = await resolvePushSubscriptionPayload()
   if (!stored) {
-    throw new Error('No browser subscription found.')
+    throw new Error('No browser push subscription found. Enable notifications first.')
   }
 
   const response = await fetch(pushApiUrl('/preferences'), {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({
-      cardSlug,
+      profile_slug: cardSlug,
       endpoint: stored.endpoint,
       preferences,
     }),
   })
 
-  if (!response.ok) {
-    const error = (await response.json().catch(() => null)) as { error?: string } | null
-    throw new Error(error?.error ?? 'Could not update preferences.')
+  let payload: PushPreferencesUpdateResponse = {}
+  try {
+    payload = (await response.json()) as PushPreferencesUpdateResponse
+  } catch {
+    /* ignore parse errors */
   }
 
-  writeFollowState(cardSlug, {
-    following: true,
-    preferences,
-    subscribedAt: readFollowState(cardSlug)?.subscribedAt,
-  })
+  if (!response.ok || payload.success === false) {
+    throw new Error(payload.message || 'Could not update your notification preferences.')
+  }
 
-  return preferences
+  const savedPreferences = normalizeBackendPreferences(payload.preferences ?? preferences)
+  const uiPreferences = fromBackendPreferences(savedPreferences)
+
+  setCachedCardPushStatus(cardSlug, { following: true, preferences: uiPreferences })
+
+  return {
+    message: payload.message ?? 'Your notification preferences were updated.',
+    preferences: savedPreferences,
+  }
+}
+
+export async function updateCardPreferences(
+  cardSlug: string,
+  preferences: NotificationPreferences,
+  options?: { backendBase?: Partial<BackendNotificationPreferences> }
+): Promise<UpdatePreferencesResult> {
+  return updateCardBackendPreferences(cardSlug, toBackendPreferences(preferences, options?.backendBase))
 }
 
 export async function unsubscribeFromCard(cardSlug: string) {
-  const registration = await getReadyRegistration()
-  const subscription = await registration?.pushManager.getSubscription()
-  const stored = readStoredSubscription()
+  const stored = await resolvePushSubscriptionPayload()
 
   if (stored) {
     await fetch(pushApiUrl('/unsubscribe'), {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        cardSlug,
+        profile_slug: cardSlug,
         endpoint: stored.endpoint,
       }),
     }).catch(() => {
@@ -272,12 +382,15 @@ export async function unsubscribeFromCard(cardSlug: string) {
     })
   }
 
+  const registration = await getReadyRegistration()
+  const subscription = await registration?.pushManager.getSubscription()
   if (subscription) {
     await subscription.unsubscribe()
   }
 
   clearStoredSubscription()
   clearFollowState(cardSlug)
+  invalidateCardPushStatus(cardSlug)
 }
 
 export async function sendTestNotification(cardSlug: string, title?: string, body?: string) {

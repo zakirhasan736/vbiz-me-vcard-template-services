@@ -2,6 +2,7 @@
 
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
+import { TruncatedClampText } from '@/profile-app/components/TruncatedClampText'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useSectionAccent, V3EmptyState, V3ErrorState, V3LoadingSkeleton, V3SectionShell } from '@/profile-app/sections'
 import { useGetMissionStatementQuery } from '@/redux/api'
@@ -69,16 +70,16 @@ function MissionContentCard({ item, sectionTitle, accent, idx = 0 }: MissionCont
         </div>
 
         <div className="relative z-10 mt-6 lg:mt-8">
-          {hasHtml ? (
-            <div
-              className="prose prose-zinc dark:prose-invert mb-4 max-w-2xl text-base leading-relaxed font-medium lg:text-lg dark:text-zinc-400"
-              dangerouslySetInnerHTML={{ __html: item.description }}
-            />
-          ) : plainDescription ? (
-            <p className="mb-4 max-w-2xl text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400">
-              {plainDescription}
-            </p>
-          ) : null}
+          <TruncatedClampText
+            html={hasHtml ? item.description : undefined}
+            plain={!hasHtml ? plainDescription : undefined}
+            maxLines={5}
+            minLength={180}
+            accentColor={accent}
+            readMoreLabel="Read more"
+            readLessLabel="Read less"
+            textClassName="text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400"
+          />
 
           {detailUrl ? (
             <a

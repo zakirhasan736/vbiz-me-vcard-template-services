@@ -2,13 +2,13 @@
 
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
 import { buildV3ThemeCss } from '@/lib/v3Theme'
+import { useMemo } from 'react'
 
-/** Overrides hardcoded accent classes inside the profile app shell. */
-export function ProfileThemeStyles({ design }: { design: ResolvedProfileDesign }) {
+function buildProfileThemeCss(design: ResolvedProfileDesign): string {
   const { primaryColor, accentColor } = design
   const v3Css = design.profileTemplate === 'v3' ? buildV3ThemeCss(design) : ''
 
-  const css = `
+  return `
     .vbiz-profile-root .text-\\[\\#eab308\\],
     .vbiz-profile-root .text-\\[\\#ca8a04\\],
     .vbiz-profile-root .text-\\[\\#eed677\\] {
@@ -99,6 +99,11 @@ export function ProfileThemeStyles({ design }: { design: ResolvedProfileDesign }
     }
     ${v3Css}
   `
+}
+
+/** Overrides hardcoded accent classes inside the profile app shell. */
+export function ProfileThemeStyles({ design }: { design: ResolvedProfileDesign }) {
+  const css = useMemo(() => buildProfileThemeCss(design), [design])
 
   return <style dangerouslySetInnerHTML={{ __html: css }} />
 }

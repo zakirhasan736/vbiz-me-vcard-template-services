@@ -1,79 +1,90 @@
 'use client'
 
+import { fetchPushStatus, unsubscribeFromCard, updateCardBackendPreferences } from '@/lib/push/config'
 import {
-  NOTIFICATION_PREFERENCE_OPTIONS,
-  readFollowState,
-  sendTestNotification,
-  unsubscribeFromCard,
-  updateCardPreferences,
-} from '@/lib/push/config'
-import type { NotificationPreferenceKey, NotificationPreferences } from '@/lib/push/types'
-import type { ModalPresentation } from '@/profile-app/components/SaveContactModal'
-import { V1BottomSheet } from '@/profile-app/v1/components/V1BottomSheet'
-import { Bell, Save, X } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
+  BACKEND_NOTIFICATION_PREFERENCE_OPTIONS,
+  DEFAULT_BACKEND_NOTIFICATION_PREFERENCES,
+  type BackendNotificationPreferenceKey,
+  type BackendNotificationPreferences,
+} from '@/lib/push/preferenceMapping'
+import { notify } from '@/lib/toast/toast'
+import { ProfileModalShell } from '@/profile-app/components/ProfileModalShell'
+import { Bell, BellOff, BellRing, Loader2, Save, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-function readInitialPreferences(cardSlug: string): NotificationPreferences {
-  const followState = readFollowState(cardSlug)
-  if (followState?.preferences) return followState.preferences
-
-  return {
-    contact: true,
-    video: true,
-    blog: true,
-    company: true,
-    services: true,
-  }
-}
-
-const NotificationSettingsForm = ({
-  cardSlug,
+export const NotificationSettingsModal = ({
+  isOpen,
   onClose,
-  presentation = 'default',
-  isOpen = true,
+  cardSlug = 'preview',
+  onReEnable,
 }: {
-  cardSlug: string
+  isOpen: boolean
   onClose: () => void
-  presentation?: ModalPresentation
-  isOpen?: boolean
+  cardSlug?: string
+  /** Called when the user wants to re-enable after unfollowing (opens the enable popup). */
+  onReEnable?: () => void
 }) => {
-  const [preferences, setPreferences] = useState<NotificationPreferences>(() => readInitialPreferences(cardSlug))
+  const [preferences, setPreferences] = useState<BackendNotificationPreferences>(
+    () => DEFAULT_BACKEND_NOTIFICATION_PREFERENCES
+  )
+  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [testing, setTesting] = useState(false)
   const [unfollowing, setUnfollowing] = useState(false)
+  const [unfollowed, setUnfollowed] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const togglePreference = (pref: NotificationPreferenceKey) => {
+  const togglePreference = (pref: BackendNotificationPreferenceKey) => {
     setPreferences((prev) => ({ ...prev, [pref]: !prev[pref] }))
   }
+
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+
+    const load = async () => {
+      setUnfollowed(false)
+      setLoading(true)
+      setError(null)
+      setMessage(null)
+      try {
+        const status = await fetchPushStatus(cardSlug)
+        if (cancelled) return
+        if (status.backendPreferences) {
+          setPreferences(status.backendPreferences)
+        } else {
+          setPreferences(DEFAULT_BACKEND_NOTIFICATION_PREFERENCES)
+        }
+      } catch {
+        if (!cancelled) setPreferences(DEFAULT_BACKEND_NOTIFICATION_PREFERENCES)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    const timer = window.setTimeout(() => void load(), 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [isOpen, cardSlug])
 
   const handleSave = async () => {
     setSaving(true)
     setError(null)
     setMessage(null)
     try {
-      await updateCardPreferences(cardSlug, preferences)
-      setMessage('Preferences saved.')
+      const result = await updateCardBackendPreferences(cardSlug, preferences)
+      setPreferences(result.preferences)
+      const successMessage = result.message
+      setMessage(successMessage)
+      notify.success(successMessage)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save preferences.')
+      const failureMessage = e instanceof Error ? e.message : 'Could not save your notification preferences.'
+      setError(failureMessage)
+      notify.error(failureMessage)
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleTest = async () => {
-    setTesting(true)
-    setError(null)
-    setMessage(null)
-    try {
-      await sendTestNotification(cardSlug, 'vBiz Me Update', 'This is a test push notification for your followed card.')
-      setMessage('Test notification sent.')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send test notification.')
-    } finally {
-      setTesting(false)
     }
   }
 
@@ -83,139 +94,127 @@ const NotificationSettingsForm = ({
     setMessage(null)
     try {
       await unsubscribeFromCard(cardSlug)
-      setMessage('You unfollowed this card.')
-      window.setTimeout(onClose, 800)
+      setUnfollowed(true)
+      notify.success('You unfollowed this card. Notifications are turned off.')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not unfollow this card.')
+      const failureMessage = e instanceof Error ? e.message : 'Could not unfollow this card.'
+      setError(failureMessage)
+      notify.error(failureMessage)
     } finally {
       setUnfollowing(false)
     }
   }
 
-  const panel = (
-    <div className="relative w-full max-w-sm p-6 sm:max-w-none">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute top-4 right-4 rounded-full bg-zinc-800 p-1.5 text-zinc-400 transition-colors hover:text-zinc-200"
-        aria-label="Close notification settings"
-      >
-        <X size={16} />
-      </button>
+  const handleReEnable = () => {
+    if (onReEnable) {
+      onReEnable()
+    } else {
+      onClose()
+    }
+  }
 
-      <div className="flex flex-col text-left">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500">
-            <Bell size={20} />
+  return (
+    <ProfileModalShell
+      key={cardSlug}
+      isOpen={isOpen}
+      onClose={onClose}
+      panelClassName="relative w-full overflow-hidden rounded-t-3xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:max-w-sm sm:rounded-3xl"
+    >
+      <div className="relative w-full max-w-sm p-6 sm:max-w-none">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full bg-zinc-800 p-1.5 text-zinc-400 transition-colors hover:text-zinc-200"
+          aria-label="Close notification settings"
+        >
+          <X size={16} />
+        </button>
+
+        {unfollowed ? (
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+              <BellOff size={24} />
+            </div>
+            <h2 className="mb-2 text-xl font-bold text-zinc-100">Notifications turned off</h2>
+            <p className="mb-6 text-sm text-zinc-400">
+              You won&apos;t get updates for this card anymore. You can re-enable them anytime.
+            </p>
+            <div className="flex w-full flex-col gap-3">
+              <button
+                type="button"
+                onClick={handleReEnable}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-zinc-200"
+              >
+                <BellRing size={16} /> Re-enable Notifications
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-full border border-zinc-700 bg-zinc-950 py-3 text-sm font-medium text-zinc-200 transition-all hover:bg-zinc-800"
+              >
+                Close
+              </button>
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-zinc-100">Notification Settings</h2>
-        </div>
+        ) : (
+          <div className="flex flex-col text-left">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500">
+                <Bell size={20} />
+              </div>
+              <h2 className="text-xl font-bold text-zinc-100">Notification Settings</h2>
+            </div>
 
-        <p className="mb-6 text-sm text-zinc-400">Choose what to get notified about:</p>
+            <p className="mb-6 text-sm text-zinc-400">Choose what to get notified about:</p>
 
-        <div className="mb-6 w-full space-y-3 rounded-xl bg-zinc-950/50 p-4 text-sm text-zinc-300">
-          {NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
-            <label key={p.id} className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={preferences[p.id]}
-                onChange={() => togglePreference(p.id)}
-                className="rounded border-zinc-700 bg-zinc-800 text-yellow-500 focus:ring-yellow-500"
-              />
-              {p.label}
-            </label>
-          ))}
-        </div>
+            <div className="mb-6 w-full space-y-3 rounded-xl bg-zinc-950/50 p-4 text-sm text-zinc-300">
+              {loading ? (
+                <div className="flex items-center justify-center py-6 text-zinc-400">
+                  <Loader2 size={20} className="animate-spin" />
+                </div>
+              ) : (
+                BACKEND_NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
+                  <label key={p.id} className="flex cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={preferences[p.id]}
+                      onChange={() => togglePreference(p.id)}
+                      className="rounded border-zinc-700 bg-zinc-800 text-yellow-500 focus:ring-yellow-500"
+                    />
+                    {p.label}
+                  </label>
+                ))
+              )}
+            </div>
 
-        {message ? <p className="mb-3 text-xs text-green-400">{message}</p> : null}
-        {error ? (
-          <p className="mb-3 text-xs text-red-400" role="alert">
-            {error}
-          </p>
-        ) : null}
+            {message ? <p className="mb-3 text-xs text-green-400">{message}</p> : null}
+            {error ? (
+              <p className="mb-3 text-xs text-red-400" role="alert">
+                {error}
+              </p>
+            ) : null}
 
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-zinc-200 disabled:opacity-60"
-          >
-            <Save size={16} /> {saving ? 'Saving…' : 'Save Preferences'}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleTest()}
-            disabled={testing}
-            className="w-full rounded-full border border-zinc-700 bg-zinc-950 py-3 text-sm font-medium text-zinc-200 transition-all hover:bg-zinc-800 disabled:opacity-60"
-          >
-            {testing ? 'Sending test…' : 'Send Test Notification'}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleUnfollow()}
-            disabled={unfollowing}
-            className="w-full rounded-full border border-red-500/30 bg-red-500/10 py-3 text-sm font-medium text-red-300 transition-all hover:bg-red-500/20 disabled:opacity-60"
-          >
-            {unfollowing ? 'Unfollowing…' : 'Unfollow This Card'}
-          </button>
-        </div>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-zinc-200 disabled:opacity-60"
+              >
+                <Save size={16} /> {saving ? 'Saving…' : 'Save Preferences'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleUnfollow()}
+                disabled={unfollowing}
+                className="w-full rounded-full border border-red-500/30 bg-red-500/10 py-3 text-sm font-medium text-red-300 transition-all hover:bg-red-500/20 disabled:opacity-60"
+              >
+                {unfollowing ? 'Unfollowing…' : 'Unfollow This Card'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  )
-
-  if (presentation === 'bottom-sheet') {
-    return (
-      <V1BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className="relative w-full overflow-hidden rounded-t-[2.5rem] border-t border-white/10 bg-[#0c0c0e] p-2 pb-8 shadow-[0_40px_100px_rgba(0,0,0,0.85)] sm:rounded-[2.5rem] sm:border">
-          {panel}
-        </div>
-      </V1BottomSheet>
-    )
-  }
-
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-sm rounded-3xl border border-zinc-800 bg-zinc-900 shadow-2xl"
-      >
-        {panel}
-      </motion.div>
-    </div>
-  )
-}
-
-export const NotificationSettingsModal = ({
-  isOpen,
-  onClose,
-  cardSlug = 'preview',
-  presentation = 'default',
-}: {
-  isOpen: boolean
-  onClose: () => void
-  cardSlug?: string
-  presentation?: ModalPresentation
-}) => {
-  if (presentation === 'bottom-sheet') {
-    return (
-      <NotificationSettingsForm
-        key={cardSlug}
-        cardSlug={cardSlug}
-        onClose={onClose}
-        presentation={presentation}
-        isOpen={isOpen}
-      />
-    )
-  }
-
-  return (
-    <AnimatePresence>
-      {isOpen ? (
-        <NotificationSettingsForm key={cardSlug} cardSlug={cardSlug} onClose={onClose} presentation={presentation} />
-      ) : null}
-    </AnimatePresence>
+    </ProfileModalShell>
   )
 }

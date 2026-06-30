@@ -19,6 +19,57 @@ export type ProfileContactItem = {
   style?: Pick<DisplayFieldConfig, 'textColor' | 'backgroundColor' | 'iconColor'>
 }
 
+export const PROFILE_CONTACT_LABEL_ORDER = ['Profession', 'Company', 'Email', 'Phone', 'Website', 'Address'] as const
+
+export type BentoProfileContactItem = ProfileContactItem & {
+  colSpan: 1 | 2
+}
+
+const MAX_BENTO_CONTACT_ITEMS = 6
+
+/** Row widths per item count — e.g. 5 items → [2,1,2], 3 items → [2,1], 6 items → [2,1,2,1]. */
+function getBentoRowPattern(count: number): number[] {
+  const patterns: Record<number, number[]> = {
+    1: [1],
+    2: [2],
+    3: [2, 1],
+    4: [2, 2],
+    5: [2, 1, 2],
+    6: [2, 1, 2, 1],
+  }
+  return patterns[count] ?? [2, 2, 2]
+}
+
+function assignBentoColSpans(items: ProfileContactItem[]): BentoProfileContactItem[] {
+  const slice = items.slice(0, MAX_BENTO_CONTACT_ITEMS)
+  const count = slice.length
+  if (count === 0) return []
+
+  const colSpans: (1 | 2)[] = []
+  for (const row of getBentoRowPattern(count)) {
+    if (row === 1) {
+      colSpans.push(2)
+    } else {
+      colSpans.push(1, 1)
+    }
+  }
+
+  return slice.map((item, index) => ({
+    ...item,
+    colSpan: colSpans[index] ?? 1,
+  }))
+}
+
+function resolveProfessionValue(personal: VCardPersonal, isVisible: (key: string) => boolean): string {
+  if (isVisible('MyInfo Profession') && personal.profession?.trim()) {
+    return cleanProfileFieldValue(personal.profession)
+  }
+  if (isVisible('MyInfo Designation') && personal.designation?.trim()) {
+    return cleanProfileFieldValue(personal.designation)
+  }
+  return ''
+}
+
 export function splitDisplayName(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return { first: 'Your', rest: 'Name' }
@@ -42,13 +93,28 @@ export function buildProfileContactItems(
 ): ProfileContactItem[] {
   const items: ProfileContactItem[] = []
 
-  if (isVisible('MyInfo Profession') && personal.profession) {
+  const professionValue = resolveProfessionValue(personal, isVisible)
+  if (professionValue) {
+    const professionStyle = field('MyInfo Profession')
+    const designationStyle = field('MyInfo Designation')
     items.push({
       icon: Briefcase,
       label: 'Profession',
-      value: personal.profession,
+      value: professionValue,
       detail: 'Role',
-      style: field('MyInfo Profession'),
+      style:
+        professionStyle.textColor || professionStyle.backgroundColor || professionStyle.iconColor
+          ? professionStyle
+          : designationStyle,
+    })
+  }
+  if (isVisible('MyInfo Company') && personal.company) {
+    items.push({
+      icon: Building2,
+      label: 'Company',
+      value: personal.company,
+      detail: 'Org',
+      style: field('MyInfo Company'),
     })
   }
   if (isVisible('MyInfo Email') && personal.email) {
@@ -71,15 +137,6 @@ export function buildProfileContactItems(
       href: `tel:${personal.phone.replace(/\s/g, '')}`,
       detail: 'Direct',
       style: field('MyInfo Phone'),
-    })
-  }
-  if (isVisible('MyInfo Company') && personal.company) {
-    items.push({
-      icon: Building2,
-      label: 'Company',
-      value: personal.company,
-      detail: 'Org',
-      style: field('MyInfo Company'),
     })
   }
   const website = personal.website?.trim()
@@ -105,6 +162,31 @@ export function buildProfileContactItems(
   }
 
   return items
+}
+
+/** Desktop bento grid: up to 6 core fields, auto row layout by count. */
+export function buildBentoContactItems(
+  personal: VCardPersonal,
+  isVisible: (key: string) => boolean,
+  field: (key: string) => DisplayFieldConfig
+): BentoProfileContactItem[] {
+  const byLabel = new Map(buildProfileContactItems(personal, isVisible, field).map((item) => [item.label, item]))
+
+  const ordered = PROFILE_CONTACT_LABEL_ORDER.map((label) => byLabel.get(label)).filter(
+    (item): item is ProfileContactItem => Boolean(item)
+  )
+
+  return assignBentoColSpans(ordered)
+}
+
+/** Mobile / popup: all core contact fields plus API extra fields. */
+export function buildFullContactItems(
+  personal: VCardPersonal,
+  isVisible: (key: string) => boolean,
+  field: (key: string) => DisplayFieldConfig,
+  extraFields: VCardExtraField[] = []
+): ProfileContactItem[] {
+  return [...buildProfileContactItems(personal, isVisible, field), ...buildExtraFieldContactItems(extraFields)]
 }
 
 export function formatProfileViewCount(views: number): string {

@@ -10,6 +10,8 @@ export type LiveAgentProps = UseLiveAgentOptions & {
   embedded?: boolean
   /** Accent from the card theme (`design.accentColor`). */
   accentColor?: string
+  /** Overrides the floating wrapper position classes (e.g. per-template placement). */
+  wrapperClassName?: string
 }
 
 const PREVIEW_PHONE_SELECTOR = '.vbiz-preview-phone'
@@ -32,6 +34,7 @@ export function LiveAgent({
   cardData = DEFAULT_LIVE_AGENT_CARD,
   systemInstruction,
   readyToConnect = false,
+  wrapperClassName,
 }: LiveAgentProps) {
   const subscribe = useCallback(
     (onStoreChange: () => void) => (embedded ? subscribeToPreviewPhoneShell(onStoreChange) : () => {}),
@@ -49,6 +52,7 @@ export function LiveAgent({
       systemInstruction={systemInstruction}
       readyToConnect={readyToConnect}
       embedded={embedded}
+      wrapperClassName={wrapperClassName}
     />
   )
 

@@ -1,6 +1,8 @@
+import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
 import { buildProfilePath } from '@/lib/profileRoutes'
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
 import { resolveProfileDesignFromData } from '@/lib/resolvedProfileDesign'
+import type { CardThemeConfig } from '@/lib/theme/cardThemeContract'
 import { getDisplaySettingsFromVCard, getHomeMediaUrls, isFieldVisible } from '@/lib/vcardDisplaySettings'
 import { normalizeFaqList } from '@/lib/vcardFaq'
 import { normalizeGeneralPostList } from '@/lib/vcardGeneralPosts'
@@ -74,6 +76,10 @@ export type VBizProfileAppProps = {
   onPreviewThemeChange?: (theme: 'light' | 'dark') => void
   profileViews?: number
   actionButtons?: MyCardActionButtons | null
+  /** Server-prefetched navbar catalog (`GET /post-types`). */
+  initialNavBarLinks?: NavBarLinksData | null
+  /** Dynamic global theme (Primary/Secondary/Accent + button/social appearance). Optional. */
+  themeConfig?: CardThemeConfig | null
 }
 
 export function buildProfileShareUrl(slug: string): string {
@@ -139,6 +145,7 @@ export function vCardDataToProfileProps(
     faqs: normalizeFaqList(data.faqs),
     displaySettings: display,
     shareSlug: slug || undefined,
+    themeConfig: data.themeConfig ?? null,
   }
 }
 

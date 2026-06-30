@@ -50,12 +50,6 @@
   }
 }
 
-@layer components {
-  .wrapper {
-    @apply mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8;
-  }
-}
-
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -68,34 +62,5 @@
   .mask-edges {
     mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
-  }
-
-  body[data-vbiz-tour-active] header[data-vbiz-tour-header-boost] {
-    z-index: 10001 !important;
-    isolation: isolate;
-  }
-
-  body[data-vbiz-tour-active] #main-scroll {
-    overflow-y: auto !important;
-    min-height: 0 !important;
-    max-height: calc(100dvh - 5.5rem);
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    pointer-events: none;
-    scrollbar-width: none;
-  }
-
-  body[data-vbiz-tour-active] #main-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  body[data-vbiz-tour-active] #main-scroll .overflow-y-auto {
-    pointer-events: none;
-    overscroll-behavior: contain;
-  }
-
-  body[data-vbiz-tour-active] [data-vbiz-tour-highlight] {
-    z-index: 10003 !important;
-    position: relative;
   }
 }

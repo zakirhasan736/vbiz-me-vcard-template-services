@@ -49,7 +49,7 @@ export function V1BottomSheet({ isOpen, onClose, children, panelClassName }: V1B
             className="pointer-events-auto fixed inset-0 z-9998 bg-black/75 backdrop-blur-md"
             aria-hidden
           />
-          <div className="pointer-events-none fixed inset-0 z-9999 flex items-end justify-center p-0 sm:p-4">
+          <div className="pointer-events-none fixed inset-0 z-9999 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <motion.div
               initial={{ y: '100%', opacity: 0.5 }}
               animate={{ y: 0, opacity: 1 }}

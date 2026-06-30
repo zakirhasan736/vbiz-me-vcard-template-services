@@ -1,3 +1,5 @@
+import { openGoogleWalletInNewTab } from '@/profile-app/lib/googleWallet'
+import { openVbizmeLogin, openVbizmePricing, reloadProfileCard } from '@/profile-app/lib/profileExternalLinks'
 import type { MyCardActionButton, MyCardActionButtons } from '@interfaces/api/myCard'
 import { ArrowUpRight, Download, Eye, Globe, QrCode, RefreshCw, Share2, User, type LucideIcon } from 'lucide-react'
 import type { CSSProperties } from 'react'
@@ -5,7 +7,7 @@ import type { CSSProperties } from 'react'
 export type ProfileActionButtonKey = 'my_info' | 'save_contact' | 'share' | 'refresh' | 'language' | 'view_counter'
 
 /** Fixed home-page CTAs (left column). Marked buttons always render. */
-export type HomeCtaKey = 'save_my_info' | 'my_vcard' | 'google_wallet' | 'get_vcard_now'
+export type HomeCtaKey = 'my_info' | 'save_my_info' | 'my_vcard' | 'google_wallet' | 'get_vcard_now'
 
 export type ResolvedHomeCtaButton = {
   key: HomeCtaKey
@@ -17,8 +19,13 @@ export type ResolvedHomeCtaButton = {
 }
 
 export type HomeCtaLayout = {
+  /** Top paired row (two buttons side by side). */
   row1: ResolvedHomeCtaButton[]
+  /** Full-width buttons stacked below row1. */
+  stacked: ResolvedHomeCtaButton[]
+  /** @deprecated Use `stacked`. Kept for v1 home layout consumers. */
   row2: ResolvedHomeCtaButton
+  /** @deprecated Use `stacked`. Kept for v1 home layout consumers. */
   row3: ResolvedHomeCtaButton
 }
 
@@ -34,6 +41,7 @@ export type ResolvedProfileActionButton = {
 }
 
 const HOME_CTA_DEFAULT_LABELS: Record<HomeCtaKey, string> = {
+  my_info: 'MY INFO',
   save_my_info: 'SAVE MY INFO',
   my_vcard: 'MY VCARD',
   google_wallet: 'SAVE TO GOOGLE WALLET',
@@ -57,36 +65,52 @@ export function resolveHomeCtaLayout(options: {
   actionButtons?: MyCardActionButtons | null
   labels?: Partial<Record<HomeCtaKey, string>>
   accentColor?: string
+  /** When true, adds a leading "My Info" button (opens the info popup) and stacks Save My Info below. */
+  includeMyInfo?: boolean
 }): HomeCtaLayout {
-  const { actionButtons, labels = {}, accentColor = '#eab308' } = options
+  const { actionButtons, labels = {}, accentColor = '#eab308', includeMyInfo = false } = options
 
-  const row1: ResolvedHomeCtaButton[] = [
-    resolveSaveMyInfoButton(actionButtons, labels),
-    {
-      key: 'my_vcard',
-      label: (labels.my_vcard ?? HOME_CTA_DEFAULT_LABELS.my_vcard).toUpperCase(),
-      icon: QrCode,
-      backgroundColor: accentColor,
-      textColor: '#000',
-      variant: 'accent',
-    },
-  ]
+  const saveMyInfo = resolveSaveMyInfoButton(actionButtons, labels)
+
+  const myVcard: ResolvedHomeCtaButton = {
+    key: 'my_vcard',
+    label: (labels.my_vcard ?? HOME_CTA_DEFAULT_LABELS.my_vcard).toUpperCase(),
+    icon: QrCode,
+    backgroundColor: accentColor,
+    textColor: '#000',
+    variant: 'accent',
+  }
+
+  const googleWallet: ResolvedHomeCtaButton = {
+    key: 'google_wallet',
+    label: (labels.google_wallet ?? HOME_CTA_DEFAULT_LABELS.google_wallet).toUpperCase(),
+    icon: Download,
+    variant: 'outline',
+  }
+
+  const getVcardNow: ResolvedHomeCtaButton = {
+    key: 'get_vcard_now',
+    label: (labels.get_vcard_now ?? HOME_CTA_DEFAULT_LABELS.get_vcard_now).toUpperCase(),
+    icon: ArrowUpRight,
+    backgroundColor: accentColor,
+    variant: 'cta',
+  }
+
+  const myInfo: ResolvedHomeCtaButton = {
+    key: 'my_info',
+    label: (labels.my_info ?? HOME_CTA_DEFAULT_LABELS.my_info).toUpperCase(),
+    icon: User,
+    variant: 'outline',
+  }
+
+  const row1 = includeMyInfo ? [myInfo, myVcard] : [saveMyInfo, myVcard]
+  const stacked = includeMyInfo ? [saveMyInfo, googleWallet, getVcardNow] : [googleWallet, getVcardNow]
 
   return {
     row1,
-    row2: {
-      key: 'google_wallet',
-      label: (labels.google_wallet ?? HOME_CTA_DEFAULT_LABELS.google_wallet).toUpperCase(),
-      icon: Download,
-      variant: 'outline',
-    },
-    row3: {
-      key: 'get_vcard_now',
-      label: (labels.get_vcard_now ?? HOME_CTA_DEFAULT_LABELS.get_vcard_now).toUpperCase(),
-      icon: ArrowUpRight,
-      backgroundColor: accentColor,
-      variant: 'cta',
-    },
+    stacked,
+    row2: googleWallet,
+    row3: getVcardNow,
   }
 }
 
@@ -94,24 +118,33 @@ export function handleHomeCtaClick(
   key: HomeCtaKey,
   handlers?: {
     onAction?: (action: string) => void
+    cardSlug?: string
   }
 ) {
   switch (key) {
+    case 'my_info':
+      if (handlers?.onAction) {
+        handlers.onAction('info')
+        return
+      }
+      window.dispatchEvent(new CustomEvent('openMyInfoModal'))
+      return
     case 'save_my_info':
-    case 'my_vcard':
-    case 'get_vcard_now':
+      // Only the dedicated Save Contact button opens the save-contact popup.
       if (handlers?.onAction) {
         handlers.onAction('contact')
         return
       }
       window.dispatchEvent(new CustomEvent('saveContactAction'))
       return
+    case 'my_vcard':
+      reloadProfileCard()
+      return
+    case 'get_vcard_now':
+      openVbizmePricing()
+      return
     case 'google_wallet':
-      if (handlers?.onAction) {
-        handlers.onAction('wallet')
-        return
-      }
-      window.dispatchEvent(new CustomEvent('openWalletModal'))
+      void openGoogleWalletInNewTab(handlers?.cardSlug)
       return
     default:
       return
@@ -254,9 +287,7 @@ export function handleProfileActionButtonClick(
   }
 
   if (key === 'view_counter') {
-    if (button.link) {
-      window.open(button.link, '_blank', 'noopener,noreferrer')
-    }
+    openVbizmeLogin()
     return
   }
 

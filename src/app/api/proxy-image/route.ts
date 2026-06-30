@@ -26,8 +26,13 @@ export async function GET(request: NextRequest) {
     }
 
     const buffer = await response.arrayBuffer()
-    const base64 = Buffer.from(buffer).toString('base64')
     const contentType = response.headers.get('content-type') || 'image/jpeg'
+
+    if (!contentType.startsWith('image/')) {
+      return NextResponse.json({ error: 'URL is not an image' }, { status: 415 })
+    }
+
+    const base64 = Buffer.from(buffer).toString('base64')
     const type = contentType.includes('png') ? 'PNG' : 'JPEG'
 
     return NextResponse.json({ base64, type })

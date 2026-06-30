@@ -40,7 +40,6 @@ export function v3DesignToCssVars(design: ResolvedProfileDesign): CSSProperties 
 export function buildV3ThemeCss(design: ResolvedProfileDesign): string {
   const accent = design.accentColor
   const dark = accentDark(accent)
-  const light = accentLight(accent, 18)
   const scope = '.vbiz-profile-v3'
 
   const gradientStops = `

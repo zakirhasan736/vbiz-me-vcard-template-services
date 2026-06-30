@@ -3,8 +3,9 @@
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import { mapMyCardToVCardRecord } from '@/lib/api/myCard/mapMyCard'
 import { DEFAULT_PROFILE_SLUG } from '@/lib/constants/profile'
-import { useGetMyCardBySlugQuery } from '@/redux/api/myCardApi'
-import { useEffect, useMemo } from 'react'
+import { myCardApi, useGetMyCardBySlugQuery } from '@/redux/api/myCardApi'
+import type { MyCardData } from '@interfaces/api/myCard'
+import { useLayoutEffect, useMemo } from 'react'
 import {
   selectMyCardRawBySlug,
   selectMyCardRecordBySlug,
@@ -13,11 +14,13 @@ import {
   selectProfileIdentityBySlug,
   selectProfileMediaBySlug,
 } from './myCard.selectors'
-import { setActiveProfileSlug } from './myCard.slice'
+import { hydrateMyCard, setActiveProfileSlug } from './myCard.slice'
 
 type UseProfileOptions = {
   /** Skip the network request (read Redux cache only). */
   skip?: boolean
+  /** Server-prefetched payload — available on first client render. */
+  initialMyCard?: MyCardData | null
 }
 
 /**
@@ -28,10 +31,18 @@ export function useProfile(slug: string = DEFAULT_PROFILE_SLUG, options?: UsePro
   const dispatch = useAppDispatch()
   const trimmed = slug.trim()
   const skip = options?.skip || !trimmed
+  const initialMyCard = options?.initialMyCard ?? null
+  const hasPrefetched = Boolean(initialMyCard)
 
-  const query = useGetMyCardBySlugQuery(trimmed, { skip })
+  useLayoutEffect(() => {
+    if (!initialMyCard || !trimmed) return
+    dispatch(myCardApi.util.upsertQueryData('getMyCardBySlug', trimmed, initialMyCard))
+    dispatch(hydrateMyCard({ slug: trimmed, raw: initialMyCard }))
+  }, [dispatch, trimmed, initialMyCard])
 
-  useEffect(() => {
+  const query = useGetMyCardBySlugQuery(trimmed, { skip: skip || hasPrefetched })
+
+  useLayoutEffect(() => {
     if (!trimmed || skip) return
     dispatch(setActiveProfileSlug(trimmed))
   }, [dispatch, trimmed, skip])
@@ -43,7 +54,7 @@ export function useProfile(slug: string = DEFAULT_PROFILE_SLUG, options?: UsePro
   const features = useAppSelector((state) => selectProfileFeaturesBySlug(state, trimmed))
   const actionButtons = useAppSelector((state) => selectProfileActionButtonsBySlug(state, trimmed))
 
-  const myCard = query.data ?? cachedRaw
+  const myCard = query.data ?? cachedRaw ?? initialMyCard
   const record = useMemo(() => {
     if (cachedRecord) return cachedRecord
     if (myCard) return mapMyCardToVCardRecord(myCard)
@@ -58,9 +69,9 @@ export function useProfile(slug: string = DEFAULT_PROFILE_SLUG, options?: UsePro
     media,
     features,
     actionButtons,
-    isLoading: !skip && query.isLoading && !myCard,
+    isLoading: !skip && !hasPrefetched && query.isLoading && !myCard,
     isFetching: query.isFetching,
-    isError: query.isError,
+    isError: hasPrefetched ? false : query.isError,
     isSuccess: Boolean(myCard),
     error: query.error,
   }

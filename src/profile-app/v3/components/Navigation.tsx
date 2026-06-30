@@ -118,7 +118,7 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUpOrLeave}
         onMouseLeave={onMouseUpOrLeave}
-        className={`no-scrollbar flex w-full touch-pan-x items-center gap-1.5 overflow-x-auto scroll-smooth px-6 py-0.5 select-none md:w-auto md:gap-3.5 md:px-2 ${
+        className={`no-scrollbar flex w-full touch-pan-x items-center gap-3 overflow-x-auto scroll-smooth px-6 py-0.5 select-none md:w-auto md:gap-3.5 md:px-2 ${
           isPressed ? 'scale-[0.995] cursor-grabbing' : 'cursor-grab'
         } transition-all duration-150`}
         style={{ scrollbarWidth: 'none' }}
@@ -149,7 +149,7 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               id={`tab-btn-${tab.id}`}
               onMouseEnter={() => setHoveredTab(tab.id)}
               onMouseLeave={() => setHoveredTab(null)}
-              className="focus-visible:ring-gold/60 relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-12 md:w-12 md:rounded-[14px]"
+              className="focus-visible:ring-gold/60 relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-12 md:w-12 md:rounded-[14px]"
               title={tab.label}
             >
               {/* Hover highlight with animated layout transition */}
@@ -181,8 +181,8 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
               {/* Icon & Label Container */}
               <div className="relative z-10 flex items-center justify-center">
                 <tab.icon
-                  size={16}
-                  className={`h-4 w-4 md:h-[18px] md:w-[18px] ${
+                  size={20}
+                  className={`h-5 w-5 md:h-5 md:w-5 ${
                     isActive
                       ? theme === 'dark'
                         ? 'text-gold'

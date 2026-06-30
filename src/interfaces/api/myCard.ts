@@ -109,6 +109,7 @@ export type MyCardData = {
   profile: MyCardProfile
   settings: Record<string, string>
   features: Record<string, boolean | string | number>
+  /** Active shell id from backend, e.g. "dynamic" (v1), "v2", "v3", or "default" (v3). */
   template: string
   background_media: MyCardMediaBlock
   intro_video: MyCardMediaBlock
@@ -116,6 +117,8 @@ export type MyCardData = {
   action_buttons: MyCardActionButtons
   my_info: MyCardMyInfo
   background_audio?: MyCardBackgroundAudio
+  /** Optional dynamic global theme (Primary/Secondary/Accent + button/social appearance). */
+  theme_config?: unknown
 }
 
 export type MyCardResponse = ApiResponse<MyCardData>

@@ -1,32 +1,24 @@
 'use client'
 
-import { FALLBACK_LANGUAGES, I18N_CONFIG, selectedLanguageStorageKey } from '@/lib/i18n/config'
-import { applyTranslation, getCardOwnerId, resetToEnglish, type BackendLanguage } from '@/lib/i18n/translation'
-import type { ModalPresentation } from '@/profile-app/components/SaveContactModal'
-import { V1BottomSheet } from '@/profile-app/v1/components/V1BottomSheet'
+import { FALLBACK_LANGUAGES, I18N_CONFIG } from '@/lib/i18n/config'
+import { applyTranslation, getActiveLanguage, resetToEnglish, type BackendLanguage } from '@/lib/i18n/translation'
+import { ProfileModalShell } from '@/profile-app/components/ProfileModalShell'
 import { Check, Loader2, X } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 
 /** Shared language picker — used by v1, v2, v3 profile templates. */
-export function LanguageModal({
-  isOpen,
-  onClose,
-  theme,
-  presentation = 'default',
-}: {
-  isOpen: boolean
-  onClose: () => void
-  theme?: string
-  presentation?: ModalPresentation
-}) {
+export function LanguageModal({ isOpen, onClose, theme }: { isOpen: boolean; onClose: () => void; theme?: string }) {
   const [languages, setLanguages] = useState<BackendLanguage[]>(FALLBACK_LANGUAGES)
   const [fallbackLang, setFallbackLang] = useState<string>(I18N_CONFIG.fallback)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [selected, setSelected] = useState<string>(() => {
-    const cardId = getCardOwnerId()
-    return localStorage.getItem(selectedLanguageStorageKey(cardId)) || I18N_CONFIG.fallback
-  })
+  const [isApplying, setIsApplying] = useState(false)
+  const [selected, setSelected] = useState<string>(I18N_CONFIG.fallback)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const timer = window.setTimeout(() => setSelected(getActiveLanguage(fallbackLang)), 0)
+    return () => window.clearTimeout(timer)
+  }, [isOpen, fallbackLang])
 
   useEffect(() => {
     if (!isOpen) return
@@ -66,19 +58,27 @@ export function LanguageModal({
 
   const handleApply = () => {
     triggerHaptic(20)
-    if (selected === I18N_CONFIG.fallback) {
+    const active = getActiveLanguage(fallbackLang)
+    if (selected === active) {
+      onClose()
+      return
+    }
+
+    setIsApplying(true)
+    if (selected === fallbackLang) {
       resetToEnglish()
     } else {
       applyTranslation(selected, fallbackLang)
     }
-    onClose()
+    // Page reloads — modal stays in applying state until navigation.
   }
 
   const handleReset = () => {
     triggerHaptic(25)
+    setIsApplying(true)
     resetToEnglish()
-    setSelected(I18N_CONFIG.fallback)
-    onClose()
+    setSelected(fallbackLang)
+    // Page reloads.
   }
 
   const isDark =
@@ -165,47 +165,43 @@ export function LanguageModal({
       >
         <button
           type="button"
-          disabled={isLoading}
+          disabled={isLoading || isApplying}
           onClick={handleApply}
           className="from-gold flex w-[85%] cursor-pointer items-center justify-center gap-2 rounded-full bg-linear-to-br to-yellow-500 py-3.5 text-xs font-extrabold tracking-wider text-black uppercase shadow-[0_10px_25px_rgba(238,214,119,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.98] disabled:opacity-50 md:text-sm"
         >
-          <Check size={16} strokeWidth={3} /> APPLY LANGUAGE
+          {isApplying ? (
+            <>
+              <Loader2 size={16} className="animate-spin" strokeWidth={3} /> RELOADING…
+            </>
+          ) : (
+            <>
+              <Check size={16} strokeWidth={3} /> APPLY LANGUAGE
+            </>
+          )}
         </button>
 
         <button
           type="button"
+          disabled={isApplying}
           onClick={handleReset}
-          className={`mt-1 cursor-pointer text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:opacity-80 active:scale-95 ${
+          className={`mt-1 cursor-pointer text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:opacity-80 active:scale-95 disabled:opacity-50 ${
             isDark ? 'text-gold' : 'text-amber-800'
           }`}
         >
-          Reset to English (Clear Cookies & Cache)
+          Reset to English
         </button>
       </div>
     </div>
   )
 
-  if (presentation === 'bottom-sheet') {
-    return (
-      <V1BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className="w-full rounded-t-[2.5rem] sm:rounded-[2.5rem]">{panel}</div>
-      </V1BottomSheet>
-    )
-  }
-
   return (
-    <AnimatePresence>
-      {isOpen ? (
-        <div className="fixed inset-0 z-150 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          >
-            {panel}
-          </motion.div>
-        </div>
-      ) : null}
-    </AnimatePresence>
+    <ProfileModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      backdropClassName="fixed inset-0 z-150 flex items-end justify-center bg-black/60 p-0 backdrop-blur-md sm:items-center sm:p-4"
+      panelClassName="w-full rounded-t-[2.5rem] sm:max-w-md sm:rounded-[2.5rem]"
+    >
+      {panel}
+    </ProfileModalShell>
   )
 }

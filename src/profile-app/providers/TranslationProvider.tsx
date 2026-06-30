@@ -1,7 +1,6 @@
 'use client'
 
 import { setTranslationCardScope } from '@/lib/i18n/cardScope'
-import { I18N_CONFIG } from '@/lib/i18n/config'
 import { initTranslation } from '@/lib/i18n/translation'
 import { LanguageModal } from '@/profile-app/components/LanguageModal'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
@@ -18,13 +17,11 @@ export function TranslationProvider({
   cardOwnerId,
   profileSlug,
   theme = 'light',
-  languageModalPresentation,
   children,
 }: {
   cardOwnerId?: string
   profileSlug?: string
   theme?: 'light' | 'dark'
-  languageModalPresentation?: 'default' | 'bottom-sheet'
   children: ReactNode
 }) {
   const [languageModalOpen, setLanguageModalOpen] = useState(false)
@@ -48,14 +45,11 @@ export function TranslationProvider({
 
   return (
     <TranslationUiContext.Provider value={value}>
-      <div id={I18N_CONFIG.googleTranslateElementId} className="hidden" aria-hidden />
+      {/* Google Translate host is created off-screen by the early bootstrap / runtime
+          (see googleTranslateRuntime). Rendering it here as display:none collided with
+          the bootstrap host (duplicate id) and stopped the combo from mounting. */}
       {children}
-      <LanguageModal
-        isOpen={languageModalOpen}
-        onClose={closeLanguageModal}
-        theme={theme}
-        presentation={languageModalPresentation}
-      />
+      <LanguageModal isOpen={languageModalOpen} onClose={closeLanguageModal} theme={theme} />
     </TranslationUiContext.Provider>
   )
 }

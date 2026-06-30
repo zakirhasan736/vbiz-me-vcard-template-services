@@ -2,8 +2,10 @@
 
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { formatGeneralPostDate } from '@/lib/vcardGeneralPosts'
+import { TruncatedClampText } from '@/profile-app/components/TruncatedClampText'
 import { ArrowUpRight, BookOpen, Calendar, FileEdit } from 'lucide-react'
 import { motion } from 'motion/react'
+import type { MouseEvent } from 'react'
 
 const SKELETON_CARD_COUNT = 3
 
@@ -194,11 +196,21 @@ function FeaturedPostCard({
         <h2 className="mb-6 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 transition-colors group-hover:text-black sm:text-4xl lg:text-5xl dark:text-zinc-100 dark:group-hover:text-white">
           {post.title}
         </h2>
-        {post.description ? (
-          <p className="mb-8 max-w-xl text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400">
-            {post.description}
-          </p>
-        ) : null}
+        <TruncatedClampText
+          plain={post.description}
+          className="mb-8 max-w-xl"
+          textClassName="text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400"
+          minLength={150}
+          onReadMore={
+            onPostClick
+              ? (e: MouseEvent) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  onPostClick(post)
+                }
+              : undefined
+          }
+        />
         {isClickable ? (
           <div className="mt-auto flex w-full items-center justify-end border-t border-zinc-200 pt-6 md:max-w-xl dark:border-zinc-800/80">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-lg transition-transform duration-300 group-hover:scale-110 dark:bg-zinc-100 dark:text-zinc-950">
@@ -261,16 +273,20 @@ function PostCard({
         ) : null}
       </div>
       <h3 className="mb-2 text-lg font-bold text-zinc-900 dark:text-zinc-100">{post.title}</h3>
-      {post.description ? (
-        <p className="mb-4 line-clamp-4 text-sm leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
-          {post.description}
-        </p>
-      ) : null}
-      {isClickable ? (
-        <span className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-[#eab308]">
-          Read more <ArrowUpRight size={14} />
-        </span>
-      ) : null}
+      <TruncatedClampText
+        plain={post.description}
+        className="mb-4"
+        minLength={150}
+        onReadMore={
+          onPostClick
+            ? (e: MouseEvent) => {
+                e.stopPropagation()
+                e.preventDefault()
+                onPostClick(post)
+              }
+            : undefined
+        }
+      />
     </motion.div>
   )
 

@@ -6,6 +6,9 @@ type Props = {
   src: string
   className?: string
   onEnded?: () => void
+  /** When false, video stays paused and hidden until fully buffered. */
+  shouldPlay?: boolean
+  onCanPlayThrough?: () => void
 }
 
 function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
@@ -18,10 +21,10 @@ function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
 }
 
 /**
- * Intro preloader video — autoplays muted (browser policy); user unmutes via the overlay control.
+ * Intro preloader video — waits for parent `shouldPlay` before starting playback.
  */
 export const ProfileIntroVideo = forwardRef<HTMLVideoElement, Props>(function ProfileIntroVideo(
-  { src, className, onEnded },
+  { src, className, onEnded, shouldPlay = false, onCanPlayThrough },
   forwardedRef
 ) {
   const internalRef = useRef<HTMLVideoElement>(null)
@@ -32,17 +35,19 @@ export const ProfileIntroVideo = forwardRef<HTMLVideoElement, Props>(function Pr
 
     el.muted = true
 
+    if (!shouldPlay) {
+      el.pause()
+      return
+    }
+
     const tryPlay = () => {
       if (el.paused) void el.play().catch(() => undefined)
     }
 
     tryPlay()
     el.addEventListener('canplay', tryPlay, { once: true })
-
-    return () => {
-      el.removeEventListener('canplay', tryPlay)
-    }
-  }, [src])
+    return () => el.removeEventListener('canplay', tryPlay)
+  }, [src, shouldPlay])
 
   return (
     <video
@@ -50,10 +55,11 @@ export const ProfileIntroVideo = forwardRef<HTMLVideoElement, Props>(function Pr
       key={src}
       src={src}
       className={className}
-      autoPlay
       muted
       playsInline
+      preload="auto"
       onEnded={onEnded}
+      onCanPlayThrough={onCanPlayThrough}
     />
   )
 })

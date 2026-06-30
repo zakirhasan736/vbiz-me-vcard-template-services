@@ -1,24 +1,19 @@
 'use client'
 
-import { hasContactFlowBeenAsked, writeContactFlowAsked } from '@/lib/push/config'
+import { resolveNotificationModalTarget } from '@/lib/push/notificationRouting'
 import type { ResolvedProfileDesign } from '@/lib/resolvedProfileDesign'
 import { designToCssVars, resolveProfileDesign } from '@/lib/resolvedProfileDesign'
+import { ProfileHomeModals, type ProfileHomeModalId } from '@/profile-app/components/ProfileHomeModals'
+import { useProfileHomeModalEvents } from '@/profile-app/hooks/useProfileHomeModalEvents'
+import { useProfileTheme } from '@/profile-app/hooks/useProfileTheme'
 import { ArrowDown, Moon, Sun } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useEffect, useState } from 'react'
-import { CursorTrail } from './components/CursorTrail'
-import { DoneModal } from './components/DoneModal'
-import { LeaveMessageModal } from './components/LeaveMessageModal'
+import { useCallback, useState } from 'react'
 import { LiveAgent } from './components/LiveAgent'
-import { NotificationAskModal } from './components/NotificationAskModal'
-import { NotificationSettingsModal } from './components/NotificationSettingsModal'
 import { ProfileBackgroundAudio } from './components/ProfileBackgroundAudio'
 import { ProfileCoverMedia } from './components/ProfileCoverMedia'
-import { ProfileIntroPreloader } from './components/ProfileIntroPreloader'
 import { ProfileLanguageButton } from './components/ProfileLanguageButton'
 import { ProfileSectionOutlet } from './components/ProfileSectionOutlet'
-import { SaveContactModal } from './components/SaveContactModal'
-import { SaveToWalletModal } from './components/SaveToWalletModal'
 import { useLiveAgentProfileActions } from './hooks/useLiveAgentProfileActions'
 import { useProfileSectionScroll } from './hooks/useProfileSectionScroll'
 import { useProfileDisplay } from './lib/profileDisplayContext'
@@ -31,13 +26,10 @@ import { useProfileNavigation } from './providers/ProfileNavigationProvider'
 import { useTranslationUi } from './providers/TranslationProvider'
 import { ProfileHeaderV2 } from './v2/components/ProfileHeaderV2'
 import { ProfileNavigationV2 } from './v2/components/ProfileNavigationV2'
-import { InfoModal } from './v3/components/InfoModal'
-import { NotepadModal } from './v3/components/NotepadModal'
-import { ShareModal } from './v3/components/ShareModal'
 
 export type { VBizProfileAppProps } from './profilePublicProps'
 
-type V2ModalState = 'contact' | 'wallet' | 'notification' | 'done' | 'settings' | 'notepad' | 'share' | 'info' | null
+type V2ModalState = ProfileHomeModalId
 
 export function VBizProfileApp({
   explainerVideoUrl,
@@ -57,6 +49,7 @@ export function VBizProfileApp({
 }: VBizProfileAppProps) {
   const { isVisible, pageColors, field } = useProfileDisplay()
   const slugForPersistence = profileSlug ?? shareSlug
+  const cardSlug = slugForPersistence ?? 'preview'
   const { activeSectionId } = useProfileNavigation()
   const { openLanguageModal } = useTranslationUi()
   const { isScrolled } = useProfileSectionScroll(activeSectionId)
@@ -78,40 +71,25 @@ export function VBizProfileApp({
       { darkMode: true }
     )
 
-  const [internalTheme, setInternalTheme] = useState<'light' | 'dark'>(() => {
-    if (embedded) return design.darkMode ? 'dark' : 'light'
-    return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark'
+  const { theme, toggleTheme } = useProfileTheme({
+    design,
+    embedded,
+    previewTheme,
+    onPreviewThemeChange,
+    defaultTheme: 'dark',
+    bodyClassNames: {
+      dark: 'bg-[#09090b] text-zinc-200 transition-colors duration-500 ease-in-out',
+      light: 'bg-zinc-50 text-zinc-900 transition-colors duration-500 ease-in-out',
+    },
   })
-  const theme = embedded && previewTheme !== undefined ? previewTheme : internalTheme
   const [activeModal, setActiveModal] = useState<V2ModalState>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
-  const [messageModalOpen, setMessageModalOpen] = useState(false)
-  const { showPreloader, introAllowed, endPreloader, hasVideo } = useProfileIntroContext()
+  const { showPreloader, introAllowed, hasVideo } = useProfileIntroContext()
   const coverPersistenceId = slugForPersistence?.trim() || 'profile'
 
   const openSaveContactModal = useCallback(() => setActiveModal('contact'), [])
-  useLiveAgentProfileActions(openSaveContactModal)
-
-  useEffect(() => {
-    if (embedded) return
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-      document.body.className = 'bg-[#09090b] text-zinc-200 transition-colors duration-500 ease-in-out'
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.body.className = 'bg-zinc-50 text-zinc-900 transition-colors duration-500 ease-in-out'
-    }
-    localStorage.setItem('theme', theme)
-  }, [theme, embedded])
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    if (embedded && onPreviewThemeChange) {
-      onPreviewThemeChange(next)
-    } else {
-      setInternalTheme(next)
-    }
-  }
+  const openNotepadModal = useCallback(() => setActiveModal('notepad'), [])
+  useLiveAgentProfileActions(openSaveContactModal, openNotepadModal)
 
   const handleShare = useCallback(async () => {
     const result = await shareProfile({
@@ -129,27 +107,7 @@ export function VBizProfileApp({
     }
   }, [shareSlug, ownerName])
 
-  useEffect(() => {
-    const handleSaveContactEvent = () => setActiveModal('contact')
-    const handleOpenNotepadEvent = () => setActiveModal('notepad')
-    const handleOpenMyInfoEvent = () => setActiveModal('info')
-    const handleOpenWalletEvent = () => setActiveModal('wallet')
-    const handleOpenShareEvent = () => setActiveModal('share')
-
-    window.addEventListener('saveContactAction', handleSaveContactEvent)
-    window.addEventListener('openNotepadAction', handleOpenNotepadEvent)
-    window.addEventListener('openMyInfoModal', handleOpenMyInfoEvent)
-    window.addEventListener('openWalletModal', handleOpenWalletEvent)
-    window.addEventListener('openShareModal', handleOpenShareEvent)
-
-    return () => {
-      window.removeEventListener('saveContactAction', handleSaveContactEvent)
-      window.removeEventListener('openNotepadAction', handleOpenNotepadEvent)
-      window.removeEventListener('openMyInfoModal', handleOpenMyInfoEvent)
-      window.removeEventListener('openWalletModal', handleOpenWalletEvent)
-      window.removeEventListener('openShareModal', handleOpenShareEvent)
-    }
-  }, [])
+  useProfileHomeModalEvents(setActiveModal, { cardSlug })
 
   const rootStyle = {
     ...designToCssVars(design),
@@ -164,19 +122,14 @@ export function VBizProfileApp({
       style={rootStyle}
     >
       <ProfileThemeStyles design={design} />
-      {showPreloader && hasVideo && explainerVideoUrl?.trim() ? (
-        <ProfileIntroPreloader videoUrl={explainerVideoUrl} onSkip={endPreloader} />
-      ) : null}
       {showPreloader && !hasVideo && (
         <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-zinc-950 text-zinc-100 dark:bg-black">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-yellow-500 border-t-transparent" />
           <p className="mt-4 text-xs font-bold tracking-[0.3em] text-zinc-500 uppercase">Preparing</p>
         </div>
       )}
-      <CursorTrail />
-
       {!embedded && (
-        <div className="fixed top-4 right-4 z-100 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-100 flex items-center gap-2 sm:fixed">
           <ProfileLanguageButton className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700" />
           <motion.button
             type="button"
@@ -236,8 +189,10 @@ export function VBizProfileApp({
           headerTextColor={headerTextColor ?? undefined}
           embedded={embedded}
           onShare={() => (isVisible('Share Btn') ? setActiveModal('share') : void handleShare())}
-          onNotificationSettings={() => setActiveModal('settings')}
-          onSaveContact={() => setActiveModal('contact')}
+          onNotificationSettings={() => {
+            void resolveNotificationModalTarget(cardSlug).then(setActiveModal)
+          }}
+          onOpenNotepad={() => setActiveModal('notepad')}
           onLanguage={openLanguageModal}
         />
 
@@ -252,7 +207,7 @@ export function VBizProfileApp({
           {activeSectionId === 'home' ? (
             <ProfileSectionOutlet sectionId={activeSectionId} template="v2" />
           ) : (
-            <div className="mx-auto w-full max-w-[1032px] px-6">
+            <div className="mx-auto w-full max-w-[1032px] lg:px-6">
               <ProfileSectionOutlet sectionId={activeSectionId} template="v2" />
             </div>
           )}
@@ -260,7 +215,7 @@ export function VBizProfileApp({
       </div>
 
       <AnimatePresence>
-        {activeSectionId === 'home' && !isScrolled && !embedded && (
+        {!isScrolled && !embedded && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -301,63 +256,19 @@ export function VBizProfileApp({
         cardData={liveAgentCardData}
         systemInstruction={liveAgentSystemPrompt}
         readyToConnect={introAllowed}
-      />
-
-      <LeaveMessageModal
-        isOpen={messageModalOpen}
-        onClose={() => setMessageModalOpen(false)}
-        ownerName={ownerName ?? 'the card owner'}
-        profileId={cardOwnerId}
-        design={design}
-        embedded={embedded}
+        wrapperClassName="right-4 bottom-[60px] md:right-6 md:bottom-[60px] lg:right-10 lg:bottom-[60px]"
       />
 
       {!embedded && (
-        <>
-          <NotepadModal
-            isOpen={activeModal === 'notepad'}
-            onClose={() => setActiveModal(null)}
-            cardOwnerId={cardOwnerId ?? 'michaelangelo_casanova'}
-          />
-          <SaveContactModal
-            isOpen={activeModal === 'contact'}
-            onClose={() => setActiveModal(null)}
-            profileId={cardOwnerId}
-            onSuccess={() => {
-              if (hasContactFlowBeenAsked(cardOwnerId ?? '91')) {
-                setActiveModal('done')
-              } else {
-                setActiveModal('wallet')
-              }
-            }}
-          />
-          <SaveToWalletModal
-            isOpen={activeModal === 'wallet'}
-            onClose={() => setActiveModal(null)}
-            onAction={() => setActiveModal('notification')}
-          />
-          <NotificationAskModal
-            isOpen={activeModal === 'notification'}
-            onClose={() => {
-              writeContactFlowAsked(cardOwnerId ?? '91', false)
-              setActiveModal(null)
-            }}
-            cardOwnerId={cardOwnerId ?? '91'}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
-            onAccept={(preferences) => {
-              writeContactFlowAsked(cardOwnerId ?? '91', true, preferences)
-              setActiveModal('done')
-            }}
-          />
-          <NotificationSettingsModal
-            isOpen={activeModal === 'settings'}
-            onClose={() => setActiveModal(null)}
-            cardSlug={profileSlug ?? shareSlug ?? 'preview'}
-          />
-          <DoneModal isOpen={activeModal === 'done'} onClose={() => setActiveModal(null)} />
-          <ShareModal isOpen={activeModal === 'share'} onClose={() => setActiveModal(null)} />
-          <InfoModal isOpen={activeModal === 'info'} onClose={() => setActiveModal(null)} theme={theme} />
-        </>
+        <ProfileHomeModals
+          activeModal={activeModal}
+          onClose={() => setActiveModal(null)}
+          onSetModal={setActiveModal}
+          theme={theme}
+          cardOwnerId={cardOwnerId}
+          cardSlug={profileSlug ?? shareSlug ?? 'preview'}
+          ownerName={ownerName}
+        />
       )}
 
       <ProfileBackgroundAudio profileSlug={profileSlug} shareSlug={shareSlug} />

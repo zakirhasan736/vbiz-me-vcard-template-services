@@ -92,7 +92,7 @@ function createFallbackNavItem(postType: PostTypeNavLink): NavBarNavItem {
 }
 
 function mapStaticLink(link: StaticNavLink): NavBarNavItem | null {
-  if (!link.active) return null
+  if (link.active !== true) return null
   const navId = STATIC_LINK_TO_NAV_ID[link.id] ?? link.id
   const def = NAV_ITEM_BY_ID[navId]
   if (!def) return null
@@ -100,7 +100,8 @@ function mapStaticLink(link: StaticNavLink): NavBarNavItem | null {
 }
 
 function isActivePostType(postType: PostTypeNavLink): boolean {
-  return postType.status?.trim().toLowerCase() === 'active'
+  const status = postType.status?.trim().toLowerCase()
+  return status === 'active' || status === '1'
 }
 
 function mapPostType(postType: PostTypeNavLink): NavBarNavItem | null {
@@ -120,13 +121,23 @@ function dedupeNavItemsById(items: NavBarNavItem[]): NavBarNavItem[] {
   })
 }
 
-/** Maps `GET /post-types` payload into ordered profile nav items. */
+/**
+ * Maps `GET /post-types` into profile nav items.
+ * Visibility: StaticLink.active === true, post_types.status === "active".
+ * Order: static links first (API order), then dynamic post types (API order).
+ */
 export function mapNavBarLinks(data: NavBarLinksData | undefined | null): NavBarNavItem[] {
   if (!data) return []
 
-  const staticItems = (data.StaticLink ?? []).map(mapStaticLink).filter((item): item is NavBarNavItem => Boolean(item))
+  const staticItems = (data.StaticLink ?? [])
+    .filter((link) => link.active === true)
+    .map(mapStaticLink)
+    .filter((item): item is NavBarNavItem => Boolean(item))
 
-  const postTypeItems = (data.post_types ?? []).map(mapPostType).filter((item): item is NavBarNavItem => Boolean(item))
+  const postTypeItems = (data.post_types ?? [])
+    .filter(isActivePostType)
+    .map(mapPostType)
+    .filter((item): item is NavBarNavItem => Boolean(item))
 
   return dedupeNavItemsById([...staticItems, ...postTypeItems])
 }

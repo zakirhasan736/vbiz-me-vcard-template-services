@@ -1,11 +1,16 @@
 'use client'
 
+import { useAppDispatch } from '@/hooks/redux'
+import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
 import { mapNavBarLinks } from '@/lib/api/navbar/mapNavBarLinks'
+import { orderAndDedupeNavItems } from '@/lib/api/navbar/orderNavTabs'
 import { DEFAULT_PROFILE_SECTION } from '@/lib/profileRoutes'
 import { getNavItemById, type NavBarNavItem } from '@/lib/vcardNavbar'
+import { useNavTabsWithSectionData } from '@/profile-app/hooks/useNavTabsWithSectionData'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetNavBarLinksQuery } from '@/redux/api'
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { navBarLinksApi } from '@/redux/features/navbar/navbar.api'
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
 
 type ProfileNavigationContextValue = {
   navItems: NavBarNavItem[]
@@ -27,23 +32,59 @@ type Props = {
   children: ReactNode
   sectionId?: string
   onSectionChange?: (sectionId: string) => void
+  /** Server-prefetched `/post-types` — one fast request, no per-section probes. */
+  initialNavBarLinks?: NavBarLinksData | null
 }
 
-/** Client-side section nav — no URL / route changes. */
-export function ProfileNavigationProvider({ children, sectionId = DEFAULT_PROFILE_SECTION, onSectionChange }: Props) {
-  const { settings: displaySettings } = useProfileDisplay()
-  const { data: navBarLinks, isLoading: isNavLoading, isError: isNavError } = useGetNavBarLinksQuery()
+/**
+ * Client-side section nav — no URL / route changes.
+ * Shows every active backend tab immediately; empty sections are removed in the
+ * background after load (does not extend the preloader).
+ */
+export function ProfileNavigationProvider({
+  children,
+  sectionId = DEFAULT_PROFILE_SECTION,
+  onSectionChange,
+  initialNavBarLinks = null,
+}: Props) {
+  const dispatch = useAppDispatch()
+  const { settings: displaySettings, cardOwnerId, education, experience } = useProfileDisplay()
+  const profileId = cardOwnerId?.trim() ?? ''
+
+  const hasPrefetchedNavLinks = Boolean(initialNavBarLinks)
+
+  useLayoutEffect(() => {
+    if (!initialNavBarLinks) return
+    dispatch(navBarLinksApi.util.upsertQueryData('getNavBarLinks', undefined, initialNavBarLinks))
+  }, [dispatch, initialNavBarLinks])
+
+  const {
+    data: navBarLinksFromQuery,
+    isLoading: isNavLinksLoading,
+    isError: isNavError,
+  } = useGetNavBarLinksQuery(undefined, { skip: hasPrefetchedNavLinks })
+
+  const navBarLinks = initialNavBarLinks ?? navBarLinksFromQuery
 
   const navItems = useMemo(() => {
     if (isNavError || !navBarLinks) return []
     return mapNavBarLinks(navBarLinks)
   }, [navBarLinks, isNavError])
 
-  // Navbar tabs come from GET /post-types only (StaticLink.active + post_types.status).
+  const { tabsWithData, isCheckingSectionData } = useNavTabsWithSectionData(navItems, {
+    profileId,
+    education,
+    experience,
+  })
+
   const visibleTabs = useMemo(() => {
     if (!displaySettings.globalEnabled) return []
-    return navItems
-  }, [navItems, displaySettings.globalEnabled])
+    const allBackendTabs = orderAndDedupeNavItems(navItems)
+    if (isCheckingSectionData) return allBackendTabs
+    return orderAndDedupeNavItems(tabsWithData)
+  }, [displaySettings.globalEnabled, isCheckingSectionData, navItems, tabsWithData])
+
+  const isNavLoading = hasPrefetchedNavLinks ? false : isNavLinksLoading
 
   const getNavItem = useCallback((tabId: string) => getNavItemById(tabId, navItems), [navItems])
 

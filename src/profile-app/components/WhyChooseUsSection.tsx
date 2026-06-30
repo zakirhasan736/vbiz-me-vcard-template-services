@@ -2,6 +2,7 @@
 
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
+import { TruncatedClampText } from '@/profile-app/components/TruncatedClampText'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetWhyChooseUsQuery } from '@/redux/api'
 import { ArrowUpRight, Landmark, Quote } from 'lucide-react'
@@ -35,7 +36,6 @@ function WhyChooseUsCard({
 }) {
   const imageUrl = resolveWhyChooseUsImage(item)
   const plainDescription = stripHtml(item.description)
-  const hasHtml = item.description.trim().length > 0
   const detailUrl = item.generalInfoUrl.trim()
 
   return (
@@ -78,16 +78,12 @@ function WhyChooseUsCard({
         </div>
 
         <div className="relative z-10 mt-6 lg:mt-8">
-          {hasHtml ? (
-            <div
-              className="prose prose-zinc dark:prose-invert mb-4 max-w-2xl text-base leading-relaxed font-medium lg:text-lg dark:text-zinc-400"
-              dangerouslySetInnerHTML={{ __html: item.description }}
-            />
-          ) : plainDescription ? (
-            <p className="mb-4 max-w-2xl text-base leading-relaxed font-medium text-zinc-600 lg:text-lg dark:text-zinc-400">
-              {plainDescription}
-            </p>
-          ) : null}
+          <TruncatedClampText
+            html={item.description}
+            plain={plainDescription}
+            accentColor={accent}
+            textClassName="text-base leading-relaxed font-medium lg:text-lg dark:text-zinc-400"
+          />
 
           {detailUrl ? (
             <a

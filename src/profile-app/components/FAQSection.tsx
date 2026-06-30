@@ -134,7 +134,7 @@ export const FAQSection = () => {
                       className="flex w-full items-center justify-between p-4 pr-5 text-left focus:outline-none"
                     >
                       <h4
-                        className={`pr-3 text-xs leading-tight font-black ${isOpen ? 'text-zinc-950 dark:text-white' : 'text-zinc-700 dark:text-zinc-300'}`}
+                        className={`pr-3 text-xs leading-tight font-black ${isOpen ? 'text-zinc-950 dark:text-white' : 'text-zinc-700 dark:text-zinc-200'}`}
                       >
                         {faq.question}
                       </h4>
@@ -153,7 +153,7 @@ export const FAQSection = () => {
                           transition={{ duration: 0.25 }}
                         >
                           <div
-                            className="prose prose-sm dark:prose-invert max-w-none border-t border-zinc-100 px-4 pt-1 pb-4 text-[11px] leading-relaxed font-medium text-zinc-600 sm:text-xs dark:border-zinc-800/40 dark:text-zinc-400"
+                            className="prose prose-sm dark:prose-invert max-w-none border-t border-zinc-100 px-4 pt-1 pb-4 text-[11px] leading-relaxed font-medium text-zinc-700 sm:text-xs dark:border-zinc-800/40 dark:text-zinc-200 [&_*]:!text-[inherit]"
                             dangerouslySetInnerHTML={{ __html: faq.answer }}
                           />
                         </motion.div>
@@ -212,7 +212,7 @@ export const FAQSection = () => {
                     className="relative z-10 flex w-full cursor-pointer items-center justify-between p-6 text-left focus:outline-none lg:p-8"
                   >
                     <h4
-                      className={`pr-8 text-base font-bold transition-colors md:text-lg ${isOpen ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-300'}`}
+                      className={`pr-8 text-base font-bold transition-colors md:text-lg ${isOpen ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-200'}`}
                     >
                       {faq.question}
                     </h4>
@@ -231,7 +231,7 @@ export const FAQSection = () => {
                         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                       >
                         <div
-                          className="prose prose-sm dark:prose-invert max-w-none border-t border-zinc-200 px-6 pt-6 pb-8 text-sm leading-relaxed font-medium text-zinc-600 md:text-base lg:px-8 dark:border-zinc-800/50 dark:text-zinc-400"
+                          className="prose prose-sm dark:prose-invert max-w-none border-t border-zinc-200 px-6 pt-6 pb-8 text-sm leading-relaxed font-medium text-zinc-700 md:text-base lg:px-8 dark:border-zinc-800/50 dark:text-zinc-200 [&_*]:!text-[inherit]"
                           dangerouslySetInnerHTML={{ __html: faq.answer }}
                         />
                       </motion.div>
