@@ -5,6 +5,7 @@
  * Used by v1, v2, and v3 profile shells — self-contained layout that fits any parent.
  */
 import { mapPublicCardProfileUrl, type PublicCardListItem } from '@/lib/api/publicCards/mapPublicCards'
+import { PUBLIC_CARDS_SEARCH_DEBOUNCE_MS, PUBLIC_CARDS_SEARCH_MIN_CHARS } from '@/lib/publicCards/publicCardsSearch'
 import { usePublicCardsDirectory } from '@/profile-app/hooks/usePublicCardsDirectory'
 import type { PublicCardsFilterOption } from '@interfaces/api/publicCards'
 import {
@@ -114,6 +115,55 @@ function MobileFilterSelect({ label, value, onChange, options, placeholder, Icon
 const CONNECTION_CARD_SHELL =
   'group/card relative flex flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-900 shadow-xl transition-colors duration-300 md:rounded-3xl'
 
+const CONNECTION_CARD_MEDIA_FIT = 'object-cover object-[center_35%] origin-[center_35%] scale-[1.02]'
+
+/** Photo area — real card image/video, or initials when the API returns the generic vBiz logo. */
+function PublicCardPhoto({
+  card,
+  className = '',
+  imageClassName = '',
+}: {
+  card: PublicCardListItem
+  className?: string
+  imageClassName?: string
+}) {
+  if (card.img && card.isVideo) {
+    return (
+      <video
+        src={card.img}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className={`h-full w-full ${CONNECTION_CARD_MEDIA_FIT} ${imageClassName}`}
+        aria-label={card.name}
+      />
+    )
+  }
+
+  if (card.img) {
+    return (
+      <Image
+        src={card.img}
+        alt={card.name}
+        fill
+        unoptimized
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        className={`${CONNECTION_CARD_MEDIA_FIT} ${imageClassName}`}
+      />
+    )
+  }
+
+  return (
+    <div
+      className={`flex h-full w-full items-center justify-center bg-linear-to-br from-zinc-800 via-zinc-900 to-zinc-950 ${className}`}
+      aria-hidden
+    >
+      <span className="text-3xl font-black tracking-tight text-[#eab308] md:text-4xl">{card.initials}</span>
+    </div>
+  )
+}
+
 /** Single card design shared by both the grid and the 3D slider. */
 function ConnectionCardInner({ card }: { card: PublicCardListItem }) {
   return (
@@ -121,12 +171,9 @@ function ConnectionCardInner({ card }: { card: PublicCardListItem }) {
       {/* Photo */}
       <div className="relative min-h-0 flex-1 overflow-hidden bg-zinc-950">
         <div className="absolute inset-0 z-10 bg-linear-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
-        <Image
-          src={card.img}
-          alt={card.name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover grayscale-15 transition-all duration-700 group-hover/card:scale-105 group-hover/card:grayscale-0"
+        <PublicCardPhoto
+          card={card}
+          imageClassName="grayscale-15 transition-all duration-700 group-hover/card:scale-105 group-hover/card:grayscale-0"
         />
       </div>
 
@@ -160,9 +207,14 @@ export const PublicCardsSection = () => {
     isLoading,
     isSearching,
     isLoadingMore,
+    isPrefetchingAll,
+    isSearchActive,
     error,
     hasMore,
-    total,
+    hasLoadedAll,
+    loadedCount,
+    remainingCount,
+    serverTotal,
     setDraftFilter,
     applyFilters,
     updateAndApplyFilter,
@@ -216,9 +268,11 @@ export const PublicCardsSection = () => {
       setDraftFilter('service', value)
       if (serviceDebounceRef.current) clearTimeout(serviceDebounceRef.current)
       serviceDebounceRef.current = setTimeout(() => {
+        const trimmed = value.trim()
+        if (trimmed.length > 0 && trimmed.length < PUBLIC_CARDS_SEARCH_MIN_CHARS) return
         updateAndApplyFilter('service', value)
         setActiveIndex(0)
-      }, 400)
+      }, PUBLIC_CARDS_SEARCH_DEBOUNCE_MS)
     },
     [setDraftFilter, updateAndApplyFilter]
   )
@@ -237,6 +291,13 @@ export const PublicCardsSection = () => {
 
   const sliderActiveIndex = cards.length === 0 ? 0 : Math.min(activeIndex, cards.length - 1)
 
+  useEffect(() => {
+    if (viewMode !== 'slider' || !hasMore || isLoadingMore || isPrefetchingAll) return
+    if (sliderActiveIndex >= cards.length - 2) {
+      void loadMore()
+    }
+  }, [cards.length, hasMore, isLoadingMore, isPrefetchingAll, loadMore, sliderActiveIndex, viewMode])
+
   const nextCard = () => {
     if (cards.length <= 1) return
     if (isTransitioning) return
@@ -254,7 +315,7 @@ export const PublicCardsSection = () => {
   }
 
   const showInitialLoader = isLoading && cards.length === 0
-  const showEmptyState = !isLoading && !error && cards.length === 0
+  const showEmptyState = !isLoading && !isPrefetchingAll && !error && cards.length === 0
 
   return (
     <div className="vbiz-public-cards-section isolate w-full max-w-full overflow-hidden pb-20">
@@ -305,10 +366,26 @@ export const PublicCardsSection = () => {
                   Discover and connect with top-tier verified professionals across the United States. Filter instantly
                   by state, city, and industry sector to find valuable prospects.
                 </p>
-                {total > 0 ? (
-                  <p className="text-[10px] font-semibold text-zinc-500 sm:text-xs dark:text-zinc-400">
-                    {total.toLocaleString()} public {total === 1 ? 'profile' : 'profiles'} found
-                  </p>
+                {serverTotal > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                    <p className="text-[10px] font-semibold text-zinc-500 sm:text-xs dark:text-zinc-400">
+                      {isSearchActive
+                        ? `${cards.length} match${cards.length === 1 ? '' : 'es'} across ${hasLoadedAll ? serverTotal : loadedCount} loaded profiles`
+                        : `Showing ${loadedCount} of ${serverTotal} public ${serverTotal === 1 ? 'profile' : 'profiles'}`}
+                      {isPrefetchingAll ? ' · loading full directory…' : ''}
+                    </p>
+                    {hasMore ? (
+                      <button
+                        type="button"
+                        onClick={() => void loadMore()}
+                        disabled={isLoadingMore || isPrefetchingAll}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#eab308]/40 bg-[#eab308]/15 px-3 py-1.5 text-[10px] font-bold text-[#b8940f] transition-all hover:border-[#eab308]/60 hover:bg-[#eab308]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs dark:text-[#eab308]"
+                      >
+                        {isLoadingMore || isPrefetchingAll ? <Loader2 size={12} className="animate-spin" /> : null}
+                        Load {remainingCount} more
+                      </button>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
 
@@ -345,7 +422,7 @@ export const PublicCardsSection = () => {
                     type="text"
                     value={draftFilters.service}
                     onChange={(e) => handleDesktopServiceChange(e.target.value)}
-                    placeholder="Search directory..."
+                    placeholder={`Search name or profession (${PUBLIC_CARDS_SEARCH_MIN_CHARS}+ letters)…`}
                     className="w-full rounded-xl border border-zinc-300 bg-white py-3 pr-4 pl-11 text-xs font-medium text-zinc-900 shadow-sm transition-all placeholder:text-zinc-400 hover:border-zinc-400 hover:bg-zinc-50 focus:border-[#eab308] focus:outline-none lg:text-sm dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80"
                   />
                 </div>
@@ -467,7 +544,7 @@ export const PublicCardsSection = () => {
                           type="text"
                           value={draftFilters.service}
                           onChange={(e) => setDraftFilter('service', e.target.value)}
-                          placeholder="Search name, job profession..."
+                          placeholder={`Search name or profession (${PUBLIC_CARDS_SEARCH_MIN_CHARS}+ letters)…`}
                           className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-3 pr-4 pl-11 text-xs font-semibold text-zinc-100 shadow-sm transition-all placeholder:text-zinc-500 focus:border-[#eab308] focus:outline-none"
                         />
                       </div>
@@ -521,7 +598,11 @@ export const PublicCardsSection = () => {
                       disabled={isSearching}
                       className="flex flex-2 items-center justify-center gap-1.5 rounded-xl bg-[#eab308] py-3.5 text-xs font-black text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 disabled:opacity-60"
                     >
-                      {isSearching ? <Loader2 size={13} className="animate-spin" /> : `Apply (${cards.length} Cards)`}
+                      {isSearching || isPrefetchingAll ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        `Apply (${serverTotal || cards.length} Cards)`
+                      )}
                     </button>
                   </div>
                 </motion.div>
@@ -580,7 +661,7 @@ export const PublicCardsSection = () => {
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.6, delay: (idx % 8) * 0.08, ease: 'easeOut' }}
               key={card.id}
-              className={`${CONNECTION_CARD_SHELL} h-[360px] cursor-pointer hover:border-zinc-700 sm:h-[380px]`}
+              className={`${CONNECTION_CARD_SHELL} h-[385px] cursor-pointer hover:border-zinc-700 sm:h-[407px]`}
             >
               <ConnectionCardInner card={card} />
             </motion.div>
@@ -716,18 +797,18 @@ export const PublicCardsSection = () => {
                     {/* Connection Photo */}
                     <div
                       className="relative w-full overflow-hidden bg-zinc-950"
-                      style={{ height: isMobile ? '190px' : '260px' }}
+                      style={{ height: isMobile ? '203px' : '278px' }}
                     >
                       <div className="absolute inset-0 z-10 bg-linear-to-t from-zinc-900 via-zinc-900/20 to-transparent" />
 
                       <motion.div
-                        className="absolute inset-0 h-full w-full overflow-hidden"
+                        className="absolute inset-0 h-full w-full translate-x-(--mouse-x,0px) translate-y-(--mouse-y,0px) overflow-hidden"
                         animate={{ scale: absOffset === 0 ? 1 : 1.05 }}
                         transition={{ duration: 0.5 }}
                       >
-                        <div
-                          className="absolute top-[-5%] left-[-5%] h-[110%] w-[110%] translate-x-(--mouse-x,0px) translate-y-(--mouse-y,0px) bg-cover bg-center grayscale-15 transition-transform duration-300 ease-out group-hover/card:scale-105"
-                          style={{ backgroundImage: `url(${card.img})` }}
+                        <PublicCardPhoto
+                          card={card}
+                          imageClassName="grayscale-15 transition-transform duration-300 ease-out group-hover/card:scale-105 group-hover/card:grayscale-0"
                         />
                       </motion.div>
                     </div>
@@ -805,19 +886,6 @@ export const PublicCardsSection = () => {
           </div>
         </div>
       )}
-
-      {/* Load More Button */}
-      {hasMore && cards.length > 0 ? (
-        <div className="relative z-20 mt-10 flex w-full justify-center border-t border-zinc-800/50 pt-8 pb-8 md:mt-16">
-          <button
-            onClick={loadMore}
-            disabled={isLoadingMore}
-            className="group flex min-w-[160px] items-center justify-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-900/50 px-6 py-3.5 text-sm font-bold text-zinc-100 shadow-sm backdrop-blur-md transition-all hover:bg-zinc-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoadingMore ? <Loader2 size={16} className="animate-spin" /> : 'Load More Connections'}
-          </button>
-        </div>
-      ) : null}
 
       {/* Custom CSS for 3D Perspective & Hidden Scrollbars */}
       <style

@@ -1,9 +1,9 @@
 'use client'
 
+import { useAppDispatch } from '@/hooks/redux'
 import type { NavBarNavItem, ProfileNavContentKey } from '@/lib/vcardNavbar'
 import { NAV_SECTION_API_CHECKS } from '@/profile-app/lib/navSectionDataChecks'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { useAppDispatch } from '@/hooks/redux'
 import { api } from '@/redux/api/api'
 import { useEffect, useMemo } from 'react'
 
@@ -17,11 +17,20 @@ type InitiableEndpoint = {
 }
 
 /**
+ * How many section probes run at once. Keeps the on-load fetch off the
+ * backend's rate limiter (avoids a single burst of ~30+ simultaneous requests)
+ * while still resolving tab visibility quickly.
+ */
+const PROBE_CONCURRENCY = 4
+
+/**
  * Probes every API-backed nav section's content endpoint on mount so empty tabs
  * can be hidden silently — without the user having to open them first.
  *
- * Each fetched result is cached by RTK (1h), so opening the tab afterwards reuses
- * the data with no extra request. Sections confirmed empty are reported via
+ * Probes run through a small concurrency pool so we never fire the whole burst
+ * at once (which would hammer the backend and trip its 429 rate limiter). Each
+ * fetched result is cached by RTK (1h), so opening the tab afterwards reuses the
+ * data with no extra request. Sections confirmed empty are reported via
  * `markSectionEmpty`, mirroring `useActiveSectionDataReporter`.
  */
 export function useProbeNavSectionsForData(
@@ -45,35 +54,46 @@ export function useProbeNavSectionsForData(
   useEffect(() => {
     const endpoints = api.endpoints as unknown as Record<string, InitiableEndpoint>
     const subscriptions: QuerySubscription[] = []
+    let cancelled = false
+    let cursor = 0
 
-    for (const key of probeKeys) {
+    const probeOne = async (key: ProfileNavContentKey) => {
       const check = NAV_SECTION_API_CHECKS[key]
-      if (!check) continue
+      if (!check) return
 
       // Sections without a custom arg resolver need the profile id; skip until ready.
-      if (!check.getArg && !profileId) continue
+      if (!check.getArg && !profileId) return
 
       const endpoint = endpoints[check.endpointName]
-      if (!endpoint?.initiate) continue
+      if (!endpoint?.initiate) return
 
       const arg = check.getArg ? check.getArg(profileId) : profileId
       const subscription = dispatch(endpoint.initiate(arg) as never) as unknown as QuerySubscription
       subscriptions.push(subscription)
 
-      subscription
-        .unwrap()
-        .then((data) => {
-          if (data != null && !check.hasData(data)) {
-            markSectionEmpty(key)
-          }
-        })
-        .catch(() => {
-          // Network/parse failures leave the tab visible; the section's own
-          // empty-state handling takes over when the user opens it.
-        })
+      try {
+        const data = await subscription.unwrap()
+        if (!cancelled && data != null && !check.hasData(data)) {
+          markSectionEmpty(key)
+        }
+      } catch {
+        // Network/parse failures (incl. exhausted 429 retries) leave the tab
+        // visible; the section's own empty-state handles it when opened.
+      }
     }
 
+    const worker = async () => {
+      while (!cancelled && cursor < probeKeys.length) {
+        const key = probeKeys[cursor++]
+        await probeOne(key)
+      }
+    }
+
+    const poolSize = Math.min(PROBE_CONCURRENCY, probeKeys.length)
+    for (let i = 0; i < poolSize; i++) void worker()
+
     return () => {
+      cancelled = true
       for (const subscription of subscriptions) subscription.unsubscribe?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

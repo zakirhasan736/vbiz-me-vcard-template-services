@@ -1,3 +1,4 @@
+import { initialsFromPublicCardName, resolvePublicCardImage } from '@/lib/publicCards/publicCardImage'
 import type { PublicCard, PublicCardsQueryResult, PublicCardsResponse } from '@interfaces/api/publicCards'
 
 export function normalizePublicCardsResponse(response: PublicCardsResponse): PublicCardsQueryResult {
@@ -26,16 +27,23 @@ export type PublicCardListItem = {
   id: number
   name: string
   profession: string
-  img: string
+  professionId: number | null
+  img: string | null
+  isVideo: boolean
+  initials: string
   slug: string
 }
 
 export function mapPublicCardToListItem(card: PublicCard): PublicCardListItem {
+  const image = resolvePublicCardImage(card)
   return {
     id: card.id,
     name: card.name,
-    profession: card.profession ?? 'Professional',
-    img: card.image,
+    profession: card.profession?.trim() || 'Professional',
+    professionId: card.profession_id,
+    img: image.src,
+    isVideo: image.isVideo,
+    initials: initialsFromPublicCardName(card.name),
     slug: card.slug,
   }
 }

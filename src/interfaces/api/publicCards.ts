@@ -65,10 +65,12 @@ export type PublicCardsPaginationMeta = {
 
 export type PublicCardsSearchParams = {
   page?: number
+  per_page?: number
   state_id?: number
   city_id?: number
   profession_id?: number
   service?: string
+  search?: string
 }
 
 /** Full API response from `GET /public-cards`. */

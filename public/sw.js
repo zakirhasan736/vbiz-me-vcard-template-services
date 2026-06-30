@@ -1,3 +1,42 @@
+const DEFAULT_ICON = '/next.svg'
+
+const PUSH_TYPE_TO_CATEGORY = {
+  profile_update: 'company',
+  contact_update: 'contact',
+  video_update: 'video',
+  blog_update: 'blog',
+  services_update: 'services',
+}
+
+function slugFromUrl(url) {
+  if (!url || typeof url !== 'string') return ''
+  const path = url.startsWith('http') ? new URL(url).pathname : url
+  const segment = path.replace(/^\/+|\/+$/g, '').split('/')[0]
+  return segment || ''
+}
+
+function normalizePushPayload(raw) {
+  const url = raw.url || (raw.slug ? `/${raw.slug}` : '/')
+  const slug = raw.slug || slugFromUrl(url)
+  const category = raw.category || PUSH_TYPE_TO_CATEGORY[raw.type] || 'company'
+
+  return {
+    title: raw.title || 'vBiz Me Update',
+    body: raw.body || raw.message || 'A card you follow has been updated.',
+    url,
+    slug,
+    icon: raw.icon || raw.avatarImageUrl || raw.avatarUrl || DEFAULT_ICON,
+    businessName: raw.businessName || slug || 'vBiz Me',
+    avatarUrl: raw.avatarUrl || '',
+    avatarImageUrl: raw.avatarImageUrl || '',
+    avatarVideoUrl: raw.avatarVideoUrl || '',
+    category,
+    speakLine: raw.speakLine || '',
+    profileId: raw.profile_id ?? raw.profileId ?? null,
+    type: raw.type || '',
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting())
 })
@@ -9,27 +48,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   if (!event.data) return
 
-  let payload = {
-    title: 'vBiz Me Update',
-    body: 'A card you follow has been updated.',
-    url: '/',
-    icon: '/next.svg',
-    slug: '',
-    businessName: 'vBiz Me',
-    avatarUrl: '',
-    avatarImageUrl: '',
-    avatarVideoUrl: '',
-    category: 'company',
-    speakLine: 'Hey, this is vBiz Me. A card you follow has been updated.',
-  }
+  let payload = normalizePushPayload({})
 
   try {
-    payload = { ...payload, ...event.data.json() }
+    payload = normalizePushPayload({ ...payload, ...event.data.json() })
   } catch {
     payload.body = event.data.text()
   }
 
-  const targetUrl = payload.url || (payload.slug ? `/${payload.slug}` : '/')
   const richPayload = {
     title: payload.title,
     message: payload.body,
@@ -39,23 +65,28 @@ self.addEventListener('push', (event) => {
     avatarVideoUrl: payload.avatarVideoUrl,
     category: payload.category,
     speakLine: payload.speakLine,
-    url: targetUrl,
-    slug: payload.slug || '',
+    url: payload.url,
+    slug: payload.slug,
+    profileId: payload.profileId,
+    type: payload.type,
   }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Let any open tab show the in-app toast (avatar + title + message).
-      for (const client of clientList) {
-        client.postMessage({
-          type: 'vbiz_push',
-          payload: richPayload,
-        })
+      // Tab open on this site → in-app toast only (no duplicate OS banner).
+      if (clientList.length > 0) {
+        for (const client of clientList) {
+          client.postMessage({
+            type: 'vbiz_push',
+            payload: richPayload,
+          })
+        }
+        return undefined
       }
 
-      // Also raise the OS notification (mobile + desktop notification bar) as a fallback
-      // in case the user misses the in-app toast. Clicking it opens the target vCard.
-      const icon = payload.avatarImageUrl || payload.avatarUrl || payload.icon || '/next.svg'
+      // No open tabs (vcard closed / browser was off) → OS notification.
+      // Delivered when the user next opens the browser if they were offline.
+      const icon = payload.avatarImageUrl || payload.avatarUrl || payload.icon
       return self.registration.showNotification(payload.title, {
         body: payload.body,
         icon,
@@ -71,15 +102,16 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
-  const targetUrl = event.notification.data?.url || '/'
+  const rawUrl = event.notification.data?.url || '/'
+  const targetUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, self.location.origin).href
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        const clientUrl = new URL(client.url)
-        const target = new URL(targetUrl, self.location.origin)
+        const clientPath = new URL(client.url).pathname
+        const targetPath = new URL(targetUrl).pathname
 
-        if (clientUrl.pathname === target.pathname) {
+        if (clientPath === targetPath) {
           return client.focus()
         }
       }
