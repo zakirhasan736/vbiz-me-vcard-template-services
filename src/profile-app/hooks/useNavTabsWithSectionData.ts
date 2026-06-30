@@ -11,11 +11,12 @@ type UseNavTabsWithSectionDataOptions = {
 }
 
 /**
- * Nav tab visibility without upfront API probes.
+ * Nav tab visibility.
  *
- * - All backend-active tabs show immediately (no burst of /dynamic-section calls).
- * - Section components fetch via RTK only when their tab is active (cached 1h).
- * - Tabs are hidden only after the user opens them and the section is confirmed empty.
+ * - Local sections (home/education/work) are resolved immediately from props.
+ * - API-backed sections are probed upfront (see `useProbeNavSectionsForData`);
+ *   any confirmed empty is reported via `markSectionEmpty` and filtered out here.
+ * - `useActiveSectionDataReporter` still catches empties when a tab is opened.
  */
 export function useNavTabsWithSectionData(
   navItems: NavBarNavItem[],

@@ -7,6 +7,7 @@ import { orderAndDedupeNavItems } from '@/lib/api/navbar/orderNavTabs'
 import { DEFAULT_PROFILE_SECTION } from '@/lib/profileRoutes'
 import { getNavItemById, type NavBarNavItem, type ProfileNavContentKey } from '@/lib/vcardNavbar'
 import { useNavTabsWithSectionData } from '@/profile-app/hooks/useNavTabsWithSectionData'
+import { useProbeNavSectionsForData } from '@/profile-app/hooks/useProbeNavSectionsForData'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetNavBarLinksQuery } from '@/redux/api'
 import { navBarLinksApi } from '@/redux/features/navbar/navbar.api'
@@ -40,8 +41,8 @@ type Props = {
 
 /**
  * Client-side section nav — no URL / route changes.
- * Shows every active backend tab immediately. Section data is fetched via RTK
- * only when a tab is opened; empty tabs are hidden after the user visits them.
+ * Active backend tabs are probed for content on load (cached 1h), so tabs whose
+ * section has no published data are hidden silently before the user opens them.
  */
 export function ProfileNavigationProvider({
   children,
@@ -76,6 +77,10 @@ export function ProfileNavigationProvider({
     education,
     experience,
   })
+
+  // Probe each active section's content upfront so empty tabs hide silently,
+  // instead of disappearing only after the user opens them.
+  useProbeNavSectionsForData(navItems, markSectionEmpty)
 
   const visibleTabs = useMemo(() => {
     if (!displaySettings.globalEnabled) return []
