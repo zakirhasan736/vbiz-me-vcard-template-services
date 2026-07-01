@@ -2,6 +2,7 @@
 
 import { getGeminiApiKey } from '@/lib/gemini'
 import { LIVE_AGENT_CONFIG } from '@/lib/liveAgent/config'
+import { getLiveAgentInitialPromptForLanguage, getSelectedLanguageForLiveAgent } from '@/lib/liveAgent/languagePrompt'
 import {
   buildLiveAgentSystemPrompt,
   DEFAULT_LIVE_AGENT_CARD,
@@ -36,14 +37,14 @@ const NUDGE_COOLDOWN_MS = 9000
 export const MISSING_API_KEY_ERROR =
   'Gemini API key is missing. Add GEMINI_API_KEY or NEXT_PUBLIC_GEMINI_API_KEY to .env and restart the dev server.'
 
-/** Must match the open-site trigger described in `buildLiveAgentSystemPrompt`. */
-const OPEN_SITE_GREETING_TURN = 'The user has just opened the site...'
-
 /** Text must use sendClientContent — sendRealtimeInput only accepts audio/media blobs. */
-function sendInitialGreetingSafe(session: Session) {
+function sendInitialGreetingSafe(session: Session, cardData: LiveAgentCardData) {
+  const company = cardData.company?.trim() || 'vBiz Me'
+  const lang = getSelectedLanguageForLiveAgent()
+  const greetingPrompt = getLiveAgentInitialPromptForLanguage(lang, company)
   try {
     session.sendClientContent({
-      turns: OPEN_SITE_GREETING_TURN,
+      turns: greetingPrompt,
       turnComplete: true,
     })
   } catch (e) {
@@ -523,7 +524,7 @@ export function useLiveAgent({
                 .then((session: Session) => {
                   if (gen !== connectionGenRef.current || !canStreamAudioRef.current) return
                   sessionRef.current = session
-                  sendInitialGreetingSafe(session)
+                  sendInitialGreetingSafe(session, cardDataRef.current)
                   // Fallback: enable mic if greeting turnComplete never arrives.
                   micFallbackTimerRef.current = window.setTimeout(() => {
                     if (gen !== connectionGenRef.current || allowMicInputRef.current) return

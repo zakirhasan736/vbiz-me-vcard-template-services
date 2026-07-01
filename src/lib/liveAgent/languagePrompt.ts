@@ -1,5 +1,12 @@
 import { resolveCardOwnerId } from '@/lib/i18n/cardScope'
 import { LANGUAGE_NAMES, translationsCacheKey } from '@/lib/i18n/config'
+import {
+  BRAND_PRONUNCIATION_PRIORITY_OVERRIDE,
+  buildGreetingText,
+  buildLiveAgentGreetingIntroPrompt,
+  buildVoicePronunciationBlock,
+  spokenCompanyName,
+} from '@/lib/liveAgent/brandPronunciation'
 import { SYSTEM_PROMPT_TEMPLATE } from '@/lib/liveAgent/systemPromptTemplate'
 import type { LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
 
@@ -16,8 +23,17 @@ export function buildCardPayloadForPrompt(data: LiveAgentCardData): string {
 }
 
 export function buildSystemPrompt(data: LiveAgentCardData, override?: string): string {
+  const company = data.company?.trim() || 'vBiz Me'
   const cardPayload = buildCardPayloadForPrompt(data)
-  return override ?? SYSTEM_PROMPT_TEMPLATE.replace('__CARD_DATA_PLACEHOLDER__', cardPayload)
+  const greetingText = buildGreetingText(company)
+  const spokenBrand = spokenCompanyName(company)
+
+  const base = (override ?? SYSTEM_PROMPT_TEMPLATE)
+    .replace('__CARD_DATA_PLACEHOLDER__', cardPayload)
+    .replaceAll('__LIVE_AGENT_GREETING_TEXT__', greetingText)
+    .replaceAll('__SPOKEN_BRAND_NAME__', spokenBrand)
+
+  return `${base}\n\n${buildVoicePronunciationBlock(company)}\n\n${BRAND_PRONUNCIATION_PRIORITY_OVERRIDE}`
 }
 
 export function getLiveAgentSystemPromptForLanguage(
@@ -56,13 +72,7 @@ Do not speak in English unless explicitly asked by the user. Ensure your tone, p
 }
 
 export function getLiveAgentInitialPromptForLanguage(langCode: string, company = 'vBiz Me'): string {
-  const langName = LANGUAGE_NAMES[langCode] || 'English'
-
-  if (langCode && langCode !== 'en') {
-    return `The user has just opened the site. Their preferred language is ${langName}. Please say: 'Welcome to ${company}! How can I help you?' (translated to fluent ${langName}) and offer a quick guided tour of the card entirely in ${langName}.`
-  }
-
-  return `The user has just opened the site. Please say: 'Welcome to ${company}! How can I help you?' and offer a quick guided tour of the card.`
+  return buildLiveAgentGreetingIntroPrompt(company, langCode)
 }
 
 /**

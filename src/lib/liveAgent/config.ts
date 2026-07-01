@@ -11,8 +11,8 @@ export const LIVE_AGENT_CONFIG = {
   model: 'gemini-3.1-flash-live-preview',
   /** Command parser model for typed commands. */
   commandModel: 'gemini-3-flash-preview',
-  /** Male prebuilt voice for Gemini Live (Orus — firm tone; distinct from Charon on main site). */
-  voice: 'Iapetus',
+  /** Male prebuilt voice for Gemini Live — Puck (upbeat, conversational). */
+  voice: 'Puck',
   micSampleRate: 16000,
   playbackSampleRate: 24000,
   commandApiPath: '/api/command',
