@@ -736,6 +736,16 @@ iframe.goog-te-banner-frame {
   position: relative;
 }
 
+/* Phone / marketing iframe embed — hide live agent (JS + CSS belt-and-suspenders) */
+html[data-vbiz-iframe-embed] .live-ai-agent-panel,
+html[data-vbiz-iframe-embed] .vbiz-preview-live-agent,
+.vbiz-profile-root[data-embedded] .live-ai-agent-panel,
+.vbiz-profile-root[data-embedded] .vbiz-preview-live-agent {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .vbiz-profile-root[data-embedded] .vbiz-live-agent .pointer-events-auto[class*='rounded-3xl'] {
   max-height: min(50dvh, 320px);
   overflow-y: auto;
