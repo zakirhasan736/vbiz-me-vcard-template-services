@@ -11,7 +11,7 @@ type Props = {
 
 /**
  * Shared full-screen intro video for every template (v1 / v2 / v3).
- * Plays once per profile, after the brand loader settles: loader -> intro video -> content.
+ * Plays after the brand loader settles on every full page reload: loader -> intro video -> content.
  */
 export function ProfileIntroOverlay({ explainerVideoUrl }: Props) {
   const { showPreloader, endPreloader, hasVideo } = useProfileIntroContext()

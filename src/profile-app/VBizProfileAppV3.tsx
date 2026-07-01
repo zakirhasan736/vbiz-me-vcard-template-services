@@ -168,7 +168,7 @@ export function VBizProfileAppV3({
                   {activeSectionId === 'home' ? (
                     <ProfileSectionOutlet sectionId={activeSectionId} template="v3" homeHeroProps={homeHeroProps} />
                   ) : (
-                    <div className="mx-auto mt-10 mb-10 min-h-screen w-full max-w-[1032px] px-6 md:mt-15">
+                    <div className="mx-auto mt-10 mb-10 min-h-auto w-full max-w-[1032px] px-6 md:mt-15">
                       <ProfileSectionOutlet sectionId={activeSectionId} template="v3" />
                     </div>
                   )}

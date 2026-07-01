@@ -11,6 +11,11 @@ const READY_BUFFER_FRACTION = 0.98
 /** Safety net for very slow networks only — prefer full buffer / canplaythrough. */
 const READY_MAX_WAIT_MS = 12000
 
+const SPLIT_COUNT = 3
+const SPLIT_STAGGER_S = 0.14
+const SPLIT_DURATION_S = 0.58
+const SPLIT_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
+
 type Props = {
   videoUrl: string
   onSkip: () => void
@@ -138,31 +143,49 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
   const volumePercent = Math.round(volume * 100)
 
   return (
-    <motion.div
+    <div
       className="fixed inset-0 z-200 overflow-hidden bg-black text-white"
       style={{ width: '100dvw', height: '100dvh' }}
-      initial={false}
-      animate={{ clipPath: revealed ? 'inset(0 0 0% 0)' : 'inset(0 0 100% 0)' }}
-      transition={{ duration: revealed ? 0.65 : 0, ease: [0.22, 1, 0.36, 1] }}
     >
       <ProfileIntroVideo
         ref={videoRef}
         src={src}
         shouldPlay={ready}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 md:object-contain ${
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 md:object-contain ${
           revealed ? 'opacity-100' : 'opacity-0'
         }`}
         onEnded={onSkip}
       />
 
+      {/* Three vertical splits — each curtain drops top→bottom (100% → 0% height) with stagger */}
+      <div className="pointer-events-none absolute inset-0 z-10 flex">
+        {Array.from({ length: SPLIT_COUNT }, (_, index) => (
+          <div
+            key={index}
+            className={`relative h-full min-w-0 flex-1 overflow-hidden ${index < SPLIT_COUNT - 1 ? 'border-r border-black/40' : ''}`}
+          >
+            <motion.div
+              className="absolute inset-x-0 top-0 bg-black"
+              initial={{ height: '100%' }}
+              animate={{ height: revealed ? '0%' : '100%' }}
+              transition={{
+                duration: SPLIT_DURATION_S,
+                delay: revealed ? index * SPLIT_STAGGER_S : 0,
+                ease: SPLIT_EASE,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
       {!revealed ? (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black">
           <Loader2 size={32} className="animate-spin text-white/70" />
           <p className="text-xs font-medium tracking-wide text-white/50">Loading intro…</p>
         </div>
       ) : null}
 
-      <div className="absolute right-4 bottom-4 z-20 flex items-center gap-3 sm:right-6 sm:bottom-6">
+      <div className="absolute right-4 bottom-4 z-30 flex items-center gap-3 sm:right-6 sm:bottom-6">
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${isMuted ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100 sm:max-w-48'}`}
           aria-hidden={isMuted}
@@ -213,6 +236,6 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
           {skipLabel}
         </button>
       </div>
-    </motion.div>
+    </div>
   )
 }

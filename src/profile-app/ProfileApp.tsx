@@ -1,6 +1,7 @@
 'use client'
 
 import { CardThemeStyles } from '@/profile-app/components/CardThemeStyles'
+import { CinematicScrollbarBinder } from '@/profile-app/components/CinematicScrollbarBinder'
 import { ProfileBrandPreloader } from '@/profile-app/components/ProfileBrandPreloader'
 import { ProfileForceNotification } from '@/profile-app/components/ProfileForceNotification'
 import { ProfileIntroOverlay } from '@/profile-app/components/ProfileIntroOverlay'
@@ -80,6 +81,7 @@ export function ProfileApp(props: VBizProfileAppProps) {
             {!props.embedded && <ProfileBrandPreloader />}
             {!props.embedded && <ProfileIntroOverlay explainerVideoUrl={props.explainerVideoUrl} />}
             <CardThemeStyles config={props.themeConfig} mode={themeMode} />
+            <CinematicScrollbarBinder />
             {shell}
           </ProfileIntroProvider>
         </ProfileNavigationProvider>
