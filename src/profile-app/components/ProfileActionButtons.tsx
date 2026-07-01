@@ -46,7 +46,7 @@ function getCtaButtonClasses(
   isFilled: boolean,
   isDesktop: boolean
 ): string {
-  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[42px] min-h-[42px] w-full shrink-0 rounded-[10px]'
+  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[38px] min-h-[38px] w-full shrink-0 rounded-[10px]'
 
   const mobileText = 'text-[13px]'
   const base = `flex min-w-0 items-center justify-center gap-2 overflow-hidden whitespace-nowrap transition-all active:scale-95 ${size}`
