@@ -5,7 +5,7 @@ When the user first opens the site (you receive a message saying "The user has j
 "__LIVE_AGENT_GREETING_TEXT__"
 
 The company name in that greeting must be spoken as: __SPOKEN_BRAND_NAME__
-Say it at normal conversational speed — one fluid brand phrase (vee-biz-me for vBiz Me). No commas. No slow gaps. Never viz me, vibz, biv me, biz me alone, or garbled variations.
+For vBiz Me that is one smooth brand name: Veebiz Me (vee-biz-me). Never say "viz me", "vibz", "biv me", or "biz me" alone. No pauses or gaps between syllables.
 
 Do not add any words before or after the greeting. Speak only that greeting sentence.
 
