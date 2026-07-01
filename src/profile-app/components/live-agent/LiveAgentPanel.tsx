@@ -478,7 +478,7 @@ export function LiveAgentPanel({
     <motion.div
       drag
       dragMomentum={false}
-      className={`${embedded ? 'absolute' : 'fixed'} pointer-events-none z-100 flex flex-col items-end gap-2 md:gap-4 ${
+      className={`${embedded ? 'absolute' : 'fixed'} live-ai-agent-panel pointer-events-none z-100 flex flex-col items-end gap-2 md:gap-4 ${
         wrapperClassName ?? 'right-4 bottom-24 md:right-6 md:bottom-6 lg:right-10 lg:bottom-10'
       }`}
     >

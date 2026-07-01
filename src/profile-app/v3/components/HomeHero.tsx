@@ -298,12 +298,7 @@ export const HomeHero: React.FC<{
             </p>
           )}
 
-          <ProfileActionButtons
-            theme={theme}
-            onAction={onAction}
-            visibleOn="mobile"
-            className="relative z-20 mb-2 flex w-[90%] max-w-[340px] shrink-0 flex-col gap-3 shadow-xl"
-          />
+          <ProfileActionButtons theme={theme} onAction={onAction} visibleOn="mobile" />
         </div>
 
         {/* Desktop View */}

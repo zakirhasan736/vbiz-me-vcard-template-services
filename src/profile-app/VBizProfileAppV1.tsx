@@ -142,6 +142,7 @@ export function VBizProfileAppV1({
     <div
       data-embedded={embedded ? '' : undefined}
       data-profile-template="v1"
+      data-theme={theme}
       className={`${shellClass} selection:bg-yellow-primary/30 font-sans selection:text-gray-900 dark:selection:text-white ${theme === 'dark' ? 'dark bg-[#050505] text-[#e0e0e0]' : 'bg-white text-gray-900'} ${embedded ? 'min-h-0 max-w-full' : ''}`}
       style={rootStyle}
     >

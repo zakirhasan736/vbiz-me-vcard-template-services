@@ -118,10 +118,7 @@ export function LanguageModal({ isOpen, onClose, theme }: { isOpen: boolean; onC
             </p>
           </div>
         ) : (
-          <div
-            className="no-scrollbar grid max-h-[340px] grid-cols-2 gap-3 overflow-y-auto pr-1 select-none"
-            style={{ scrollbarWidth: 'thin' }}
-          >
+          <div className="no-scrollbar grid max-h-[340px] grid-cols-2 gap-3 overflow-y-auto pr-1 select-none">
             {languages.map((lang) => {
               const isSelected = selected === lang.code
               return (

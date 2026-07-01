@@ -60,7 +60,9 @@ export const HomeSectionV2 = () => {
 
   return (
     <div className="grid w-full grid-cols-1 gap-6 pb-0 md:grid-cols-2">
-      <ProfileActionButtons />
+      <div className="flex min-h-[42vh] flex-col md:contents md:min-h-0">
+        <ProfileActionButtons className="w-full" />
+      </div>
 
       {bentoContactItems.length > 0 && (
         <div className="hidden grid-cols-2 gap-3 md:grid">

@@ -126,6 +126,7 @@ export function VBizProfileAppV3({
     <div
       data-profile-template="v3"
       data-embedded={embedded ? '' : undefined}
+      data-theme={theme}
       className={`vbiz-profile-root vbiz-profile-v3 no-scrollbar relative flex min-h-dvh w-full flex-col items-center overflow-x-clip transition-colors duration-500 ${theme === 'dark' ? 'bg-ocean-deep text-zinc-100' : 'bg-white text-zinc-900'} ${embedded ? 'min-h-0 max-w-full' : ''}`}
       style={rootStyle}
     >

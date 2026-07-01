@@ -625,11 +625,12 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
             <div className="group relative flex flex-col gap-5 overflow-hidden rounded-4xl border border-black/5 bg-white px-[14px] py-5 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] backdrop-blur-3xl sm:p-8 dark:border-white/5 dark:bg-gray-900/40 dark:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.8)]">
               <div className="from-yellow-primary/10 absolute inset-0 bg-linear-to-tr via-transparent to-black/1 opacity-0 transition-opacity duration-700 group-hover:opacity-100 dark:to-white/2" />
 
-              <div className="relative z-10 flex flex-col gap-3">
+              <div className="relative z-10 flex flex-1 flex-col">
                 <ProfileActionButtons
                   theme={homeHeroProps?.theme}
                   onAction={homeHeroProps?.onAction}
                   className="w-full"
+                  mobileClassName="mx-auto w-full max-w-none shadow-none mb-0"
                 />
               </div>
 

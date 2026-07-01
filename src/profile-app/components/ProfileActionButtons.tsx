@@ -15,10 +15,17 @@ import { useMemo } from 'react'
 type ProfileActionButtonsProps = {
   theme?: string
   onAction?: (action: string) => void
+  /** Classes for the desktop wrapper (or sole wrapper when `visibleOn="desktop"`). */
   className?: string
+  /** Extra classes merged onto the mobile hero shell wrapper. */
+  mobileClassName?: string
   /** Use when buttons sit in separate mobile/desktop layout slots (e.g. v3 hero). */
   visibleOn?: 'both' | 'mobile' | 'desktop'
 }
+
+/** Shared mobile hero shell — mt-auto pins the CTA stack to the bottom of flex heroes. */
+export const PROFILE_ACTION_BUTTONS_MOBILE_SHELL_CLASS =
+  'relative z-20 mt-auto mb-2 flex w-[90%] max-w-[340px] shrink-0 flex-col gap-2 shadow-xl'
 
 function CtaButtonContent({ button, iconSize }: { button: ResolvedHomeCtaButton; iconSize: number }) {
   const Icon = button.icon
@@ -39,12 +46,13 @@ function getCtaButtonClasses(
   isFilled: boolean,
   isDesktop: boolean
 ): string {
-  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[46px] min-h-[46px] w-full shrink-0 rounded-xl'
+  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[42px] min-h-[42px] w-full shrink-0 rounded-[10px]'
 
+  const mobileText = 'text-[13px]'
   const base = `flex min-w-0 items-center justify-center gap-2 overflow-hidden whitespace-nowrap transition-all active:scale-95 ${size}`
 
   if (template === 'v1') {
-    return `${base} px-4 text-[11px] font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em] ${
+    return `${base} px-4 ${isDesktop ? 'text-[11px]' : mobileText} font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em] ${
       isFilled
         ? 'text-black shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)]'
         : theme === 'dark'
@@ -54,7 +62,7 @@ function getCtaButtonClasses(
   }
 
   if (template === 'v2') {
-    return `${base} text-[13px] font-bold tracking-wide shadow-sm sm:text-sm ${
+    return `${base} ${isDesktop ? 'text-[13px] sm:text-sm' : mobileText} font-semibold tracking-wide shadow-sm ${
       isFilled
         ? 'text-zinc-950 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
         : 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
@@ -62,9 +70,11 @@ function getCtaButtonClasses(
   }
 
   // v3
-  return `${base} text-[13px] font-bold duration-300 hover:scale-[1.02] ${
+  return `${base} ${isDesktop ? 'text-[13px] font-bold' : `${mobileText} font-semibold`} duration-300 hover:scale-[1.02] ${
     isFilled
-      ? 'font-extrabold text-black shadow-lg'
+      ? isDesktop
+        ? 'font-extrabold text-black shadow-lg'
+        : 'text-black shadow-lg'
       : theme === 'dark'
         ? 'border-gold/40 bg-ocean-dark hover:border-gold hover:bg-ocean-light/70 border text-white'
         : 'border-gold hover:bg-gold/10 border bg-white text-zinc-900'
@@ -87,7 +97,7 @@ function HomeCtaButton({
   onClick: () => void
 }) {
   const isFilled = button.variant === 'accent' || button.variant === 'cta'
-  const iconSize = template === 'v1' ? 18 : isDesktop ? 16 : 18
+  const iconSize = isDesktop ? (template === 'v1' ? 18 : 16) : 16
 
   return (
     <button
@@ -116,11 +126,12 @@ function CtaButtonGrid({
   isDesktop: boolean
   onClick: (button: ResolvedHomeCtaButton) => void
 }) {
-  const gap = template === 'v1' ? 'gap-4' : isDesktop ? 'gap-3' : 'gap-3'
+  const gap = isDesktop ? (template === 'v1' ? 'gap-4' : 'gap-3') : 'gap-2'
+  const rowGap = isDesktop ? 'gap-3' : 'gap-2'
 
   return (
     <div className={`flex flex-col ${gap}`}>
-      <div className={layout.row1.length === 2 ? 'grid grid-cols-2 gap-3' : 'flex'}>
+      <div className={layout.row1.length === 2 ? `grid grid-cols-2 ${rowGap}` : 'flex'}>
         {layout.row1.map((button) => (
           <HomeCtaButton
             key={button.key}
@@ -149,7 +160,13 @@ function CtaButtonGrid({
 }
 
 /** Shared home CTA grid for v1, v2, and v3 — mobile [2,1,1,1], desktop [2,1,1]. */
-export function ProfileActionButtons({ theme, onAction, className, visibleOn = 'both' }: ProfileActionButtonsProps) {
+export function ProfileActionButtons({
+  theme,
+  onAction,
+  className,
+  mobileClassName,
+  visibleOn = 'both',
+}: ProfileActionButtonsProps) {
   const { t } = useTranslation()
   const { actionButtons, design, cardSlug } = useProfileDisplay()
   const accentColor = design?.accentColor ?? '#eab308'
@@ -182,11 +199,15 @@ export function ProfileActionButtons({ theme, onAction, className, visibleOn = '
 
   const showMobile = visibleOn === 'both' || visibleOn === 'mobile'
   const showDesktop = visibleOn === 'both' || visibleOn === 'desktop'
+  const mobileWrapperClass = [PROFILE_ACTION_BUTTONS_MOBILE_SHELL_CLASS, mobileClassName].filter(Boolean).join(' ')
+  const desktopWrapperClass = [visibleOn === 'both' ? 'hidden md:block' : undefined, className]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <div className={className}>
+    <>
       {showMobile ? (
-        <div className={visibleOn === 'both' ? 'md:hidden' : undefined}>
+        <div className={visibleOn === 'both' ? `md:hidden ${mobileWrapperClass}` : mobileWrapperClass}>
           <CtaButtonGrid
             layout={mobileLayout}
             template={template}
@@ -198,7 +219,7 @@ export function ProfileActionButtons({ theme, onAction, className, visibleOn = '
         </div>
       ) : null}
       {showDesktop ? (
-        <div className={visibleOn === 'both' ? 'hidden md:block' : undefined}>
+        <div className={desktopWrapperClass || undefined}>
           <CtaButtonGrid
             layout={desktopLayout}
             template={template}
@@ -209,6 +230,6 @@ export function ProfileActionButtons({ theme, onAction, className, visibleOn = '
           />
         </div>
       ) : null}
-    </div>
+    </>
   )
 }
