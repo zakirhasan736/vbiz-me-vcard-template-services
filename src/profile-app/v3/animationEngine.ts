@@ -1,5 +1,13 @@
 export type V3AnimationPreset =
-  'dynamic' | 'flip-left' | 'flip-right' | 'slide-left' | 'slide-right' | 'slide-top' | 'slide-bottom' | 'fade' | 'zoom'
+  | 'dynamic'
+  | 'flip-left'
+  | 'flip-right'
+  | 'slide-left'
+  | 'slide-right'
+  | 'slide-top'
+  | 'slide-bottom'
+  | 'fade'
+  | 'zoom'
 
 export type V3AnimationProps = {
   initial: Record<string, number | string>

@@ -2,7 +2,13 @@ import type { NotificationPreferenceKey, NotificationPreferences } from '@/lib/p
 
 /** Preference keys returned by `GET /push/subscription-status` and `PUT /push/preferences`. */
 export type BackendNotificationPreferenceKey =
-  'service_updates' | 'portfolio_updates' | 'contact_updates' | 'offers' | 'business_hours' | 'news' | 'theme_updates'
+  | 'service_updates'
+  | 'portfolio_updates'
+  | 'contact_updates'
+  | 'offers'
+  | 'business_hours'
+  | 'news'
+  | 'theme_updates'
 
 export type BackendNotificationPreferences = Record<BackendNotificationPreferenceKey, boolean>
 

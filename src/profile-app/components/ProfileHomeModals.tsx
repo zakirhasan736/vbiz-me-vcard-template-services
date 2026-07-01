@@ -17,7 +17,15 @@ const NotepadModal = dynamic(
 )
 
 export type ProfileHomeModalId =
-  'contact' | 'follow' | 'notification' | 'done' | 'settings' | 'notepad' | 'share' | 'info' | null
+  | 'contact'
+  | 'follow'
+  | 'notification'
+  | 'done'
+  | 'settings'
+  | 'notepad'
+  | 'share'
+  | 'info'
+  | null
 
 type ProfileHomeModalsProps = {
   activeModal: ProfileHomeModalId
