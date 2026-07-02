@@ -233,7 +233,7 @@ export const HomeHero: React.FC<{
             </div>
           )}
 
-          <div className="relative z-20 mx-auto mb-4 aspect-4/5 w-[53%] max-w-[240px] border-2 border-white bg-black shadow-[0_10px_30px_rgba(0,0,0,0.5)] sm:w-[60%] md:w-[65%]">
+          <div className="relative z-20 mx-auto mb-4 aspect-4/4 w-[53%] max-w-[240px] border-2 border-white bg-black shadow-[0_10px_30px_rgba(0,0,0,0.5)] sm:w-[60%] md:w-[65%]">
             <ProfileMedia
               src={profileSrc}
               alt={personal.fullName ? `${personal.fullName} profile` : 'Profile'}
