@@ -2,9 +2,8 @@
 
 import { LiveAgentPanel } from '@/profile-app/components/live-agent/LiveAgentPanel'
 import type { UseLiveAgentOptions } from '@/profile-app/components/live-agent/useLiveAgent'
-import { isInIframe, markIframeEmbedOnDocument } from '@/profile-app/lib/isInIframe'
 import { DEFAULT_LIVE_AGENT_CARD, type LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
-import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 
 export type LiveAgentProps = UseLiveAgentOptions & {
@@ -28,15 +27,6 @@ function subscribeToPreviewPhoneShell(onStoreChange: () => void) {
   return () => observer.disconnect()
 }
 
-function subscribeToInIframe(onStoreChange: () => void) {
-  window.addEventListener('pageshow', onStoreChange)
-  return () => window.removeEventListener('pageshow', onStoreChange)
-}
-
-function getInIframeSnapshot(): boolean {
-  return isInIframe()
-}
-
 /** Shared live agent (central configuration & UI) for all profile templates. */
 export function LiveAgent({
   accentColor,
@@ -54,11 +44,6 @@ export function LiveAgent({
   const getSnapshot = useCallback(() => (embedded ? getPreviewPhoneShell() : null), [embedded])
 
   const phoneShell = useSyncExternalStore(subscribe, getSnapshot, () => null)
-  const inIframe = useSyncExternalStore(subscribeToInIframe, getInIframeSnapshot, () => false)
-
-  useEffect(() => {
-    markIframeEmbedOnDocument()
-  }, [inIframe])
 
   const panel = (
     <LiveAgentPanel
@@ -70,12 +55,6 @@ export function LiveAgent({
       wrapperClassName={wrapperClassName}
     />
   )
-
-  // Iframe embed (marketing phone mockup, landing page, etc.) — parent owns the concierge UX
-  if (inIframe) return null
-
-  // ?embed=1 preview shell without a phone frame — no duplicate agent chrome
-  if (embedded && !phoneShell) return null
 
   if (!embedded) return panel
 

@@ -6,14 +6,11 @@ import { notFound } from 'next/navigation'
 
 type Props = {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ embed?: string }>
 }
 
-export default async function PublicProfilePage({ params, searchParams }: Props) {
+export default async function PublicProfilePage({ params }: Props) {
   const { slug } = await params
-  const { embed } = await searchParams
   const trimmed = slug?.trim()
-  const embedded = embed === '1' || embed === 'true'
 
   if (!trimmed) {
     notFound()
@@ -36,7 +33,6 @@ export default async function PublicProfilePage({ params, searchParams }: Props)
   return (
     <PublicProfileLayout
       slug={trimmed}
-      embedded={embedded}
       initialMyCard={myCard}
       initialNavBarLinks={navBarLinks}
       liveAgentCardData={agent.cardData}

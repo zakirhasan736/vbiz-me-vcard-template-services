@@ -14,7 +14,6 @@ import type { LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
 
 type Props = {
   slug: string
-  embedded?: boolean
   /** Server-prefetched profile — skips client loading screen on first visit. */
   initialMyCard?: MyCardData | null
   /** Server-prefetched navbar catalog. */
@@ -26,7 +25,6 @@ type Props = {
 /** Stable per-slug layout. Cover video is detached in `ProfileApp` (`ProfileCoverHost`). */
 export default function PublicProfileLayout({
   slug,
-  embedded = false,
   initialMyCard,
   initialNavBarLinks,
   liveAgentCardData,
@@ -68,7 +66,6 @@ export default function PublicProfileLayout({
     <CardScopeProvider cardId={record.id}>
       <ProfileApp
         {...profileProps}
-        embedded={embedded}
         profileSlug={slug}
         initialNavBarLinks={initialNavBarLinks}
         liveAgentCardData={liveAgentCardData}

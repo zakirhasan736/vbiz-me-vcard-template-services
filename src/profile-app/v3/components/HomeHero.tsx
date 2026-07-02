@@ -212,7 +212,7 @@ export const HomeHero: React.FC<{
         </div>
 
         {/* Mobile View */}
-        <div className="relative flex flex-1 flex-col items-center pt-[25px] pb-[70px] md:hidden">
+        <div className="relative flex flex-1 flex-col items-center pt-[25px] pb-14 sm:pb-[70px] md:hidden">
           {visibleSocials.length > 0 && (
             <div className="absolute top-8 left-2 z-30 flex flex-col gap-2">
               {visibleSocials.map((item) => {
@@ -233,7 +233,7 @@ export const HomeHero: React.FC<{
             </div>
           )}
 
-          <div className="relative z-20 mx-auto mb-4 aspect-4/5 w-[65%] max-w-[240px] border-2 border-white bg-black shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+          <div className="relative z-20 mx-auto mb-4 aspect-4/5 w-[53%] max-w-[240px] border-2 border-white bg-black shadow-[0_10px_30px_rgba(0,0,0,0.5)] sm:w-[60%] md:w-[65%]">
             <ProfileMedia
               src={profileSrc}
               alt={personal.fullName ? `${personal.fullName} profile` : 'Profile'}
@@ -289,7 +289,7 @@ export const HomeHero: React.FC<{
           )}
           {designationLine && (
             <p
-              className={`notranslate mb-6 text-[16px] font-medium opacity-90 drop-shadow-sm ${theme === 'dark' ? 'text-white/90' : 'text-zinc-700'}`}
+              className={`notranslate mb-4 text-[16px] font-medium opacity-90 drop-shadow-sm ${theme === 'dark' ? 'text-white/90' : 'text-zinc-700'}`}
               style={
                 field('MyInfo Designation').textColor ? { color: field('MyInfo Designation').textColor } : undefined
               }
