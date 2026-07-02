@@ -2,6 +2,7 @@
 
 import { LiveAgentPanel } from '@/profile-app/components/live-agent/LiveAgentPanel'
 import type { UseLiveAgentOptions } from '@/profile-app/components/live-agent/useLiveAgent'
+import { isInIframe } from '@/profile-app/lib/isInIframe'
 import { DEFAULT_LIVE_AGENT_CARD, type LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
 import { useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
@@ -44,6 +45,8 @@ export function LiveAgent({
   const getSnapshot = useCallback(() => (embedded ? getPreviewPhoneShell() : null), [embedded])
 
   const phoneShell = useSyncExternalStore(subscribe, getSnapshot, () => null)
+
+  if (isInIframe()) return null
 
   const panel = (
     <LiveAgentPanel
