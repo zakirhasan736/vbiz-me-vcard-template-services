@@ -44,7 +44,7 @@ const HOME_CTA_DEFAULT_LABELS: Record<HomeCtaKey, string> = {
   my_info: 'MY INFO',
   save_my_info: 'SAVE MY INFO',
   my_vcard: 'MY VCARD',
-  google_wallet: 'SAVE TO GOOGLE WALLET',
+  google_wallet: 'SAVE TO WALLET',
   get_vcard_now: 'GET YOUR VCARD NOW',
 }
 

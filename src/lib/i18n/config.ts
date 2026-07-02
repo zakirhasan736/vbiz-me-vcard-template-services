@@ -21,7 +21,7 @@ export const I18N_CONFIG = {
 } as const
 
 export const LANGUAGE_MAP: Record<string, { flagCode: string; name: string }> = {
-  en: { flagCode: 'GB', name: 'English' },
+  en: { flagCode: 'US', name: 'English (US)' },
   es: { flagCode: 'ES', name: 'Spanish' },
   fr: { flagCode: 'FR', name: 'French' },
   de: { flagCode: 'DE', name: 'German' },
@@ -39,7 +39,7 @@ export const LANGUAGE_MAP: Record<string, { flagCode: string; name: string }> = 
 }
 
 export const LANGUAGE_LABELS: Record<string, { label: string; flag: string }> = {
-  en: { label: 'EN', flag: '🇬🇧' },
+  en: { label: 'EN', flag: '🇺🇸' },
   es: { label: 'ES', flag: '🇪🇸' },
   fr: { label: 'FR', flag: '🇫🇷' },
   de: { label: 'DE', flag: '🇩🇪' },

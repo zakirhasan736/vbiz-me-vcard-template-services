@@ -187,7 +187,7 @@ export const HomeHero: React.FC<{
                 }}
               >
                 <span className="text-base leading-none md:text-lg">
-                  {(LANGUAGE_LABELS[lang] || { flag: '🇬🇧' }).flag}
+                  {(LANGUAGE_LABELS[lang] || { flag: '🇺🇸' }).flag}
                 </span>
                 <span className="text-gold mt-0.5 text-[7px] font-bold tracking-wider md:text-[8px]">
                   {(LANGUAGE_LABELS[lang] || { label: 'EN' }).label}

@@ -177,7 +177,7 @@ export function ProfileActionButtons({
       my_info: t('hero.my_info', 'MY INFO'),
       save_my_info: t('hero.save_my_info', 'SAVE MY INFO'),
       my_vcard: t('hero.my_vcard', 'MY VCARD'),
-      google_wallet: t('hero.save_to_google_wallet', 'SAVE TO GOOGLE WALLET'),
+      google_wallet: t('hero.save_to_wallet', 'SAVE TO WALLET'),
       get_vcard_now: t('hero.get_your_vcard_now', 'GET YOUR VCARD NOW'),
     }),
     [t]
