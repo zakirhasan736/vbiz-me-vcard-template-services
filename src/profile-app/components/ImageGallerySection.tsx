@@ -351,29 +351,29 @@ function SectionHeader({
   scrollRef?: RefObject<HTMLDivElement | null>
 }) {
   return (
-    <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
-      <div className="group relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-8 backdrop-blur-xl md:flex-row md:items-end md:gap-0 lg:col-span-4 lg:p-10 dark:border-zinc-800/80 dark:bg-zinc-900/50">
+    <div className="mb-3 grid grid-cols-1 gap-4 md:mb-4 lg:grid-cols-4">
+      <div className="group relative flex flex-col items-start justify-between gap-2 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-4 backdrop-blur-xl md:flex-row md:items-end md:gap-0 md:p-6 lg:col-span-4 lg:p-10 dark:border-zinc-800/80 dark:bg-zinc-900/50">
         <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
 
         <div className="bg-yellow-primary/10 dark:bg-yellow-primary/5 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
         <div className="pointer-events-none absolute bottom-0 left-0 -mb-24 -ml-24 rounded-full bg-black/5 p-24 blur-3xl transition-transform delay-100 duration-1000 group-hover:scale-110 dark:bg-white/5" />
 
-        <div className="relative z-10 w-full md:w-auto">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
+        <div className="relative z-10 flex w-full flex-col gap-1 md:w-auto md:gap-2">
+          <div className="mb-0 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors md:px-3 md:py-1.5 dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
             <Camera size={12} className="text-yellow-primary" /> Image Vault
           </div>
 
           {isLoading ? (
             <>
-              <div className="mb-4 h-10 w-2/3 max-w-lg animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-5 w-full max-w-xl animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-8 w-2/3 max-w-lg animate-pulse rounded-lg bg-zinc-200 md:h-10 dark:bg-zinc-700" />
+              <div className="h-4 w-full max-w-xl animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-700" />
             </>
           ) : (
             <>
-              <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+              <h2 className="max-w-2xl text-2xl leading-tight font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
                 {sectionTitle}
               </h2>
-              <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+              <p className="max-w-xl text-sm leading-snug font-medium text-zinc-600 md:text-base md:leading-normal dark:text-zinc-400">
                 Browse curated gallery images from this profile.
               </p>
             </>
@@ -384,13 +384,13 @@ function SectionHeader({
           <div className="relative z-10 flex w-full shrink-0 md:w-auto">
             <div
               ref={scrollRef}
-              className="no-scrollbar mask-edges inline-flex max-w-full cursor-grab items-center gap-1.5 overflow-x-auto rounded-2xl border border-zinc-200 bg-zinc-50 p-1.5 shadow-inner active:cursor-grabbing dark:border-zinc-800/80 dark:bg-zinc-950/50"
+              className="no-scrollbar mask-edges inline-flex max-w-full cursor-grab items-center gap-1 overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 p-1 shadow-inner active:cursor-grabbing md:gap-1.5 md:rounded-2xl md:p-1.5 dark:border-zinc-800/80 dark:bg-zinc-950/50"
             >
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => onTabChange(category)}
-                  className={`relative z-10 flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 ${activeTab === category ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-100 dark:text-zinc-950' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'}`}
+                  className={`relative z-10 flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300 md:rounded-xl md:px-4 md:py-2.5 ${activeTab === category ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-100 dark:text-zinc-950' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'}`}
                 >
                   <span className="relative z-10">{category}</span>
                 </button>

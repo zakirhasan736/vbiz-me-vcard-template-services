@@ -29,6 +29,7 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
   const [volume, setVolume] = useState(0)
   const [ready, setReady] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const [curtainsDone, setCurtainsDone] = useState(false)
 
   useEffect(() => {
     const html = document.documentElement
@@ -49,6 +50,7 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
     const timer = window.setTimeout(() => {
       setReady(false)
       setRevealed(false)
+      setCurtainsDone(false)
     }, 0)
     return () => window.clearTimeout(timer)
   }, [src])
@@ -158,25 +160,27 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
       />
 
       {/* Three vertical splits — each curtain drops top→bottom (100% → 0% height) with stagger */}
-      <div className="pointer-events-none absolute inset-0 z-10 flex">
-        {Array.from({ length: SPLIT_COUNT }, (_, index) => (
-          <div
-            key={index}
-            className={`relative h-full min-w-0 flex-1 overflow-hidden ${index < SPLIT_COUNT - 1 ? 'border-r border-black/40' : ''}`}
-          >
-            <motion.div
-              className="absolute inset-x-0 top-0 bg-black"
-              initial={{ height: '100%' }}
-              animate={{ height: revealed ? '0%' : '100%' }}
-              transition={{
-                duration: SPLIT_DURATION_S,
-                delay: revealed ? index * SPLIT_STAGGER_S : 0,
-                ease: SPLIT_EASE,
-              }}
-            />
-          </div>
-        ))}
-      </div>
+      {!curtainsDone ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex">
+          {Array.from({ length: SPLIT_COUNT }, (_, index) => (
+            <div key={index} className="relative h-full min-w-0 flex-1 overflow-hidden">
+              <motion.div
+                className="absolute inset-x-0 top-0 bg-black"
+                initial={{ height: '100%' }}
+                animate={{ height: revealed ? '0%' : '100%' }}
+                transition={{
+                  duration: SPLIT_DURATION_S,
+                  delay: revealed ? index * SPLIT_STAGGER_S : 0,
+                  ease: SPLIT_EASE,
+                }}
+                onAnimationComplete={() => {
+                  if (revealed && index === SPLIT_COUNT - 1) setCurtainsDone(true)
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {!revealed ? (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black">

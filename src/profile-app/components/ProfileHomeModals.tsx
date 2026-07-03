@@ -1,7 +1,6 @@
 'use client'
 
 import { writeContactFlowAsked } from '@/lib/push/config'
-import { resolveNotificationModalTarget } from '@/lib/push/notificationRouting'
 import { DoneModal } from '@/profile-app/components/DoneModal'
 import { InfoModal } from '@/profile-app/components/InfoModal'
 import { NotificationAskModal } from '@/profile-app/components/NotificationAskModal'
@@ -60,9 +59,7 @@ export function ProfileHomeModals({
         isOpen={activeModal === 'contact'}
         onClose={onClose}
         profileId={cardOwnerId}
-        onSuccess={() => {
-          void resolveNotificationModalTarget(cardSlug).then(onSetModal)
-        }}
+        ownerName={ownerName}
       />
       <NotificationFollowModal
         isOpen={activeModal === 'follow'}

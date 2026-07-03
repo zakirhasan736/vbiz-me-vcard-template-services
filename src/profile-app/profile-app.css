@@ -831,3 +831,150 @@ iframe.goog-te-banner-frame {
     word-break: break-word;
   }
 }
+
+/* Compact section banners — all nav sections except Home & About */
+.vbiz-profile-root
+  [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+  .mb-4.grid
+  > [class*='lg:col-span-4'] {
+  gap: 0.75rem !important;
+  padding: 1.25rem !important;
+}
+
+@media (max-width: 639px) {
+  .vbiz-profile-root
+    [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+    .mb-4.grid
+    > [class*='lg:col-span-4']
+    h2,
+  .vbiz-profile-root [data-section-id='faq'] h2,
+  .vbiz-profile-root [data-section-id='mission'] h2,
+  .vbiz-profile-root [data-section-id='who-we-are'] h2,
+  .vbiz-profile-root [data-section-id='reviews'] h2,
+  .vbiz-profile-root [data-section-id='public-cards'] h2 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  .vbiz-profile-root
+    [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+    .mb-4.grid
+    > [class*='lg:col-span-4']
+    p.max-w-xl,
+  .vbiz-profile-root [data-section-id='faq'] .group.relative.mb-4 p,
+  .vbiz-profile-root [data-section-id='mission'] h2 + *,
+  .vbiz-profile-root [data-section-id='who-we-are'] h2 + *,
+  .vbiz-profile-root [data-section-id='reviews'] h2 + p,
+  .vbiz-profile-root [data-section-id='public-cards'] h2 + p {
+    line-height: 1.5 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .vbiz-profile-root
+    [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+    .mb-4.grid
+    > [class*='lg:col-span-4'] {
+    padding: 1.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vbiz-profile-root
+    [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+    .mb-4.grid
+    > [class*='lg:col-span-4'] {
+    padding: 2rem !important;
+  }
+
+  .vbiz-profile-root
+    [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+    h2[class*='lg:text-5xl'] {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+  }
+}
+
+.vbiz-profile-root
+  [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+  .mb-4.grid
+  > [class*='lg:col-span-4']
+  [class*='mb-8'],
+.vbiz-profile-root
+  [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+  .mb-4.grid
+  > [class*='lg:col-span-4']
+  [class*='mb-6']:not(input):not(button) {
+  margin-bottom: 0.5rem !important;
+}
+
+.vbiz-profile-root
+  [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+  .mb-4.grid
+  > [class*='lg:col-span-4']
+  h2[class*='mb-4'],
+.vbiz-profile-root
+  [data-section-id]:not([data-section-id='home']):not([data-section-id='about'])
+  .mb-4.grid
+  > [class*='lg:col-span-4']
+  h2[class*='mb-6'] {
+  margin-bottom: 0.5rem !important;
+}
+
+.vbiz-profile-root [data-section-id='reviews'] [class*='min-h-[42vh]'],
+.vbiz-profile-root [data-section-id='reviews'] [class*='min-h-[50vh]'] {
+  min-height: 28vh !important;
+}
+
+@media (min-width: 768px) {
+  .vbiz-profile-root [data-section-id='reviews'] [class*='min-h-[30vh]'] {
+    min-height: 22vh !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vbiz-profile-root [data-section-id='reviews'] [class*='min-h-[32vh]'] {
+    min-height: 24vh !important;
+  }
+}
+
+.vbiz-profile-root [data-section-id='public-cards'] [class*='min-h-[40vh]'],
+.vbiz-profile-root [data-section-id='public-cards'] [class*='min-h-[44vh]'],
+.vbiz-profile-root [data-section-id='public-cards'] [class*='min-h-[38vh]'] {
+  min-height: 26vh !important;
+}
+
+@media (min-width: 768px) {
+  .vbiz-profile-root [data-section-id='public-cards'] [class*='min-h-[38vh]'] {
+    min-height: 24vh !important;
+  }
+}
+
+.vbiz-profile-root [data-section-id='faq'] .group.relative.mb-4.overflow-hidden {
+  padding: 1.25rem !important;
+}
+
+@media (min-width: 768px) {
+  .vbiz-profile-root [data-section-id='faq'] .group.relative.mb-4.overflow-hidden {
+    padding: 1.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vbiz-profile-root [data-section-id='faq'] .group.relative.mb-4.overflow-hidden {
+    padding: 2rem !important;
+  }
+
+  .vbiz-profile-root [data-section-id='faq'] h2[class*='lg:text-5xl'] {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+  }
+}
+
+/* Image Vault — extra-compact mobile banner + filters */
+@media (max-width: 767px) {
+  .vbiz-profile-root [data-section-id='gallery'] [class*='lg:col-span-4'] {
+    gap: 0.5rem !important;
+    padding: 0.75rem !important;
+  }
+}

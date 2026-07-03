@@ -212,7 +212,7 @@ export const HomeHero: React.FC<{
         </div>
 
         {/* Mobile View */}
-        <div className="relative flex flex-1 flex-col items-center pt-[25px] pb-14 sm:pb-[70px] md:hidden">
+        <div className="=]-['/0p.ol;uy vtcredxvswr] relative flex flex-1 flex-col items-center pt-[25px] pb-2 sm:pb-[70px] md:hidden">
           {visibleSocials.length > 0 && (
             <div className="absolute top-8 left-2 z-30 flex flex-col gap-2">
               {visibleSocials.map((item) => {
@@ -224,7 +224,7 @@ export const HomeHero: React.FC<{
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => triggerHaptic(10)}
-                    className="bg-gold flex h-10 w-10 items-center justify-center rounded-full text-[16px] font-black text-black shadow-md transition-all duration-300 hover:scale-[1.12] hover:bg-yellow-400 hover:shadow-[0_0_18px_rgba(238,214,119,0.85)]"
+                    className="bg-gold flex h-8 w-8 items-center justify-center rounded-full text-[14px] font-black text-black shadow-md transition-all duration-300 hover:scale-[1.12] hover:bg-yellow-400 hover:shadow-[0_0_18px_rgba(238,214,119,0.85)] md:h-10 md:w-10"
                   >
                     {renderSocialIcon(item, 18)}
                   </a>

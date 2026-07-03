@@ -69,7 +69,6 @@ export const AboutSection = () => {
   const footer = item.footer
   const ownerInitial = resolveOwnerInitial(personal.fullName)
   const { lead: titleLead, accent: titleAccent } = splitSectionTitle(sectionTitle)
-  const showDetailsGrid = Boolean(highlight || pillars.length > 0 || footer)
 
   return (
     <V3SectionShell>
@@ -81,7 +80,7 @@ export const AboutSection = () => {
                 src={heroImage}
                 alt={item.title}
                 fill
-                className="scale-105 object-cover object-top opacity-50 mix-blend-luminosity"
+                className="scale-105 object-cover object-top opacity-90 mix-blend-luminosity"
                 sizes="100vw"
                 priority
               />
@@ -103,12 +102,12 @@ export const AboutSection = () => {
           ) : null}
 
           <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-6 md:p-8 lg:p-10">
-            <div className="mt-auto flex max-w-3xl flex-col gap-3 pt-14 sm:gap-4 sm:pt-0 md:gap-5">
+            <div className="mt-auto flex max-w-3xl flex-col gap-3 pt-14 sm:gap-4 sm:pt-0 md:gap-4">
               <div className="bg-gold/10 border-gold/30 text-gold inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:text-xs">
                 <Sparkles size={14} className="text-gold" /> {sectionTitle}
               </div>
 
-              <h2 className="text-2xl leading-[1.15] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
+              <h2 className="text-2xl leading-[1.15] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-4xl">
                 {titleAccent ? (
                   <>
                     {titleLead}{' '}
@@ -147,90 +146,77 @@ export const AboutSection = () => {
                   />
                 ) : null}
               </div>
-            </div>
-          </div>
-        </div>
-
-        {showDetailsGrid ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-            {highlight ? (
-              <div className="from-gold flex h-full items-center justify-center rounded-4xl bg-linear-to-br to-amber-500 p-6 text-center shadow-sm md:p-8 md:text-left lg:p-10">
-                <div className="text-base leading-relaxed font-bold text-black md:text-lg lg:text-xl">
+              {highlight ? (
+                <div className="text-base leading-relaxed font-medium text-black md:text-base lg:text-base">
                   {highlight.title ? (
-                    <span className="mb-2 block text-3xl font-black tracking-tight md:mb-4 md:text-4xl">
+                    <span className="mb-1 block text-xl font-semibold tracking-tight text-white md:mb-1 md:text-xl">
                       {highlight.title}
                     </span>
                   ) : null}
                   {highlight.html ? (
                     <div
-                      className="[&_p]:mb-0 [&_strong]:font-black"
+                      className="text-white [&_p]:mb-0 [&_strong]:font-medium"
                       dangerouslySetInnerHTML={{ __html: highlight.html }}
                     />
                   ) : highlight.plain ? (
                     <span>{highlight.plain}</span>
                   ) : null}
                 </div>
-              </div>
-            ) : null}
-
-            {pillars.length > 0 ? (
-              <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${highlight ? '' : 'md:col-span-2'}`}>
-                {pillars.map((pillar, idx) => {
-                  const Icon = PILLAR_ICONS[idx % PILLAR_ICONS.length]
-                  const palette = PILLAR_COLORS[idx % PILLAR_COLORS.length]
-                  return (
-                    <div
-                      key={`${pillar.title}-${idx}`}
-                      className="group hover:border-gold/30 flex flex-col gap-3 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm transition-colors md:rounded-4xl md:p-6 dark:border-zinc-800/80 dark:bg-[#031327]"
-                    >
+              ) : null}
+              {pillars.length > 0 ? (
+                <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${highlight ? '' : 'md:col-span-2'}`}>
+                  {pillars.map((pillar, idx) => {
+                    const Icon = PILLAR_ICONS[idx % PILLAR_ICONS.length]
+                    const palette = PILLAR_COLORS[idx % PILLAR_COLORS.length]
+                    return (
                       <div
-                        className={`w-fit rounded-xl p-3 ${palette.bg} ${palette.color} transition-transform duration-300 group-hover:scale-110`}
+                        key={`${pillar.title}-${idx}`}
+                        className="group hover:border-gold/30 flex gap-3 rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm transition-colors md:rounded-xl md:p-3 dark:border-zinc-800/80 dark:bg-[#031327]"
                       >
-                        <Icon size={20} strokeWidth={2.5} />
+                        <div
+                          className={`h-9 w-9 rounded-xl p-2 ${palette.bg} ${palette.color} transition-transform duration-300 group-hover:scale-110`}
+                        >
+                          <Icon size={16} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                          <h4 className="mb-1 text-sm font-bold text-zinc-900 md:text-base dark:text-zinc-100">
+                            {pillar.title}
+                          </h4>
+                          {pillar.description ? (
+                            <p className="text-xs leading-snug font-medium text-zinc-500 md:text-sm dark:text-zinc-400">
+                              {pillar.description}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="mb-1 text-sm font-bold text-zinc-900 md:text-base dark:text-zinc-100">
-                          {pillar.title}
-                        </h4>
-                        {pillar.description ? (
-                          <p className="text-xs leading-snug font-medium text-zinc-500 md:text-sm dark:text-zinc-400">
-                            {pillar.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : null}
-
-            {footer && (footer.headline || footer.subheadline || footer.tagline) ? (
-              <div className="dark:bg-ocean-deep dark:border-gold/20 relative mt-2 flex flex-col flex-col-reverse items-center justify-between gap-6 overflow-hidden rounded-4xl border border-zinc-800 bg-zinc-950 p-6 text-center shadow-2xl md:col-span-2 md:mt-0 md:flex-col md:gap-8 md:rounded-[2.5rem] md:p-10 lg:p-12">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(238,214,119,0.15)_0%,transparent_70%)]" />
-                <div className="via-gold/50 absolute top-0 left-0 h-px w-full bg-linear-to-r from-transparent to-transparent" />
-
-                <div className="relative z-10 flex-1 text-center md:text-left">
-                  {footer.headline ? (
-                    <h3 className="mb-1.5 text-xl font-black tracking-tight text-white md:mb-2 md:text-2xl lg:text-3xl">
-                      {footer.headline}
-                    </h3>
-                  ) : null}
-                  {footer.subheadline ? (
-                    <p className="text-base font-bold text-zinc-400 md:text-lg">{footer.subheadline}</p>
-                  ) : null}
+                    )
+                  })}
                 </div>
+              ) : null}
 
-                {footer.tagline ? (
-                  <div className="bg-gold/10 border-gold/20 relative z-10 w-full shrink-0 rounded-2xl border p-4 text-center md:w-auto md:p-5 md:text-right">
-                    <p className="text-gold text-sm leading-snug font-black tracking-widest uppercase md:text-base">
+              {footer && (footer.headline || footer.subheadline || footer.tagline) ? (
+                <>
+                  <div className="relative z-10 flex-1 text-center md:text-left">
+                    {footer.headline ? (
+                      <h3 className="text-md mb-1 font-semibold tracking-tight text-white md:mb-1 md:text-xl lg:text-lg">
+                        {footer.headline}
+                      </h3>
+                    ) : null}
+                    {footer.subheadline ? (
+                      <p className="md:text-md text-base font-bold text-zinc-400">{footer.subheadline}</p>
+                    ) : null}
+                  </div>
+
+                  {footer.tagline ? (
+                    <p className="text-gold text-center text-sm leading-snug font-semibold tracking-widest uppercase md:text-left md:text-base">
                       {footer.tagline}
                     </p>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+                  ) : null}
+                </>
+              ) : null}
+            </div>
           </div>
-        ) : null}
+        </div>
       </div>
     </V3SectionShell>
   )

@@ -17,7 +17,11 @@ export function ProfileSectionOutlet({ sectionId, template = 'v3', homeHeroProps
   const content = <ProfileNavSection tabId={sectionId} template={template} homeHeroProps={homeHeroProps} />
 
   if (template !== 'v2') {
-    return <div className="relative w-full">{content}</div>
+    return (
+      <div className="relative w-full" data-section-id={sectionId}>
+        {content}
+      </div>
+    )
   }
 
   return (
@@ -29,6 +33,7 @@ export function ProfileSectionOutlet({ sectionId, template = 'v3', homeHeroProps
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="relative w-full"
+        data-section-id={sectionId}
       >
         {content}
       </motion.div>

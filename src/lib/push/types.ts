@@ -1,6 +1,13 @@
 import type { BackendNotificationPreferences } from '@/lib/push/preferenceMapping'
 
-export type NotificationPreferenceKey = 'contact' | 'video' | 'blog' | 'company' | 'services'
+export type NotificationPreferenceKey =
+  | 'contact'
+  | 'video'
+  | 'blog'
+  | 'company'
+  | 'services'
+  | 'events'
+  | 'announcements'
 
 export type NotificationPreferences = Record<NotificationPreferenceKey, boolean>
 
@@ -10,6 +17,8 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   blog: true,
   company: true,
   services: true,
+  events: true,
+  announcements: true,
 }
 
 export type PushSubscriptionKeys = {

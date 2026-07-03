@@ -8,6 +8,8 @@ export type BackendNotificationPreferenceKey =
   | 'offers'
   | 'business_hours'
   | 'news'
+  | 'event_updates'
+  | 'announcement_updates'
   | 'theme_updates'
 
 export type BackendNotificationPreferences = Record<BackendNotificationPreferenceKey, boolean>
@@ -19,6 +21,8 @@ export const BACKEND_NOTIFICATION_PREFERENCE_OPTIONS: Array<{ id: BackendNotific
   { id: 'service_updates', label: '🛠️ Services section updates' },
   { id: 'business_hours', label: '🏢 Professional updates' },
   { id: 'offers', label: '🎁 Offers & promotions' },
+  { id: 'event_updates', label: '📅 New events' },
+  { id: 'announcement_updates', label: '📢 New announcements' },
   { id: 'theme_updates', label: '🎨 Theme & design updates' },
 ]
 
@@ -28,6 +32,8 @@ const UI_TO_BACKEND: Record<NotificationPreferenceKey, BackendNotificationPrefer
   blog: 'news',
   company: 'business_hours',
   services: 'service_updates',
+  events: 'event_updates',
+  announcements: 'announcement_updates',
 }
 
 const BACKEND_TO_UI: Record<BackendNotificationPreferenceKey, NotificationPreferenceKey | null> = {
@@ -36,6 +42,8 @@ const BACKEND_TO_UI: Record<BackendNotificationPreferenceKey, NotificationPrefer
   news: 'blog',
   business_hours: 'company',
   service_updates: 'services',
+  event_updates: 'events',
+  announcement_updates: 'announcements',
   offers: null,
   theme_updates: null,
 }
@@ -47,6 +55,8 @@ export const DEFAULT_BACKEND_NOTIFICATION_PREFERENCES: BackendNotificationPrefer
   offers: true,
   business_hours: true,
   news: true,
+  event_updates: true,
+  announcement_updates: true,
   theme_updates: false,
 }
 
@@ -80,6 +90,8 @@ export function fromBackendPreferences(
     blog: true,
     company: true,
     services: true,
+    events: true,
+    announcements: true,
   }
   if (!backend) return defaults
 

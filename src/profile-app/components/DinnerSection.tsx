@@ -142,7 +142,7 @@ function DinnerItemDetail({ item, sectionTitle, accent, onBack }: DinnerItemDeta
               <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/30 px-3 py-1.5 text-[10px] font-bold tracking-wider text-white uppercase backdrop-blur-sm">
                 <Utensils size={12} style={{ color: accent }} /> Dinner
               </div>
-              <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                 {item.title}
               </h1>
             </div>
@@ -152,7 +152,7 @@ function DinnerItemDetail({ item, sectionTitle, accent, onBack }: DinnerItemDeta
             <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-700 uppercase dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-300">
               <Utensils size={12} style={{ color: accent }} /> Dinner
             </div>
-            <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {item.title}
             </h1>
           </div>
@@ -283,7 +283,7 @@ export const DinnerSection = () => {
               <Utensils size={12} style={{ color: accent }} /> Evening
             </div>
 
-            <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h2 className="mb-4 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {sectionTitle.includes(' ') ? (
                 <>
                   {sectionTitle.slice(0, sectionTitle.lastIndexOf(' '))}{' '}
@@ -295,7 +295,7 @@ export const DinnerSection = () => {
                 sectionTitle
               )}
             </h2>
-            <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="max-w-xl text-base leading-normal font-medium text-zinc-600 dark:text-zinc-400">
               Explore our dinner offerings for the evening.
             </p>
           </div>

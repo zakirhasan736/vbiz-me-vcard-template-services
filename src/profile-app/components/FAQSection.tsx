@@ -167,13 +167,13 @@ export const FAQSection = () => {
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className={`group relative mb-4 overflow-hidden p-8 md:mb-6 lg:p-10 ${cardClass}`}>
+          <div className={`group relative mb-4 overflow-hidden p-5 md:mb-4 md:p-6 lg:p-8 ${cardClass}`}>
             <div className="bg-gold/10 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
             <div className="relative z-10">
-              <div className="bg-gold/10 border-gold/30 text-gold mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase">
+              <div className="bg-gold/10 border-gold/30 text-gold mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase">
                 <MessageCircle size={12} /> {sectionTitle}
               </div>
-              <h2 className="mb-4 text-3xl leading-[1.1] font-black tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+              <h2 className="mb-2 text-2xl leading-[1.1] font-black tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
                 Frequently Asked{' '}
                 <span className="from-gold bg-linear-to-r to-yellow-500 bg-clip-text text-transparent italic">
                   Questions

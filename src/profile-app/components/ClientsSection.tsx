@@ -59,38 +59,41 @@ export const ClientsSection = () => {
   return (
     <div className="w-full pb-20">
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
-        <div className="group relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-8 backdrop-blur-xl md:flex-row md:items-center md:gap-0 lg:col-span-4 lg:p-10 dark:border-zinc-800/80 dark:bg-zinc-900/50">
+        <div className="group relative flex flex-col items-start justify-between gap-3 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-4 backdrop-blur-xl md:flex-row md:items-center md:gap-0 md:p-6 lg:col-span-4 lg:p-8 dark:border-zinc-800/80 dark:bg-zinc-900/50">
           <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
 
           <div className="bg-yellow-primary/10 dark:bg-yellow-primary/5 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
           <div className="pointer-events-none absolute bottom-0 left-0 -mb-24 -ml-24 rounded-full bg-black/5 p-24 blur-3xl transition-transform delay-100 duration-1000 group-hover:scale-110 dark:bg-white/5" />
 
-          <div className="relative z-10 w-full md:w-auto">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
+          <div className="relative z-10 w-full min-w-0 md:w-auto md:flex-1">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors md:mb-3 dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
               <Handshake size={12} className="text-yellow-primary" /> Trusted Partners
             </div>
 
-            <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h2 className="mb-0 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl md:mb-2 lg:text-4xl dark:text-zinc-100">
               Organizations We <span className="text-yellow-primary font-medium italic">Serve</span>
             </h2>
-            <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 hidden max-w-xl text-base leading-normal font-medium text-zinc-600 md:block dark:text-zinc-400">
               Proud to partner with forward-thinking companies across industries who trust us to elevate their
               professional presence.
             </p>
           </div>
 
-          <div className="relative z-10 flex flex-col items-start gap-3 md:items-end">
+          <div className="relative z-10 flex w-full shrink-0 flex-row items-center justify-between gap-2 md:w-auto md:flex-col md:items-end md:gap-3">
             {isLoading ? (
               <ActiveClientsCountSkeleton />
             ) : (
-              <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-2 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-900/80">
-                <Building2 size={16} className="text-yellow-primary" />
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+              <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-1.5 backdrop-blur-md md:px-4 md:py-2 dark:border-zinc-800/80 dark:bg-zinc-900/80">
+                <Building2 size={14} className="text-yellow-primary md:h-4 md:w-4" />
+                <span className="text-xs font-bold text-zinc-900 md:text-sm dark:text-zinc-100">
                   {clients.length} Active Client{clients.length === 1 ? '' : 's'}
                 </span>
               </div>
             )}
-            <button className="flex items-center justify-center gap-3 rounded-xl bg-zinc-900 px-6 py-3.5 font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] active:scale-95 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+            <button
+              type="button"
+              className="hidden items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] active:scale-95 md:flex md:gap-3 md:px-6 md:py-3.5 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+            >
               <span className="text-sm font-bold">Become a Client</span>
               <ArrowRight size={16} />
             </button>

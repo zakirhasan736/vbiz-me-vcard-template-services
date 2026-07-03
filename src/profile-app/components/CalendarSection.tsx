@@ -187,10 +187,10 @@ function SectionHeader({
             </>
           ) : (
             <>
-              <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+              <h2 className="mb-4 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
                 {sectionTitle}
               </h2>
-              <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+              <p className="max-w-xl text-base leading-normal font-medium text-zinc-600 dark:text-zinc-400">
                 {`Find a time that works for you. Let's connect and discuss how I can help you achieve your goals.`}
               </p>
             </>

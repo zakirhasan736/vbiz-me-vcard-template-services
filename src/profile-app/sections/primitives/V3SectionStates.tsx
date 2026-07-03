@@ -23,20 +23,20 @@ type V3SectionHeaderProps = {
 export function V3SectionHeader({ badge, badgeIcon: Icon, title, subtitle, className = '' }: V3SectionHeaderProps) {
   return (
     <div
-      className={`group relative mb-4 w-full overflow-hidden rounded-4xl border border-zinc-200 bg-white/50 p-6 shadow-sm md:mb-6 md:rounded-[2.5rem] md:p-10 lg:p-12 dark:border-zinc-800/80 dark:bg-[#031327]/80 ${className}`}
+      className={`group relative mb-4 w-full overflow-hidden rounded-4xl border border-zinc-200 bg-white/50 p-5 shadow-sm md:mb-4 md:rounded-[2.5rem] md:p-6 lg:p-8 dark:border-zinc-800/80 dark:bg-[#031327]/80 ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
       <div className="bg-gold/10 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
 
       <div className="relative z-10">
-        <div className="bg-gold/10 border-gold/30 text-gold mb-4 inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:mb-6 md:text-xs">
+        <div className="bg-gold/10 border-gold/30 text-gold mb-2 inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:mb-3 md:text-xs">
           <Icon size={14} className="text-gold" /> {badge}
         </div>
-        <h2 className="mb-3 text-[28px] leading-[1.15] font-black tracking-tight text-zinc-900 sm:text-4xl md:mb-4 md:text-5xl dark:text-white">
+        <h2 className="mb-2 text-2xl leading-[1.15] font-black tracking-tight text-zinc-900 sm:text-4xl md:mb-2 lg:text-4xl dark:text-white">
           {title}
         </h2>
         {subtitle ? (
-          <p className="max-w-2xl text-sm leading-relaxed font-medium text-zinc-600 md:text-base dark:text-zinc-400">
+          <p className="max-w-2xl text-sm leading-normal font-medium text-zinc-600 md:text-base dark:text-zinc-400">
             {subtitle}
           </p>
         ) : null}

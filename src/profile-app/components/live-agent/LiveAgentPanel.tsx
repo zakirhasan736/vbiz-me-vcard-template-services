@@ -581,8 +581,8 @@ export function LiveAgentPanel({
         onClick={() => setIsOpen(!isOpen)}
         className={`pointer-events-auto relative flex items-center justify-center rounded-full border transition-all duration-300 ${
           isOpen
-            ? 'h-11 w-11 border-zinc-800 bg-zinc-900 text-zinc-400 shadow-sm hover:bg-zinc-800 hover:text-zinc-200 md:h-14 md:w-14'
-            : 'h-11 w-11 border-white text-zinc-950 shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
+            ? 'h-10 w-10 border-zinc-800 bg-zinc-900 text-zinc-400 shadow-sm hover:bg-zinc-800 hover:text-zinc-200 md:h-14 md:w-14'
+            : 'h-10 w-10 border-white text-zinc-950 shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
         }`}
         style={
           !isOpen

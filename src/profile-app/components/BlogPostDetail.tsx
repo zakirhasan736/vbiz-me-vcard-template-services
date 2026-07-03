@@ -44,7 +44,7 @@ export function BlogPostDetail({ post, sectionTitle, onBack }: BlogPostDetailPro
               <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/30 px-3 py-1.5 text-[10px] font-bold tracking-wider text-white uppercase backdrop-blur-sm">
                 <FileEdit size={12} className="text-[#eab308]" /> Blog
               </div>
-              <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                 {post.title}
               </h1>
               {dateLabel ? (
@@ -59,7 +59,7 @@ export function BlogPostDetail({ post, sectionTitle, onBack }: BlogPostDetailPro
             <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-700 uppercase dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-300">
               <FileEdit size={12} className="text-[#eab308]" /> Blog
             </div>
-            <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {post.title}
             </h1>
             {dateLabel ? (

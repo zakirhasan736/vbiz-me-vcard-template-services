@@ -25,11 +25,11 @@ const SKELETON_CARD_COUNT = 4
 
 function ReviewsHeaderSkeleton() {
   return (
-    <div className="relative flex min-h-[42vh] flex-col justify-end overflow-hidden rounded-[2rem] border border-zinc-200 bg-zinc-100 p-8 md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[50vh] dark:border-zinc-800/80 dark:bg-zinc-900">
-      <div className="w-full space-y-4">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
-        <div className="h-12 w-3/4 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
-        <div className="h-16 w-full max-w-xl animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+    <div className="relative flex min-h-[200px] flex-col justify-end overflow-hidden rounded-[2rem] border border-zinc-200 bg-zinc-100 p-4 pb-12 md:min-h-[22vh] md:rounded-[2.5rem] md:p-6 md:pb-6 lg:col-span-4 lg:min-h-[24vh] dark:border-zinc-800/80 dark:bg-zinc-900">
+      <div className="w-full space-y-3">
+        <div className="h-6 w-32 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+        <div className="h-8 w-3/4 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+        <div className="hidden h-12 w-full max-w-xl animate-pulse rounded-lg bg-zinc-200 md:block dark:bg-zinc-800" />
       </div>
     </div>
   )
@@ -113,7 +113,7 @@ export const ReviewsSection = () => {
         {showInitialLoader ? (
           <ReviewsHeaderSkeleton />
         ) : (
-          <div className="group relative flex min-h-[42vh] w-full flex-col overflow-hidden rounded-[2rem] border border-zinc-800 bg-[#020914] shadow-xl md:min-h-[30vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[32vh] dark:border-[#eed677]/20">
+          <div className="group relative flex min-h-[200px] w-full flex-col overflow-hidden rounded-[2rem] border border-zinc-800 bg-[#020914] shadow-xl md:min-h-[22vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[24vh] dark:border-[#eed677]/20">
             {/* Accent background (no video) */}
             <div className="absolute inset-0 z-0 h-full w-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(238,214,119,0.14),transparent_60%)]" />
@@ -121,13 +121,14 @@ export const ReviewsSection = () => {
               <div className="absolute inset-0 hidden bg-linear-to-r from-[#020914] via-[#020914]/60 to-transparent md:block md:w-2/3" />
             </div>
 
-            {/* View toggle */}
-            <div className="absolute top-4 right-4 z-20 md:top-8 md:right-8 lg:top-10 lg:right-10">
-              <div className="inline-flex items-center rounded-xl border border-zinc-800 bg-black/50 p-1 shadow-2xl backdrop-blur-xl">
+            {/* View toggle — bottom-right on mobile, top-right on desktop */}
+            <div className="absolute top-6 right-3 z-20 md:top-8 md:right-8 md:bottom-auto lg:top-8 lg:right-10">
+              <div className="inline-flex items-center rounded-xl border border-zinc-800 bg-black/50 p-0.5 shadow-2xl backdrop-blur-xl md:p-1">
                 <button
                   type="button"
                   onClick={() => setViewMode('slider')}
-                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-all duration-300 md:gap-1.5 md:px-3 md:text-xs ${
+                  aria-label="Slider view"
+                  className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-bold transition-all duration-300 md:gap-1.5 md:px-3 md:py-1.5 md:text-xs ${
                     viewMode === 'slider' ? 'bg-[#eed677] text-black shadow-sm' : 'text-zinc-300 hover:text-white'
                   }`}
                 >
@@ -137,7 +138,8 @@ export const ReviewsSection = () => {
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
-                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-all duration-300 md:gap-1.5 md:px-3 md:text-xs ${
+                  aria-label="Grid view"
+                  className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-bold transition-all duration-300 md:gap-1.5 md:px-3 md:py-1.5 md:text-xs ${
                     viewMode === 'grid' ? 'bg-[#eed677] text-black shadow-sm' : 'text-zinc-300 hover:text-white'
                   }`}
                 >
@@ -148,28 +150,28 @@ export const ReviewsSection = () => {
             </div>
 
             {/* Content overlay */}
-            <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10">
-              <div className="mt-auto flex w-full max-w-7xl flex-col items-start justify-between gap-4 pt-10 pb-2 md:flex-row md:items-end md:gap-8 md:pt-0 md:pb-0">
-                <div className="flex max-w-2xl flex-col gap-2 md:gap-5">
+            <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-0 pb-0 sm:p-5 md:p-6 md:pb-6 lg:p-7">
+              <div className="mt-auto flex w-full max-w-7xl flex-col items-start justify-between gap-3 md:flex-row md:items-end md:gap-5">
+                <div className="flex max-w-2xl flex-col gap-1.5 md:gap-2">
                   <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#eed677]/30 bg-[#eed677]/10 px-2.5 py-1 text-[9px] font-bold tracking-widest text-[#eed677] uppercase shadow-sm backdrop-blur-md md:text-xs">
                     <Star size={12} className="text-[#eed677]" /> {sectionTitle}
                   </div>
 
-                  <h2 className="text-xl leading-[1.1] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-4xl">
+                  <h2 className="text-2xl leading-[1.1] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-4xl">
                     Trusted by{' '}
                     <span className="bg-linear-to-r from-[#eed677] to-yellow-500 bg-clip-text text-transparent italic">
                       Professionals
                     </span>
                   </h2>
-                  <p className="hidden text-[11px] leading-relaxed font-medium text-zinc-300 sm:block sm:text-sm md:text-lg">
+                  <p className="hidden max-w-xl text-sm leading-normal font-medium text-zinc-300 md:block md:text-lg">
                     Read what clients and partners are saying about working together — or leave your own review.
                   </p>
                 </div>
 
-                <div className="flex w-full shrink-0 flex-col items-start gap-3 md:w-auto md:items-end">
-                  <div className="flex w-full flex-row items-center justify-between gap-3 rounded-2xl border border-zinc-800/80 bg-black/30 p-2.5 backdrop-blur-md md:w-auto md:flex-col md:items-end md:gap-2 md:p-5">
-                    <div className="flex flex-col">
-                      <div className="flex gap-1">
+                <div className="flex w-full shrink-0 flex-col items-stretch gap-2 md:w-auto md:items-end md:gap-3">
+                  <div className="flex w-full flex-row items-center justify-between gap-2 rounded-xl border border-zinc-800/80 bg-black/30 p-2 backdrop-blur-md md:w-auto md:flex-col md:items-end md:gap-2 md:rounded-2xl md:p-5">
+                    <div className="flex min-w-0 flex-col">
+                      <div className="flex gap-0.5 md:gap-1">
                         {[1, 2, 3, 4, 5].map((i) => (
                           <Star
                             key={i}
@@ -177,13 +179,13 @@ export const ReviewsSection = () => {
                           />
                         ))}
                       </div>
-                      <span className="mt-1 text-[8px] font-bold tracking-wider text-zinc-400 uppercase md:text-[10px]">
+                      <span className="mt-0.5 text-[8px] font-bold tracking-wider text-zinc-400 uppercase md:mt-1 md:text-[10px]">
                         {totalReviewsLabel} Verified Reviews
                       </span>
                     </div>
-                    <div className="flex items-baseline gap-1 md:gap-2">
-                      <span className="text-base font-black text-white md:text-3xl">5.0</span>
-                      <span className="text-[10px] font-medium text-zinc-500 md:text-sm">/ 5.0</span>
+                    <div className="flex shrink-0 items-baseline gap-1 md:gap-2">
+                      <span className="text-sm font-black text-white md:text-3xl">5.0</span>
+                      <span className="text-[9px] font-medium text-zinc-500 md:text-sm">/ 5.0</span>
                     </div>
                   </div>
 
@@ -192,7 +194,7 @@ export const ReviewsSection = () => {
                       href={leaveReviewUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#eed677] px-4 py-2 text-xs font-bold text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 md:w-auto md:px-6 md:py-3"
+                      className="relative z-10 flex w-full max-w-[calc(100%-3.5rem)] items-center justify-center gap-2 rounded-xl bg-[#eed677] px-3 py-2 text-[11px] font-bold text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 md:max-w-none md:px-6 md:py-3 md:text-xs"
                     >
                       <span>Leave a Review</span>
                       <MessageCircle size={14} />

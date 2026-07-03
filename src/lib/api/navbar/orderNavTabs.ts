@@ -1,14 +1,44 @@
-import { NAV_BAR_NAV_ITEMS, type NavBarNavItem } from '@/lib/vcardNavbar'
+import type { NavBarNavItem } from '@/lib/vcardNavbar'
 
-/** Canonical nav order (home → about → mission → …) used to sort profile tabs. */
+/**
+ * Default profile nav order when tabs have published data.
+ * API `/post-types` may return items in any order — we sort to this list.
+ * Tabs not listed here keep their relative API order at the end.
+ */
+export const CANONICAL_NAV_TAB_ORDER = [
+  'home',
+  'about',
+  'services',
+  'gallery',
+  'videos',
+  'explainer',
+  'reviews',
+  'certificates',
+  'bbb',
+  'dcp',
+  'faq',
+  'clients',
+  'calendar',
+  'booking',
+  'contact-us',
+  'mission',
+  'blog',
+  'additional',
+  'press',
+  'events',
+  'join-team',
+  'public-cards',
+  'education',
+] as const
+
 const NAV_ORDER_INDEX: Record<string, number> = Object.fromEntries(
-  NAV_BAR_NAV_ITEMS.map((item, index) => [item.id, index])
+  CANONICAL_NAV_TAB_ORDER.map((id, index) => [id, index])
 )
 
 /**
  * Produces a meaningful, duplicate-free tab list:
  * - one tab per section content (no duplicate "Reviews", "About", etc.),
- * - ordered by the canonical Card Settings order (home first, then about, …),
+ * - ordered by {@link CANONICAL_NAV_TAB_ORDER} (home first, then about, …),
  * - unrecognized sections keep their original order at the end.
  */
 export function orderAndDedupeNavItems(items: NavBarNavItem[]): NavBarNavItem[] {

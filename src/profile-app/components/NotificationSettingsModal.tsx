@@ -158,23 +158,23 @@ export const NotificationSettingsModal = ({
           </div>
         ) : (
           <div className="flex flex-col text-left">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500">
-                <Bell size={20} />
+            <div className="mb-2 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500">
+                <Bell size={16} />
               </div>
               <h2 className="text-xl font-bold text-zinc-100">Notification Settings</h2>
             </div>
 
-            <p className="mb-6 text-sm text-zinc-400">Choose what to get notified about:</p>
+            <p className="text-md mb-4 text-zinc-400">Choose what to get notified about:</p>
 
-            <div className="mb-6 w-full space-y-3 rounded-xl bg-zinc-950/50 p-4 text-sm text-zinc-300">
+            <div className="text-md mb-6 w-full space-y-2 rounded-xl bg-zinc-950/50 p-4 font-medium text-zinc-300">
               {loading ? (
                 <div className="flex items-center justify-center py-6 text-zinc-400">
                   <Loader2 size={20} className="animate-spin" />
                 </div>
               ) : (
                 BACKEND_NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
-                  <label key={p.id} className="flex cursor-pointer items-center gap-3">
+                  <label key={p.id} className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={preferences[p.id]}

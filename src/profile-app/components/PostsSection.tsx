@@ -156,7 +156,7 @@ function PostItemDetail({ item, sectionTitle, accent, onBack }: PostItemDetailPr
                   <Calendar size={14} /> {dateLabel}
                 </p>
               ) : null}
-              <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl lg:text-4xl">
                 {item.title}
               </h1>
             </div>
@@ -171,7 +171,7 @@ function PostItemDetail({ item, sectionTitle, accent, onBack }: PostItemDetailPr
                 <Calendar size={14} /> {dateLabel}
               </p>
             ) : null}
-            <h1 className="max-w-4xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h1 className="max-w-4xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {item.title}
             </h1>
           </div>
@@ -302,7 +302,7 @@ export const PostsSection = () => {
               <FileEdit size={12} style={{ color: accent }} /> Updates
             </div>
 
-            <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h2 className="mb-4 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {sectionTitle.includes(' ') ? (
                 <>
                   {sectionTitle.slice(0, sectionTitle.lastIndexOf(' '))}{' '}
@@ -314,7 +314,7 @@ export const PostsSection = () => {
                 sectionTitle
               )}
             </h2>
-            <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="max-w-xl text-base leading-normal font-medium text-zinc-600 dark:text-zinc-400">
               Articles and updates from your vBiz profile.
             </p>
           </div>

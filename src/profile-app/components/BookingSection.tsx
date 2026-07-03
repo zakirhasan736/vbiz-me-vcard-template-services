@@ -183,7 +183,7 @@ export const BookingSection = () => {
               <CalendarDays size={12} style={{ color: accent }} /> Reservations
             </div>
 
-            <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h2 className="mb-4 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {sectionTitle.includes(' ') ? (
                 <>
                   {sectionTitle.slice(0, sectionTitle.lastIndexOf(' '))}{' '}
@@ -195,7 +195,7 @@ export const BookingSection = () => {
                 sectionTitle
               )}
             </h2>
-            <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="max-w-xl text-base leading-normal font-medium text-zinc-600 dark:text-zinc-400">
               Ready to plan your next event? Book a time that works for you and let&apos;s get started.
             </p>
           </div>

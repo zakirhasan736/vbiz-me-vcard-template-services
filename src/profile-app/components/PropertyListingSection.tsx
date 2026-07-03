@@ -146,10 +146,10 @@ export const PropertyListingSection = () => {
             <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
               <Building2 size={12} style={{ color: accent }} /> Properties
             </div>
-            <h2 className="mb-4 max-w-2xl text-3xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl dark:text-zinc-100">
+            <h2 className="mb-4 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
               {sectionTitle}
             </h2>
-            <p className="max-w-xl text-base leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+            <p className="max-w-xl text-base leading-normal font-medium text-zinc-600 dark:text-zinc-400">
               Browse available properties and listings shared on this profile.
             </p>
           </div>

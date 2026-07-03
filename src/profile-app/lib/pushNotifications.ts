@@ -39,6 +39,8 @@ export const NOTIFICATION_PREFERENCE_OPTIONS: Array<{ id: NotificationPreference
   { id: 'blog', label: '📝 New blog posts' },
   { id: 'services', label: '🛠️ Services section updates' },
   { id: 'company', label: '🏢 Professional updates' },
+  { id: 'events', label: '📅 New events' },
+  { id: 'announcements', label: '📢 New announcements' },
 ]
 
 export function isPushSupported() {

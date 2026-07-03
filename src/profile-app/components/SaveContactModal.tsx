@@ -22,9 +22,11 @@ type SaveContactModalProps = {
   onSuccess?: () => void
   /** Profile owner id sent to `POST /save-guest-user` and `GET /save-contact/{id}`. */
   profileId?: string
+  /** Card owner display name — used in the intro copy. */
+  ownerName?: string
 }
 
-export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: SaveContactModalProps) => {
+export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerName }: SaveContactModalProps) => {
   const [formData, setFormData] = useState<SaveContactFormData>(EMPTY_FORM)
   const [showSuccess, setShowSuccess] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -85,6 +87,9 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
     }
   }
 
+  const trimmedOwnerName = ownerName?.trim()
+  const contactOwnerLabel = trimmedOwnerName || 'this contact'
+
   return (
     <ProfileModalShell
       isOpen={isOpen}
@@ -97,17 +102,24 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
           type="button"
           onClick={onClose}
           className="absolute top-4 right-4 rounded-full border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500 transition-all hover:bg-zinc-800 hover:text-zinc-300 focus:outline-none"
-          aria-label="Close save contact dialog"
+          aria-label="Close download contact dialog"
         >
           <X size={16} />
         </button>
 
         {!showSuccess ? (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="mb-2 text-xl font-bold tracking-tight text-zinc-100">Save Contact</h3>
+            <div className="mb-1 pr-8">
+              <h3 className="text-xl font-bold tracking-tight text-zinc-100">Download Contact Info</h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+                You&apos;re about to receive {contactOwnerLabel}&apos;s contact file. First, tell us who you are — your
+                first name, last name, and email — so we know who&apos;s saving this contact.
+              </p>
+            </div>
             <input
               type="text"
-              placeholder="First Name"
+              placeholder="Your first name"
+              aria-label="Your first name"
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
               required
@@ -116,7 +128,8 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
             />
             <input
               type="text"
-              placeholder="Last Name"
+              placeholder="Your last name"
+              aria-label="Your last name"
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
               required
@@ -125,7 +138,8 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
             />
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Your email address"
+              aria-label="Your email address"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
@@ -142,7 +156,7 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
               disabled={submitting}
               className="w-full rounded-xl bg-zinc-100 py-3 text-sm font-bold text-zinc-950 shadow-sm transition-all hover:bg-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? 'Saving…' : 'Save Contact'}
+              {submitting ? 'Preparing download…' : 'Download Contact File'}
             </button>
           </form>
         ) : (
@@ -154,8 +168,8 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId }: Save
             >
               <Check size={36} strokeWidth={3} />
             </motion.div>
-            <h3 className="mb-2 text-xl font-bold text-zinc-100">Saved!</h3>
-            <p className="text-sm text-zinc-400">Your contact file is downloading.</p>
+            <h3 className="mb-2 text-xl font-bold text-zinc-100">Contact file ready!</h3>
+            <p className="text-sm text-zinc-400">{contactOwnerLabel}&apos;s contact info is downloading now.</p>
           </div>
         )}
       </div>

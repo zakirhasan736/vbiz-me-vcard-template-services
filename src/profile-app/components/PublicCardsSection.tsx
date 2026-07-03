@@ -321,7 +321,7 @@ export const PublicCardsSection = () => {
     <div className="vbiz-public-cards-section isolate w-full max-w-full overflow-hidden pb-20">
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Header Card / Banner — theme-aware solid background (no video) */}
-        <div className="group dark:bg-ocean-deep relative flex min-h-[40vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-200 bg-zinc-50 shadow-xl sm:min-h-[44vh] md:min-h-[38vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[38vh] dark:border-[#eab308]/20">
+        <div className="group dark:bg-ocean-deep relative flex min-h-[26vh] w-full flex-col overflow-hidden rounded-4xl border border-zinc-200 bg-zinc-50 shadow-xl sm:min-h-[28vh] md:min-h-[24vh] md:rounded-[2.5rem] lg:col-span-4 lg:min-h-[24vh] dark:border-[#eab308]/20">
           {/* Accessible background — subtle accent wash, adapts to light/dark theme */}
           <div className="absolute inset-0 z-0 h-full w-full">
             <div className="dark:from-ocean-deep dark:via-ocean-deep/85 dark:to-ocean-deep/30 absolute inset-0 bg-linear-to-t from-white via-white/85 to-white/40" />
@@ -349,20 +349,20 @@ export const PublicCardsSection = () => {
           </div>
 
           {/* Content overlay */}
-          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-7 md:p-8 lg:px-12 lg:py-9">
+          <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-0 sm:p-7 md:p-8 lg:px-12 lg:py-9">
             <div className="mt-auto flex w-full max-w-7xl flex-col items-start justify-between gap-4 md:gap-5">
               <div className="flex max-w-2xl flex-col gap-2 md:gap-2.5">
                 <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-[#eab308]/30 bg-[#eab308]/15 px-3 py-1 text-[9px] font-bold tracking-wider text-[#eab308] uppercase shadow-md backdrop-blur-md md:text-xs">
                   <Users size={12} className="text-[#eab308]" /> Global Connections Directory
                 </div>
 
-                <h2 className="text-2xl leading-[1.05] font-black tracking-tight text-zinc-900 sm:text-3xl md:text-4xl lg:text-5xl dark:text-white">
+                <h2 className="text-2xl leading-[1.05] font-black tracking-tight text-zinc-900 sm:text-3xl md:text-4xl lg:text-4xl dark:text-white">
                   Global{' '}
                   <span className="bg-linear-to-r from-[#eab308] to-yellow-500 bg-clip-text text-transparent italic">
                     Connections
                   </span>
                 </h2>
-                <p className="hidden max-w-xl text-[11px] leading-relaxed font-medium text-zinc-600 sm:block sm:text-xs md:text-sm dark:text-zinc-300">
+                <p className="max-w-xl text-[12px] leading-normal font-medium text-zinc-600 sm:text-xs md:text-sm dark:text-zinc-300">
                   Discover and connect with top-tier verified professionals across the United States. Filter instantly
                   by state, city, and industry sector to find valuable prospects.
                 </p>
@@ -440,7 +440,7 @@ export const PublicCardsSection = () => {
               </div>
 
               {/* Mobile Search & Filter trigger (md:hidden) */}
-              <div className="mt-2 flex w-full gap-2 border-t border-zinc-200 pt-4 md:hidden dark:border-zinc-800/50">
+              <div className="mt-1 flex w-full gap-2 border-t border-zinc-200 pt-4 md:hidden dark:border-zinc-800/50">
                 <button
                   onClick={() => setIsFilterOpen(true)}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-xs font-extrabold text-zinc-900 shadow-md backdrop-blur-md transition-all active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white"
