@@ -131,30 +131,35 @@ function CtaButtonGrid({
 
   return (
     <div className={`flex flex-col ${gap}`}>
-      <div className={layout.row1.length === 2 ? `grid grid-cols-2 ${rowGap}` : 'flex'}>
-        {layout.row1.map((button) => (
-          <HomeCtaButton
-            key={button.key}
-            button={button}
-            template={template}
-            theme={theme}
-            accentColor={accentColor}
-            isDesktop={isDesktop}
-            onClick={() => onClick(button)}
-          />
-        ))}
-      </div>
-      {layout.stacked.map((button) => (
-        <HomeCtaButton
-          key={button.key}
-          button={button}
-          template={template}
-          theme={theme}
-          accentColor={accentColor}
-          isDesktop={isDesktop}
-          onClick={() => onClick(button)}
-        />
-      ))}
+      {layout.rows.map((row, rowIdx) =>
+        row.length === 2 ? (
+          <div key={rowIdx} className={`grid grid-cols-2 ${rowGap}`}>
+            {row.map((button) => (
+              <HomeCtaButton
+                key={button.key}
+                button={button}
+                template={template}
+                theme={theme}
+                accentColor={accentColor}
+                isDesktop={isDesktop}
+                onClick={() => onClick(button)}
+              />
+            ))}
+          </div>
+        ) : (
+          row.map((button) => (
+            <HomeCtaButton
+              key={button.key}
+              button={button}
+              template={template}
+              theme={theme}
+              accentColor={accentColor}
+              isDesktop={isDesktop}
+              onClick={() => onClick(button)}
+            />
+          ))
+        )
+      )}
     </div>
   )
 }

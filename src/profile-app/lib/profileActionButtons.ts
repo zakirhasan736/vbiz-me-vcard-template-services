@@ -19,14 +19,8 @@ export type ResolvedHomeCtaButton = {
 }
 
 export type HomeCtaLayout = {
-  /** Top paired row (two buttons side by side). */
-  row1: ResolvedHomeCtaButton[]
-  /** Full-width buttons stacked below row1. */
-  stacked: ResolvedHomeCtaButton[]
-  /** @deprecated Use `stacked`. Kept for v1 home layout consumers. */
-  row2: ResolvedHomeCtaButton
-  /** @deprecated Use `stacked`. Kept for v1 home layout consumers. */
-  row3: ResolvedHomeCtaButton
+  /** Ordered rows — a row of 2 buttons renders side-by-side; a row of 1 renders full-width. */
+  rows: ResolvedHomeCtaButton[][]
 }
 
 /** @deprecated Use ResolvedHomeCtaButton for home section CTAs. */
@@ -65,7 +59,7 @@ export function resolveHomeCtaLayout(options: {
   actionButtons?: MyCardActionButtons | null
   labels?: Partial<Record<HomeCtaKey, string>>
   accentColor?: string
-  /** When true, adds a leading "My Info" button (opens the info popup) and stacks Save My Info below. */
+  /** When true, adds a leading "My Info" button (opens the info popup) and pairs Save My Info with Save To Wallet — used on mobile. */
   includeMyInfo?: boolean
 }): HomeCtaLayout {
   const { actionButtons, labels = {}, accentColor = '#eab308', includeMyInfo = false } = options
@@ -103,15 +97,11 @@ export function resolveHomeCtaLayout(options: {
     variant: 'outline',
   }
 
-  const row1 = includeMyInfo ? [myInfo, myVcard] : [saveMyInfo, myVcard]
-  const stacked = includeMyInfo ? [saveMyInfo, googleWallet, getVcardNow] : [googleWallet, getVcardNow]
+  const rows: ResolvedHomeCtaButton[][] = includeMyInfo
+    ? [[myInfo, myVcard], [saveMyInfo, googleWallet], [getVcardNow]]
+    : [[saveMyInfo, myVcard], [googleWallet], [getVcardNow]]
 
-  return {
-    row1,
-    stacked,
-    row2: googleWallet,
-    row3: getVcardNow,
-  }
+  return { rows }
 }
 
 export function handleHomeCtaClick(
