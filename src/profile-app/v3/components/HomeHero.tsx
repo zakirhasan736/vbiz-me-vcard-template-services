@@ -6,7 +6,7 @@ import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
 import { CustomVideoPlayer } from '@/profile-app/components/CustomVideoPlayer'
 import { ProfileActionButtons } from '@/profile-app/components/ProfileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { openVbizmeHome, openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
+import { openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
 import {
   buildBentoContactItems,
   cleanProfileFieldValue,
@@ -99,8 +99,13 @@ export const HomeHero: React.FC<{
 
   const contactItems = useMemo(() => buildBentoContactItems(personal, isVisible, field), [personal, isVisible, field])
 
+  const websiteHref = useMemo(() => resolveSocialLinkHref('Website', socialHref).trim(), [socialHref])
+
   const visibleSocials = useMemo(
-    () => filterSocialItemsWithLinks(V3_SOCIAL_ITEMS, socialHref, personal.whatsapp),
+    () =>
+      filterSocialItemsWithLinks(V3_SOCIAL_ITEMS, socialHref, personal.whatsapp).filter(
+        (item) => item.label !== 'Website'
+      ),
     [socialHref, personal.whatsapp]
   )
 
@@ -165,15 +170,18 @@ export const HomeHero: React.FC<{
                   </div>
                 </div>
               )}
-              <div
-                onClick={() => {
-                  triggerHaptic(10)
-                  openVbizmeHome()
-                }}
-                className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
-              >
-                <Globe size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
-              </div>
+              {websiteHref && (
+                <a
+                  href={websiteHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Website"
+                  onClick={() => triggerHaptic(10)}
+                  className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
+                >
+                  <Globe size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
+                </a>
+              )}
               <div
                 title="Language"
                 className={`notranslate flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${

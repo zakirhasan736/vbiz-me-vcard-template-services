@@ -4,7 +4,7 @@ import { encodeMediaUrl, isVideoUrl } from '@/lib/mediaUrl'
 import { CustomVideoPlayer } from '@/profile-app/components/CustomVideoPlayer'
 import { isProfileActionButtonEnabled } from '@/profile-app/lib/profileActionButtons'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { openVbizmeHome, openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
+import { openVbizmeLogin } from '@/profile-app/lib/profileExternalLinks'
 import { cleanProfileFieldValue, formatProfileViewCount } from '@/profile-app/lib/profileHomeData'
 import { filterSocialItemsWithLinks, resolveSocialLinkHref } from '@/profile-app/lib/profileSocialLinks'
 import { resolveProfileAvatarSrc } from '@/profile-app/profilePublicProps'
@@ -102,8 +102,13 @@ export function ProfileHeaderV2({
   const showLanguage = isProfileActionButtonEnabled('language', actionButtons, isVisible)
   const viewCounterCount = actionButtons?.view_counter?.count ?? profileViews
 
+  const websiteHref = useMemo(() => resolveSocialLinkHref('Website', socialHref).trim(), [socialHref])
+
   const visibleSocials = useMemo(
-    () => filterSocialItemsWithLinks(V2_SOCIAL_ITEMS, socialHref, personal.whatsapp),
+    () =>
+      filterSocialItemsWithLinks(V2_SOCIAL_ITEMS, socialHref, personal.whatsapp).filter(
+        (item) => item.label !== 'Website'
+      ),
     [socialHref, personal.whatsapp]
   )
 
@@ -231,14 +236,17 @@ export function ProfileHeaderV2({
             </span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => openVbizmeHome()}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-          aria-label="Visit vBiz Me website"
-        >
-          <Globe size={14} className="text-[#eab308] md:h-4 md:w-4" />
-        </button>
+        {websiteHref && (
+          <a
+            href={websiteHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+            aria-label="Visit website"
+          >
+            <Globe size={14} className="text-[#eab308] md:h-4 md:w-4" />
+          </a>
+        )}
         {showLanguage && (
           <button
             type="button"

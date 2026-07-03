@@ -23,9 +23,9 @@ import {
 import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useProfileDisplay } from '../lib/profileDisplayContext'
-import { openVbizmeHome, openVbizmeLogin } from '../lib/profileExternalLinks'
+import { openVbizmeLogin } from '../lib/profileExternalLinks'
 import { buildBentoContactItems, formatProfileViewCount, splitDisplayName } from '../lib/profileHomeData'
-import { filterSocialItemsWithLinks } from '../lib/profileSocialLinks'
+import { filterSocialItemsWithLinks, resolveSocialLinkHref } from '../lib/profileSocialLinks'
 import { resolveProfileAvatarSrc } from '../profilePublicProps'
 import { CustomVideoPlayer } from './CustomVideoPlayer'
 import { LeaveMessageModal } from './LeaveMessageModal'
@@ -250,7 +250,11 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
     [personal, isVisible, field]
   )
 
-  const visibleSocials = filterSocialItemsWithLinks(V1_SOCIAL_GRID, socialHref, personal.whatsapp)
+  const websiteHref = useMemo(() => resolveSocialLinkHref('Website', socialHref).trim(), [socialHref])
+
+  const visibleSocials = filterSocialItemsWithLinks(V1_SOCIAL_GRID, socialHref, personal.whatsapp).filter(
+    (item) => item.label !== 'Website'
+  )
 
   const [messageModalOpen, setMessageModalOpen] = useState(false)
   const messageOwnerName = personal.fullName?.trim() || 'the card owner'
@@ -324,11 +328,15 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
                     ),
                     action: () => openVbizmeLogin(),
                   },
-                  {
-                    icon: Globe,
-                    label: 'Website',
-                    action: () => openVbizmeHome(),
-                  },
+                  ...(websiteHref
+                    ? [
+                        {
+                          icon: Globe,
+                          label: 'Website',
+                          action: () => window.open(websiteHref, '_blank', 'noopener,noreferrer'),
+                        },
+                      ]
+                    : []),
                   {
                     content: (
                       <div className="flex flex-col items-center justify-center leading-none">
@@ -417,11 +425,15 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
                       ),
                       action: () => openVbizmeLogin(),
                     },
-                    {
-                      icon: Globe,
-                      label: 'Website',
-                      action: () => openVbizmeHome(),
-                    },
+                    ...(websiteHref
+                      ? [
+                          {
+                            icon: Globe,
+                            label: 'Website',
+                            action: () => window.open(websiteHref, '_blank', 'noopener,noreferrer'),
+                          },
+                        ]
+                      : []),
                     {
                       content: (
                         <div className="flex flex-col items-center justify-center leading-none">
