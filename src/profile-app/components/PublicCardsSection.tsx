@@ -208,13 +208,8 @@ export const PublicCardsSection = () => {
     isSearching,
     isLoadingMore,
     isPrefetchingAll,
-    isSearchActive,
     error,
     hasMore,
-    hasLoadedAll,
-    loadedCount,
-    remainingCount,
-    serverTotal,
     setDraftFilter,
     applyFilters,
     updateAndApplyFilter,
@@ -366,26 +361,16 @@ export const PublicCardsSection = () => {
                   Discover and connect with top-tier verified professionals across the United States. Filter instantly
                   by state, city, and industry sector to find valuable prospects.
                 </p>
-                {serverTotal > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-                    <p className="text-[10px] font-semibold text-zinc-500 sm:text-xs dark:text-zinc-400">
-                      {isSearchActive
-                        ? `${cards.length} match${cards.length === 1 ? '' : 'es'} across ${hasLoadedAll ? serverTotal : loadedCount} loaded profiles`
-                        : `Showing ${loadedCount} of ${serverTotal} public ${serverTotal === 1 ? 'profile' : 'profiles'}`}
-                      {isPrefetchingAll ? ' · loading full directory…' : ''}
-                    </p>
-                    {hasMore ? (
-                      <button
-                        type="button"
-                        onClick={() => void loadMore()}
-                        disabled={isLoadingMore || isPrefetchingAll}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#eab308]/40 bg-[#eab308]/15 px-3 py-1.5 text-[10px] font-bold text-[#b8940f] transition-all hover:border-[#eab308]/60 hover:bg-[#eab308]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs dark:text-[#eab308]"
-                      >
-                        {isLoadingMore || isPrefetchingAll ? <Loader2 size={12} className="animate-spin" /> : null}
-                        Load {remainingCount} more
-                      </button>
-                    ) : null}
-                  </div>
+                {hasMore ? (
+                  <button
+                    type="button"
+                    onClick={() => void loadMore()}
+                    disabled={isLoadingMore || isPrefetchingAll}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#eab308]/40 bg-[#eab308]/15 px-3 py-1.5 text-[10px] font-bold text-[#b8940f] transition-all hover:border-[#eab308]/60 hover:bg-[#eab308]/25 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:text-xs dark:text-[#eab308]"
+                  >
+                    {isLoadingMore || isPrefetchingAll ? <Loader2 size={12} className="animate-spin" /> : null}
+                    Load more
+                  </button>
                 ) : null}
               </div>
 
@@ -598,11 +583,7 @@ export const PublicCardsSection = () => {
                       disabled={isSearching}
                       className="flex flex-2 items-center justify-center gap-1.5 rounded-xl bg-[#eab308] py-3.5 text-xs font-black text-zinc-950 shadow-lg shadow-yellow-500/10 transition-all hover:bg-yellow-500 active:scale-95 disabled:opacity-60"
                     >
-                      {isSearching || isPrefetchingAll ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        `Apply (${serverTotal || cards.length} Cards)`
-                      )}
+                      {isSearching || isPrefetchingAll ? <Loader2 size={13} className="animate-spin" /> : 'Apply'}
                     </button>
                   </div>
                 </motion.div>

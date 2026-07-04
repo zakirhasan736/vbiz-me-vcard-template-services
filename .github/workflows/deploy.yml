@@ -1,0 +1,50 @@
+name: Deploy VVCard
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: vvcard-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.DEPLOYMENT_SECRETS }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          script: |
+            set -e
+
+            echo "===== Deploy Started ====="
+
+            cd /var/www/vbiz-me-appcard
+
+            echo "Fetching latest code..."
+            git fetch origin
+
+            echo "Resetting to latest main..."
+            git reset --hard origin/main
+
+            echo "Installing dependencies..."
+            npm ci
+
+            echo "Building Next.js..."
+            npm run build
+
+            echo "Restarting PM2..."
+            pm2 restart vbiz-me-appcard --update-env
+
+            echo "Saving PM2..."
+            pm2 save
+
+            echo "===== Deployment Completed Successfully ====="
