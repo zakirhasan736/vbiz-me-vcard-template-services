@@ -2,22 +2,13 @@
 
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetClientsQuery } from '@/redux/api'
-import { ArrowRight, Building2, ExternalLink, Handshake } from 'lucide-react'
+import { ArrowRight, ExternalLink, Handshake } from 'lucide-react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
 
 const CLIENT_LOGO_FALLBACK = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400&fit=crop'
 const SKELETON_CARD_COUNT = 6
-
-function ActiveClientsCountSkeleton() {
-  return (
-    <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-2 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-900/80">
-      <Building2 size={16} className="text-yellow-primary shrink-0" />
-      <div className="h-4 w-28 animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-700" />
-    </div>
-  )
-}
 
 function ClientCardSkeleton({ idx }: { idx: number }) {
   return (
@@ -79,25 +70,13 @@ export const ClientsSection = () => {
             </p>
           </div>
 
-          <div className="relative z-10 flex w-full shrink-0 flex-row items-center justify-between gap-2 md:w-auto md:flex-col md:items-end md:gap-3">
-            {isLoading ? (
-              <ActiveClientsCountSkeleton />
-            ) : (
-              <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-1.5 backdrop-blur-md md:px-4 md:py-2 dark:border-zinc-800/80 dark:bg-zinc-900/80">
-                <Building2 size={14} className="text-yellow-primary md:h-4 md:w-4" />
-                <span className="text-xs font-bold text-zinc-900 md:text-sm dark:text-zinc-100">
-                  {clients.length} Active Client{clients.length === 1 ? '' : 's'}
-                </span>
-              </div>
-            )}
-            <button
-              type="button"
-              className="hidden items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] active:scale-95 md:flex md:gap-3 md:px-6 md:py-3.5 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-            >
-              <span className="text-sm font-bold">Become a Client</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
+          <button
+            type="button"
+            className="relative z-10 hidden shrink-0 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-[0_0_20px_rgba(0,0,0,0.1)] active:scale-95 md:flex md:gap-3 md:px-6 md:py-3.5 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+          >
+            <span className="text-sm font-bold">Become a Client</span>
+            <ArrowRight size={16} />
+          </button>
         </div>
       </div>
 
