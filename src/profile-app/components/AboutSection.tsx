@@ -73,7 +73,7 @@ export const AboutSection = () => {
   return (
     <V3SectionShell>
       <div className="flex flex-col gap-4 md:gap-6">
-        <div className="bg-ocean-deep dark:border-gold/20 relative flex min-h-[280px] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl sm:min-h-[300px] md:min-h-[340px] md:rounded-[2.5rem]">
+        <div className="vbiz-hero-banner bg-ocean-deep dark:border-gold/20 relative flex min-h-[280px] w-full flex-col overflow-hidden rounded-4xl border border-zinc-800 shadow-xl sm:min-h-[300px] md:min-h-[340px] md:rounded-[2.5rem]">
           <div className="absolute inset-0 z-0 h-full w-full">
             {heroImage ? (
               <Image
@@ -103,11 +103,11 @@ export const AboutSection = () => {
 
           <div className="relative z-10 flex h-full w-full grow flex-col justify-end p-5 sm:p-6 md:p-8 lg:p-10">
             <div className="mt-auto flex max-w-3xl flex-col gap-3 pt-14 sm:gap-4 sm:pt-0 md:gap-4">
-              <div className="bg-gold/10 border-gold/30 text-gold inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:text-xs">
+              <div className="vbiz-hero-eyebrow vbiz-eyebrow self-start shadow-sm backdrop-blur-md md:text-xs">
                 <Sparkles size={14} className="text-gold" /> {sectionTitle}
               </div>
 
-              <h2 className="text-2xl leading-[1.15] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-4xl">
+              <h2 className="vbiz-hero-title text-2xl leading-[1.15] font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-4xl">
                 {titleAccent ? (
                   <>
                     {titleLead}{' '}
@@ -121,7 +121,9 @@ export const AboutSection = () => {
               </h2>
 
               {item.title && item.title !== sectionTitle ? (
-                <p className="text-gold/90 max-w-2xl text-base leading-snug font-bold md:text-xl">{item.title}</p>
+                <p className="vbiz-hero-subtitle text-gold/90 max-w-2xl text-base leading-snug font-bold md:text-xl">
+                  {item.title}
+                </p>
               ) : null}
 
               <div className="relative">
@@ -147,9 +149,9 @@ export const AboutSection = () => {
                 ) : null}
               </div>
               {highlight ? (
-                <div className="text-base leading-relaxed font-medium text-black md:text-base lg:text-base">
+                <div className="text-base leading-relaxed font-medium text-white md:text-base lg:text-base">
                   {highlight.title ? (
-                    <span className="mb-1 block text-xl font-semibold tracking-tight text-white md:mb-1 md:text-xl">
+                    <span className="vbiz-hero-heading mb-1 block text-xl font-semibold tracking-tight text-white md:mb-1 md:text-xl">
                       {highlight.title}
                     </span>
                   ) : null}
@@ -171,7 +173,7 @@ export const AboutSection = () => {
                     return (
                       <div
                         key={`${pillar.title}-${idx}`}
-                        className="group hover:border-gold/30 flex gap-3 rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm transition-colors md:rounded-xl md:p-3 dark:border-zinc-800/80 dark:bg-[#031327]"
+                        className="vbiz-hero-card group hover:border-gold/30 flex gap-3 rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm transition-colors md:rounded-xl md:p-3 dark:border-zinc-800/80 dark:bg-[#031327]"
                       >
                         <div
                           className={`h-9 w-9 rounded-xl p-2 ${palette.bg} ${palette.color} transition-transform duration-300 group-hover:scale-110`}
@@ -198,7 +200,7 @@ export const AboutSection = () => {
                 <>
                   <div className="relative z-10 flex-1 text-center md:text-left">
                     {footer.headline ? (
-                      <h3 className="text-md mb-1 font-semibold tracking-tight text-white md:mb-1 md:text-xl lg:text-lg">
+                      <h3 className="vbiz-hero-heading text-md mb-1 font-semibold tracking-tight text-white md:mb-1 md:text-xl lg:text-lg">
                         {footer.headline}
                       </h3>
                     ) : null}

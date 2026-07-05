@@ -146,7 +146,7 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
 
   return (
     <div
-      className="fixed inset-0 z-200 overflow-hidden bg-black text-white"
+      className="vbiz-theme-scope fixed inset-0 z-200 overflow-hidden bg-black text-white"
       style={{ width: '100dvw', height: '100dvh' }}
     >
       <ProfileIntroVideo
@@ -183,9 +183,9 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
       ) : null}
 
       {!revealed ? (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black">
-          <Loader2 size={32} className="animate-spin text-white/70" />
-          <p className="text-xs font-medium tracking-wide text-white/50">Loading intro…</p>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80">
+          <Loader2 size={32} className="vbiz-pin animate-spin opacity-70" />
+          <p className="vbiz-description mt-3 text-xs font-medium tracking-wide">Loading intro…</p>
         </div>
       ) : null}
 
@@ -227,7 +227,7 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
           onClick={toggleMute}
           disabled={!revealed}
           aria-label={isMuted ? 'Unmute intro video' : 'Mute intro video'}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20 disabled:opacity-40"
+          className="vbiz-preloader-btn flex h-11 w-11 shrink-0 items-center justify-center border transition-colors disabled:opacity-40"
         >
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
@@ -235,7 +235,7 @@ export function ProfileIntroPreloader({ videoUrl, onSkip, skipLabel = 'Skip intr
         <button
           type="button"
           onClick={onSkip}
-          className="shrink-0 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
+          className="vbiz-preloader-btn shrink-0 border px-5 py-2.5 text-sm font-semibold transition-colors"
         >
           {skipLabel}
         </button>

@@ -9,12 +9,17 @@ type ProfileModalShellProps = {
   isOpen: boolean
   onClose: () => void
   children: ReactNode
-  /** Panel wrapper classes (rounding, border, max-width, background). */
+  /** Panel wrapper classes (rounding, border, max-width). Theme surface via `vbiz-modal-panel`. */
   panelClassName?: string
   /** Backdrop container classes for v2/v3 responsive modal. */
   backdropClassName?: string
   backdropId?: string
 }
+
+const DEFAULT_BACKDROP =
+  'vbiz-modal-backdrop fixed inset-0 z-100 flex items-end justify-center p-0 backdrop-blur-md sm:items-center sm:p-4'
+
+const DEFAULT_PANEL = 'flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl border shadow-2xl sm:rounded-2xl'
 
 /**
  * Shared popup shell for all profile templates.
@@ -25,8 +30,8 @@ export function ProfileModalShell({
   isOpen,
   onClose,
   children,
-  panelClassName = '',
-  backdropClassName = 'fixed inset-0 z-100 flex items-end justify-center bg-black/50 p-0 backdrop-blur-md sm:items-center sm:p-4',
+  panelClassName = DEFAULT_PANEL,
+  backdropClassName = DEFAULT_BACKDROP,
   backdropId,
 }: ProfileModalShellProps) {
   const { design } = useProfileDisplay()
@@ -44,7 +49,7 @@ export function ProfileModalShell({
   if (isV1) {
     return (
       <V1BottomSheet isOpen={isOpen} onClose={onClose}>
-        <div className={panelClassName}>{children}</div>
+        <div className={`vbiz-modal-panel ${panelClassName || DEFAULT_PANEL}`}>{children}</div>
       </V1BottomSheet>
     )
   }
@@ -60,7 +65,7 @@ export function ProfileModalShell({
             exit={{ opacity: 0, y: 40 }}
             transition={{ type: 'spring', damping: 30, stiffness: 350 }}
             onClick={(e) => e.stopPropagation()}
-            className={`relative z-10 w-full ${panelClassName}`}
+            className={`vbiz-modal-panel relative z-10 w-full ${panelClassName || DEFAULT_PANEL}`}
           >
             {children}
           </motion.div>

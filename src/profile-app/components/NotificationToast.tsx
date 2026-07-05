@@ -2,7 +2,6 @@
 
 import { buildProfilePath } from '@/lib/profileRoutes'
 import { PLATFORM_UPDATE_EVENT } from '@/lib/push/notificationExperience'
-import { isSubscribedToCard } from '@/lib/push/notificationRouting'
 import { initialsFromName, isVideoAvatarSrc } from '@/lib/push/resolveNotificationAvatar'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
 import { ChevronRight, X } from 'lucide-react'
@@ -98,24 +97,21 @@ export const NotificationToast = () => {
       const detail = (e as CustomEvent<PlatformUpdateDetail>).detail
       if (!detail) return
 
-      void (async () => {
-        if (detail.slug && !(await isSubscribedToCard(detail.slug))) return
+      // Service worker already delivered this push — always surface the in-app toast.
+      const key = notificationKey(detail)
+      if (dismissedKeysRef.current.has(key)) return
+      if (currentKeyRef.current === key) return
 
-        const key = notificationKey(detail)
-        if (dismissedKeysRef.current.has(key)) return
-        if (currentKeyRef.current === key) return
+      dismissedKeysRef.current.add(key)
+      persistDismissedKeys(dismissedKeysRef.current)
+      currentKeyRef.current = key
 
-        dismissedKeysRef.current.add(key)
-        persistDismissedKeys(dismissedKeysRef.current)
-        currentKeyRef.current = key
+      clearAutoDismiss()
+      setNotification(detail)
 
-        clearAutoDismiss()
-        setNotification(detail)
-
-        timeoutRef.current = window.setTimeout(() => {
-          dismiss()
-        }, AUTO_DISMISS_MS)
-      })()
+      timeoutRef.current = window.setTimeout(() => {
+        dismiss()
+      }, AUTO_DISMISS_MS)
     }
 
     window.addEventListener(PLATFORM_UPDATE_EVENT, handlePlatformUpdate)

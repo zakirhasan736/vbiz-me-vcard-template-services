@@ -40,70 +40,44 @@ function CtaButtonContent({ button, iconSize }: { button: ResolvedHomeCtaButton;
   )
 }
 
-function getCtaButtonClasses(
-  template: ProfileTemplateId,
-  theme: string | undefined,
-  isFilled: boolean,
-  isDesktop: boolean
-): string {
-  const size = isDesktop ? 'h-[52px] w-full rounded-2xl' : 'h-[38px] min-h-[38px] w-full shrink-0 rounded-[10px]'
-
+/** Layout/size only — colors come from theme tokens via `.vbiz-btn[data-role]`. */
+function getCtaButtonClasses(template: ProfileTemplateId, isDesktop: boolean): string {
+  const size = isDesktop ? 'h-[52px] w-full' : 'h-[38px] min-h-[38px] w-full shrink-0'
   const mobileText = 'text-[13px]'
-  const base = `flex min-w-0 items-center justify-center gap-2 overflow-hidden whitespace-nowrap transition-all active:scale-95 ${size}`
+  const base = `vbiz-btn flex min-w-0 items-center justify-center gap-2 overflow-hidden whitespace-nowrap transition-all active:scale-95 ${size}`
 
   if (template === 'v1') {
-    return `${base} px-4 ${isDesktop ? 'text-[11px]' : mobileText} font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em] ${
-      isFilled
-        ? 'text-black shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)]'
-        : theme === 'dark'
-          ? 'border-yellow-primary/30 text-yellow-primary hover:border-yellow-primary/50 border bg-gray-900/70'
-          : 'border border-black/10 bg-white text-gray-900 shadow-sm hover:bg-gray-50'
-    }`
+    return `${base} px-4 ${isDesktop ? 'text-[11px]' : mobileText} font-semibold uppercase tracking-[0.12em] sm:tracking-[0.15em]`
   }
 
   if (template === 'v2') {
-    return `${base} ${isDesktop ? 'text-[13px] sm:text-sm' : mobileText} font-semibold tracking-wide shadow-sm ${
-      isFilled
-        ? 'text-zinc-950 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
-        : 'border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
-    }`
+    return `${base} ${isDesktop ? 'text-[13px] sm:text-sm' : mobileText} font-semibold tracking-wide shadow-sm`
   }
 
-  // v3
-  return `${base} ${isDesktop ? 'text-[13px] font-bold' : `${mobileText} font-semibold`} duration-300 hover:scale-[1.02] ${
-    isFilled
-      ? isDesktop
-        ? 'font-extrabold text-black shadow-lg'
-        : 'text-black shadow-lg'
-      : theme === 'dark'
-        ? 'border-gold/40 bg-ocean-dark hover:border-gold hover:bg-ocean-light/70 border text-white'
-        : 'border-gold hover:bg-gold/10 border bg-white text-zinc-900'
-  }`
+  return `${base} ${isDesktop ? 'text-[13px] font-bold' : `${mobileText} font-semibold`} duration-300 hover:scale-[1.02]`
 }
 
 function HomeCtaButton({
   button,
   template,
-  theme,
   accentColor,
   isDesktop,
   onClick,
 }: {
   button: ResolvedHomeCtaButton
   template: ProfileTemplateId
-  theme?: string
   accentColor: string
   isDesktop: boolean
   onClick: () => void
 }) {
-  const isFilled = button.variant === 'accent' || button.variant === 'cta'
   const iconSize = isDesktop ? (template === 'v1' ? 18 : 16) : 16
 
   return (
     <button
       type="button"
+      data-role={button.role}
       onClick={onClick}
-      className={getCtaButtonClasses(template, theme, isFilled, isDesktop)}
+      className={getCtaButtonClasses(template, isDesktop)}
       style={buildHomeCtaInlineStyle(button, accentColor)}
     >
       <CtaButtonContent button={button} iconSize={iconSize} />
@@ -114,14 +88,12 @@ function HomeCtaButton({
 function CtaButtonGrid({
   layout,
   template,
-  theme,
   accentColor,
   isDesktop,
   onClick,
 }: {
   layout: HomeCtaLayout
   template: ProfileTemplateId
-  theme?: string
   accentColor: string
   isDesktop: boolean
   onClick: (button: ResolvedHomeCtaButton) => void
@@ -139,7 +111,6 @@ function CtaButtonGrid({
                 key={button.key}
                 button={button}
                 template={template}
-                theme={theme}
                 accentColor={accentColor}
                 isDesktop={isDesktop}
                 onClick={() => onClick(button)}
@@ -152,7 +123,6 @@ function CtaButtonGrid({
               key={button.key}
               button={button}
               template={template}
-              theme={theme}
               accentColor={accentColor}
               isDesktop={isDesktop}
               onClick={() => onClick(button)}
@@ -166,7 +136,6 @@ function CtaButtonGrid({
 
 /** Shared home CTA grid for v1, v2, and v3 — mobile [2,1,1,1], desktop [2,1,1]. */
 export function ProfileActionButtons({
-  theme,
   onAction,
   className,
   mobileClassName,
@@ -216,7 +185,6 @@ export function ProfileActionButtons({
           <CtaButtonGrid
             layout={mobileLayout}
             template={template}
-            theme={theme}
             accentColor={accentColor}
             isDesktop={false}
             onClick={click}
@@ -228,7 +196,6 @@ export function ProfileActionButtons({
           <CtaButtonGrid
             layout={desktopLayout}
             template={template}
-            theme={theme}
             accentColor={accentColor}
             isDesktop
             onClick={click}

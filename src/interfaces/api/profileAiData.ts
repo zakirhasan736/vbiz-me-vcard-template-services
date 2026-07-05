@@ -23,6 +23,16 @@ export type ProfileAiEducation = {
   current_status: number
 }
 
+export type ProfileAiExperience = {
+  title?: string
+  company?: string
+  job_title?: string
+  description?: string
+  from_date?: string
+  to_date?: string | null
+  current_status?: number
+}
+
 export type ProfileAiPortfolio = {
   title: string
   description: string
@@ -53,7 +63,7 @@ export type ProfileAiData = {
   socials: ProfileAiSocials
   skills: string[]
   services: ProfileAiService[]
-  experience: unknown[]
+  experience: ProfileAiExperience[]
   education: ProfileAiEducation[]
   portfolio: ProfileAiPortfolio[]
   customSections: ProfileAiCustomSection[]

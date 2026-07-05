@@ -403,7 +403,7 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
                       rel="noopener noreferrer"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="border-yellow-primary/50 dark:border-yellow-primary/40 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white/80 text-gray-700 shadow-lg backdrop-blur-2xl dark:bg-black/40 dark:text-gray-300"
+                      className="vbiz-social flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-2xl"
                     >
                       <item.icon size={16} fill="currentColor" />
                     </motion.a>
@@ -682,7 +682,7 @@ export const HomeSection = ({ homeHeroProps }: HomeSectionProps) => {
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center justify-self-center rounded-full border border-black/5 bg-gray-50 text-gray-500 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:text-white"
+                          className="vbiz-social flex h-10 w-10 items-center justify-center justify-self-center rounded-full shadow-xl transition-all duration-300 hover:-translate-y-1"
                           style={socialInlineStyle}
                         >
                           <item.icon size={16} fill="currentColor" className="opacity-90 transition-none" />

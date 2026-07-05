@@ -15,7 +15,11 @@ export function PushNotificationRegistrar() {
     void registerServiceWorker()
 
     const handleServiceWorkerMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; payload?: PlatformUpdateDetail }
+      const data = event.data as { type?: string; payload?: PlatformUpdateDetail; url?: string }
+      if (data?.type === 'vbiz_navigate' && typeof data.url === 'string' && data.url) {
+        window.location.href = data.url
+        return
+      }
       if (data?.type !== 'vbiz_push' || !data.payload) return
       dispatchPlatformUpdate(data.payload)
     }

@@ -76,10 +76,12 @@ export type VBizProfileAppProps = {
   onPreviewThemeChange?: (theme: 'light' | 'dark') => void
   profileViews?: number
   actionButtons?: MyCardActionButtons | null
-  /** Server-prefetched navbar catalog (`GET /post-types`). */
+  /** Server-prefetched navbar catalog (`GET /post-types?profile_id=`). */
   initialNavBarLinks?: NavBarLinksData | null
   /** Dynamic global theme (Primary/Secondary/Accent + button/social appearance). Optional. */
   themeConfig?: CardThemeConfig | null
+  /** True when theme comes from settings API (not template defaults). */
+  themeFromApi?: boolean
 }
 
 export function buildProfileShareUrl(slug: string): string {

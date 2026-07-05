@@ -48,9 +48,7 @@ export function ProfileNavigationV2({ slugForPersistence, embedded }: ProfileNav
             {visibleTabs.map((tab, index) => {
               const isActive = activeSectionId === tab.id
               const tabClassName = `vbiz-nav-tab relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 sm:h-14 sm:w-14 ${
-                isActive
-                  ? 'z-10 mx-0.5 shadow-[0_4px_15px_rgba(0,0,0,0.1)] sm:mx-1 dark:shadow-[0_4px_15px_rgba(255,255,255,0.1)]'
-                  : 'text-zinc-500 hover:bg-zinc-200/50 hover:text-zinc-900 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'
+                isActive ? 'z-10 mx-0.5 shadow-[0_4px_15px_rgba(0,0,0,0.1)] sm:mx-1' : ''
               }`
 
               const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -94,14 +92,14 @@ export function ProfileNavigationV2({ slugForPersistence, embedded }: ProfileNav
                     <motion.div
                       layoutId="active-tab-indicator"
                       initial={false}
-                      className="absolute inset-0 rounded-full bg-zinc-900 dark:bg-white"
+                      className="vbiz-nav-tab-active-pill absolute inset-0 rounded-full"
                       transition={{ type: 'spring', stiffness: 500, damping: 25, mass: 1.5 }}
                     />
                   )}
                   <div className="relative z-10 flex items-center justify-center">
                     <tab.icon
                       strokeWidth={isActive ? 2.5 : 2}
-                      className={`vbiz-nav-tab-icon h-[18px] w-[18px] transition-colors duration-300 sm:h-[22px] sm:w-[22px] ${isActive ? 'text-white dark:text-zinc-950' : 'text-zinc-500'}`}
+                      className="vbiz-nav-tab-icon h-[18px] w-[18px] transition-colors duration-300 sm:h-[22px] sm:w-[22px]"
                     />
                   </div>
                 </motion.button>

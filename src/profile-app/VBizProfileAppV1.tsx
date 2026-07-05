@@ -161,7 +161,13 @@ export function VBizProfileAppV1({
       <SiteGeometricGrid />
       {/* v3 navbar layout */}
       <ProfileFloatingNav theme={theme}>
-        <Navigation tabs={navTabs} activeTab={activeSectionId} setActiveTab={goToSection} theme={theme} />
+        <Navigation
+          tabs={navTabs}
+          activeTab={activeSectionId}
+          setActiveTab={goToSection}
+          theme={theme}
+          slugForPersistence={cardSlug}
+        />
       </ProfileFloatingNav>
 
       <div className={`relative z-20 mt-0 flex h-full w-full flex-1 flex-col px-0 ${embedded ? '' : 'md:mt-[72px]'}`}>

@@ -1,24 +1,38 @@
 import {
-  DEFAULT_BUTTON_APPEARANCE,
-  DEFAULT_CARD_THEME_CONFIG,
-  DEFAULT_SOCIAL_ICON_APPEARANCE,
   DEFAULT_THEME_COLORS,
+  cornerStyleToRadius,
+  defaultButtonComponents,
+  getDefaultThemeConfig,
+  type ButtonComponents,
   type CardThemeConfig,
-  type ElementAppearance,
+  type ComponentAppearance,
+  type ComponentModeColors,
+  type ComponentStyle,
+  type CornerStyle,
   type GlobalThemeColors,
-  type SocialIconAppearance,
+  type ProfileTemplateId,
+  type SocialIconComponent,
   type ThemeColorSet,
   type ThemeMode,
 } from '@/lib/theme/cardThemeContract'
 
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
+const COMPONENT_STYLES = new Set<ComponentStyle>(['filled', 'outlined', 'ghost', 'soft', 'glass'])
 
 function isColorString(value: unknown): value is string {
   if (typeof value !== 'string') return false
   const v = value.trim()
   if (!v) return false
   return (
-    HEX_RE.test(v) || v.startsWith('rgb') || v.startsWith('hsl') || v.startsWith('color-mix') || v.startsWith('var(')
+    HEX_RE.test(v) ||
+    v.startsWith('rgb') ||
+    v.startsWith('hsl') ||
+    v.startsWith('color-mix') ||
+    v.startsWith('var(') ||
+    v === 'primary' ||
+    v === 'secondary' ||
+    v === 'accent' ||
+    v === 'auto'
   )
 }
 
@@ -61,90 +75,251 @@ export function ensureContrastPair(fill: string, foreground?: string): { fill: s
 }
 
 function mergeColorSet(base: ThemeColorSet, override?: Partial<ThemeColorSet> | null): ThemeColorSet {
-  if (!override) return base
+  if (!override) return { ...base }
   const next: ThemeColorSet = { ...base }
   for (const key of Object.keys(base) as (keyof ThemeColorSet)[]) {
-    const value = override[key]
-    if (isColorString(value)) {
-      next[key] = value
-    }
-  }
-  // allow optional keys present only in override
-  for (const key of ['background', 'surface', 'text', 'textMuted', 'border'] as (keyof ThemeColorSet)[]) {
     const value = override[key]
     if (isColorString(value)) next[key] = value
   }
   return next
 }
 
-function mergeColors(raw: unknown): GlobalThemeColors {
-  if (!raw || typeof raw !== 'object') return DEFAULT_THEME_COLORS
-  const r = raw as Partial<GlobalThemeColors>
+function mergeColors(raw: unknown, base: GlobalThemeColors = DEFAULT_THEME_COLORS): GlobalThemeColors {
+  if (!raw || typeof raw !== 'object') return base
+  const r = raw as Partial<GlobalThemeColors> & { themeMode?: ThemeMode }
   const defaultMode: ThemeMode =
-    r.defaultMode === 'light' || r.defaultMode === 'dark' ? r.defaultMode : DEFAULT_THEME_COLORS.defaultMode!
+    r.defaultMode === 'light' || r.defaultMode === 'dark'
+      ? r.defaultMode
+      : r.themeMode === 'light' || r.themeMode === 'dark'
+        ? r.themeMode
+        : (base.defaultMode ?? 'dark')
   return {
     defaultMode,
-    light: mergeColorSet(DEFAULT_THEME_COLORS.light, r.light),
-    dark: mergeColorSet(DEFAULT_THEME_COLORS.dark, r.dark),
+    light: mergeColorSet(base.light, r.light),
+    dark: mergeColorSet(base.dark, r.dark),
   }
 }
 
-function mergeAppearance<T extends ElementAppearance>(base: T, raw: unknown): T {
-  if (!raw || typeof raw !== 'object') return base
-  const r = raw as Partial<T>
-  const next = { ...base }
+function normalizeStyle(value: unknown, fallback: ComponentStyle): ComponentStyle {
+  if (typeof value === 'string' && COMPONENT_STYLES.has(value as ComponentStyle)) {
+    return value as ComponentStyle
+  }
+  if (value === 'outline') return 'outlined'
+  if (value === 'solid') return 'filled'
+  return fallback
+}
 
-  const assignIf = <K extends keyof T>(key: K, predicate: (v: unknown) => boolean) => {
-    if (key in r && predicate(r[key])) {
-      next[key] = r[key] as T[K]
+function mergeModeColors(
+  base: ComponentModeColors,
+  override?: Partial<ComponentModeColors> | null
+): ComponentModeColors {
+  if (!override) return { ...base }
+  return {
+    fill: isColorString(override.fill) ? override.fill : base.fill,
+    foreground: isColorString(override.foreground) ? override.foreground : base.foreground,
+    borderColor: isColorString(override.borderColor) ? override.borderColor : base.borderColor,
+    hoverOverlay: isColorString(override.hoverOverlay) ? override.hoverOverlay : base.hoverOverlay,
+  }
+}
+
+function mergeComponentAppearance(base: ComponentAppearance, raw: unknown): ComponentAppearance {
+  if (!raw || typeof raw !== 'object') return base
+  const r = raw as {
+    style?: unknown
+    colors?: { light?: Partial<ComponentModeColors>; dark?: Partial<ComponentModeColors> }
+  }
+  return {
+    style: normalizeStyle(r.style, base.style),
+    colors: {
+      light: mergeModeColors(base.colors.light, r.colors?.light),
+      dark: mergeModeColors(base.colors.dark, r.colors?.dark),
+    },
+  }
+}
+
+function mergeSocialIcon(
+  base: SocialIconComponent,
+  raw: unknown,
+  cornerStyle: CornerStyle = 'round'
+): SocialIconComponent {
+  const appearance = mergeComponentAppearance(base, raw)
+  if (!raw || typeof raw !== 'object') {
+    return {
+      ...base,
+      ...appearance,
+      cornerRadius: cornerStyleToRadius(cornerStyle),
+    }
+  }
+  const r = raw as Partial<SocialIconComponent>
+  return {
+    ...appearance,
+    iconSize: typeof r.iconSize === 'number' ? r.iconSize : base.iconSize,
+    size: typeof r.size === 'number' ? r.size : base.size,
+    cornerRadius:
+      typeof r.cornerRadius === 'number' || typeof r.cornerRadius === 'string'
+        ? r.cornerRadius
+        : cornerStyleToRadius(cornerStyle),
+  }
+}
+
+function mergeButtons(raw: unknown, base: ButtonComponents = defaultButtonComponents()): ButtonComponents {
+  if (!raw || typeof raw !== 'object') return base
+  const r = raw as Partial<ButtonComponents> & ComponentAppearance & Record<string, unknown>
+
+  let buttons: ButtonComponents = {
+    primary: { ...base.primary },
+    secondary: { ...base.secondary },
+    accent: { ...base.accent },
+  }
+
+  // 1) Per-role: primary | secondary | accent (each can send its own style + colors)
+  if (r.primary) buttons.primary = mergeComponentAppearance(base.primary, r.primary)
+  if (r.secondary) buttons.secondary = mergeComponentAppearance(base.secondary, r.secondary)
+  if (r.accent) buttons.accent = mergeComponentAppearance(base.accent, r.accent)
+
+  // 2) Root-level style → all button roles (settings UI global button type)
+  if ('style' in r && r.style != null) {
+    const style = normalizeStyle(r.style, buttons.primary.style)
+    buttons = applyComponentStyleToButtons(buttons, style)
+  }
+
+  // 3) Root-level colors → all button roles
+  if ('colors' in r && r.colors && typeof r.colors === 'object') {
+    const shared = { colors: r.colors as ComponentAppearance['colors'] }
+    buttons = {
+      primary: mergeComponentAppearance(buttons.primary, shared),
+      secondary: mergeComponentAppearance(buttons.secondary, shared),
+      accent: mergeComponentAppearance(buttons.accent, shared),
     }
   }
 
-  assignIf('style' as keyof T, (v) => typeof v === 'string')
-  assignIf('cornerRadius' as keyof T, (v) => typeof v === 'number' || typeof v === 'string')
-  assignIf('glass' as keyof T, (v) => typeof v === 'boolean')
-  assignIf('shadow' as keyof T, (v) => typeof v === 'string')
-  assignIf('borderWidth' as keyof T, (v) => typeof v === 'number')
-  assignIf('borderColor' as keyof T, (v) => typeof v === 'string')
-  assignIf('fill' as keyof T, (v) => typeof v === 'string')
-  assignIf('foreground' as keyof T, (v) => typeof v === 'string')
-  assignIf('paddingX' as keyof T, (v) => typeof v === 'number')
-  assignIf('paddingY' as keyof T, (v) => typeof v === 'number')
-  assignIf('gap' as keyof T, (v) => typeof v === 'number')
-  assignIf('hover' as keyof T, (v) => typeof v === 'object' && v !== null)
-  assignIf('pressed' as keyof T, (v) => typeof v === 'object' && v !== null)
-  assignIf('active' as keyof T, (v) => typeof v === 'object' && v !== null)
+  // 4) Legacy: unstructured object → accent only
+  const hasStructuredKeys =
+    r.primary || r.secondary || r.accent || ('style' in r && r.style != null) || ('colors' in r && r.colors)
+  if (!hasStructuredKeys) {
+    return {
+      primary: base.primary,
+      secondary: base.secondary,
+      accent: mergeComponentAppearance(base.accent, r),
+    }
+  }
 
-  return next
+  return buttons
+}
+
+/** Map appearance.buttonStyle (solid | outline | glass | soft) → component style. */
+export function appearanceButtonStyleToComponentStyle(value: unknown): ComponentStyle | null {
+  if (typeof value !== 'string') return null
+  const v = value.trim().toLowerCase()
+  if (v === 'solid') return 'filled'
+  if (v === 'outline') return 'outlined'
+  if (COMPONENT_STYLES.has(v as ComponentStyle)) return v as ComponentStyle
+  return null
+}
+
+function applyComponentStyleToButtons(buttons: ButtonComponents, style: ComponentStyle): ButtonComponents {
+  return {
+    primary: { ...buttons.primary, style },
+    secondary: { ...buttons.secondary, style },
+    accent: { ...buttons.accent, style },
+  }
+}
+
+function buttonRootStyleSent(raw: unknown): boolean {
+  if (!raw || typeof raw !== 'object') return false
+  const r = raw as { style?: unknown }
+  return r.style != null && r.style !== undefined
 }
 
 /**
  * Merge a raw `theme_config` from the API with safe defaults.
  * Returns a fully-populated, type-safe config — never throws on bad input.
  */
-export function resolveCardThemeConfig(raw: unknown): CardThemeConfig {
-  if (!raw || typeof raw !== 'object') {
-    return DEFAULT_CARD_THEME_CONFIG
+export function resolveCardThemeConfig(raw: unknown, template: ProfileTemplateId = 'v3'): CardThemeConfig {
+  const defaults = getDefaultThemeConfig(template)
+  if (!raw || typeof raw !== 'object') return defaults
+
+  const r = raw as Partial<CardThemeConfig> & {
+    button?: unknown
+    socialIcon?: unknown
+    components?: {
+      button?: unknown
+      socialIcon?: unknown
+    }
+    appearance?: Partial<CardThemeConfig['appearance']>
   }
 
-  const r = raw as Partial<CardThemeConfig>
-  const socialBase: SocialIconAppearance = mergeAppearance(DEFAULT_SOCIAL_ICON_APPEARANCE, r.socialIcon)
-  if (typeof (r.socialIcon as Partial<SocialIconAppearance>)?.iconSize === 'number') {
-    socialBase.iconSize = (r.socialIcon as SocialIconAppearance).iconSize
+  const buttonSource = r.components?.button ?? r.button
+  const socialSource = r.components?.socialIcon ?? r.socialIcon
+
+  const appearance = {
+    ...defaults.appearance,
+    ...(r.appearance && typeof r.appearance === 'object' ? r.appearance : {}),
+    profileTemplate: template,
   }
-  if (typeof (r.socialIcon as Partial<SocialIconAppearance>)?.size === 'number') {
-    socialBase.size = (r.socialIcon as SocialIconAppearance).size
+
+  const cornerStyle: CornerStyle =
+    appearance.cornerStyle === 'square' ||
+    appearance.cornerStyle === 'soft' ||
+    appearance.cornerStyle === 'round' ||
+    appearance.cornerStyle === 'pill'
+      ? appearance.cornerStyle
+      : defaults.appearance.cornerStyle
+
+  let buttons = mergeButtons(buttonSource, defaults.components.button)
+
+  // appearance.buttonStyle (solid | outline | glass | soft) when components.button.style not sent
+  const appearanceStyle = appearanceButtonStyleToComponentStyle(appearance.buttonStyle)
+  if (appearanceStyle && !buttonRootStyleSent(buttonSource)) {
+    buttons = applyComponentStyleToButtons(buttons, appearanceStyle)
   }
+
+  const socialIcon = mergeSocialIcon(defaults.components.socialIcon, socialSource, cornerStyle)
 
   return {
     version: typeof r.version === 'number' ? r.version : 1,
-    colors: mergeColors(r.colors),
-    button: mergeAppearance(DEFAULT_BUTTON_APPEARANCE, r.button),
-    socialIcon: socialBase,
+    colors: mergeColors(
+      {
+        ...(r.colors && typeof r.colors === 'object' ? r.colors : {}),
+        themeMode: (r as { themeMode?: ThemeMode }).themeMode,
+      },
+      defaults.colors
+    ),
+    components: {
+      button: buttons,
+      socialIcon,
+    },
+    appearance: {
+      profileTemplate: template,
+      layoutStyle:
+        appearance.layoutStyle === 'hero' || appearance.layoutStyle === 'classic'
+          ? appearance.layoutStyle
+          : defaults.appearance.layoutStyle,
+      buttonStyle:
+        appearance.buttonStyle === 'solid' ||
+        appearance.buttonStyle === 'soft' ||
+        appearance.buttonStyle === 'outline' ||
+        appearance.buttonStyle === 'glass'
+          ? appearance.buttonStyle
+          : defaults.appearance.buttonStyle,
+      cornerStyle,
+    },
   }
 }
 
 /** Returns true when the backend actually provided a usable theme_config. */
 export function hasDynamicTheme(raw: unknown): boolean {
   return Boolean(raw && typeof raw === 'object' && 'colors' in (raw as Record<string, unknown>))
+}
+
+/** Active-mode brand colors for ResolvedProfileDesign. */
+export function brandColorsFromThemeConfig(
+  themeConfig: CardThemeConfig,
+  mode: ThemeMode
+): { primaryColor: string; accentColor: string } {
+  const set = mode === 'light' ? themeConfig.colors.light : themeConfig.colors.dark
+  return {
+    primaryColor: set.primary,
+    accentColor: set.accent,
+  }
 }

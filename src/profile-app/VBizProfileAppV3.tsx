@@ -128,12 +128,22 @@ export function VBizProfileAppV3({
       data-embedded={embedded ? '' : undefined}
       data-theme={theme}
       className={`vbiz-profile-root vbiz-profile-v3 no-scrollbar relative flex min-h-dvh w-full flex-col items-center overflow-x-clip transition-colors duration-500 ${theme === 'dark' ? 'bg-ocean-deep text-zinc-100' : 'bg-white text-zinc-900'} ${embedded ? 'min-h-0 max-w-full' : ''}`}
-      style={rootStyle}
+      style={{
+        ...rootStyle,
+        backgroundColor: 'var(--vbiz-bg)',
+        color: 'var(--vbiz-text)',
+      }}
     >
       <ProfileThemeStyles design={design} />
 
       <ProfileFloatingNav theme={theme}>
-        <Navigation tabs={navTabs} activeTab={activeSectionId} setActiveTab={goToSection} theme={theme} />
+        <Navigation
+          tabs={navTabs}
+          activeTab={activeSectionId}
+          setActiveTab={goToSection}
+          theme={theme}
+          slugForPersistence={cardSlug}
+        />
       </ProfileFloatingNav>
 
       <div className="relative z-20 mt-0 flex h-full w-full flex-1 flex-col px-0 md:mt-[72px]">

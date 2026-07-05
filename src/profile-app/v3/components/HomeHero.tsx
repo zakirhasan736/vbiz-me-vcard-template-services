@@ -163,10 +163,8 @@ export const HomeHero: React.FC<{
                   <div className="absolute -top-2 -right-2 z-10 rounded-full border border-red-800 bg-[#e3342f] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                     {viewCountLabel}
                   </div>
-                  <div
-                    className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
-                  >
-                    <Eye size={18} strokeWidth={2.5} className="text-gold md:h-[22px] md:w-[22px]" />
+                  <div className="vbiz-icon-btn flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12">
+                    <Eye size={18} strokeWidth={2.5} className="md:h-[22px] md:w-[22px]" />
                   </div>
                 </div>
               )}
@@ -177,18 +175,14 @@ export const HomeHero: React.FC<{
                   rel="noopener noreferrer"
                   title="Website"
                   onClick={() => triggerHaptic(10)}
-                  className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
+                  className="vbiz-icon-btn flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
                 >
-                  <Globe size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
+                  <Globe size={18} strokeWidth={2.5} className="md:h-[20px] md:w-[20px]" />
                 </a>
               )}
               <div
                 title="Language"
-                className={`notranslate flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${
-                  theme === 'dark'
-                    ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]'
-                    : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'
-                }`}
+                className="vbiz-icon-btn notranslate flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
                 onClick={() => {
                   triggerHaptic(10)
                   onAction?.('language')
@@ -197,7 +191,7 @@ export const HomeHero: React.FC<{
                 <span className="text-base leading-none md:text-lg">
                   {(LANGUAGE_LABELS[lang] || { flag: '🇺🇸' }).flag}
                 </span>
-                <span className="text-gold mt-0.5 text-[7px] font-bold tracking-wider md:text-[8px]">
+                <span className="mt-0.5 text-[7px] font-bold tracking-wider md:text-[8px]">
                   {(LANGUAGE_LABELS[lang] || { label: 'EN' }).label}
                 </span>
               </div>
@@ -207,12 +201,12 @@ export const HomeHero: React.FC<{
                   triggerHaptic(10)
                   toggleTheme?.()
                 }}
-                className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12 ${theme === 'dark' ? 'border-gold bg-ocean-dark hover:bg-ocean-light/80 hover:shadow-[0_0_18px_rgba(238,214,119,0.75)]' : 'border-gold hover:bg-gold/20 bg-white hover:shadow-[0_0_15px_rgba(238,214,119,0.55)]'}`}
+                className="vbiz-icon-btn flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
               >
                 {theme === 'dark' ? (
-                  <Sun size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
+                  <Sun size={18} strokeWidth={2.5} className="md:h-[20px] md:w-[20px]" />
                 ) : (
-                  <Moon size={18} strokeWidth={2.5} className="text-gold md:h-[20px] md:w-[20px]" />
+                  <Moon size={18} strokeWidth={2.5} className="md:h-[20px] md:w-[20px]" />
                 )}
               </div>
             </div>
@@ -232,7 +226,7 @@ export const HomeHero: React.FC<{
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => triggerHaptic(10)}
-                    className="bg-gold flex h-8 w-8 items-center justify-center rounded-full text-[14px] font-black text-black shadow-md transition-all duration-300 hover:scale-[1.12] hover:bg-yellow-400 hover:shadow-[0_0_18px_rgba(238,214,119,0.85)] md:h-10 md:w-10"
+                    className="vbiz-social flex h-8 w-8 items-center justify-center rounded-full text-[14px] font-black shadow-md transition-all duration-300 hover:scale-[1.12] hover:shadow-[0_0_18px_rgba(238,214,119,0.85)] md:h-10 md:w-10"
                   >
                     {renderSocialIcon(item, 18)}
                   </a>
@@ -355,8 +349,9 @@ export const HomeHero: React.FC<{
               <div className="mb-4 flex gap-2">
                 {showShare && (
                   <button
+                    type="button"
                     title="Share"
-                    className={`flex items-center justify-center rounded-full border p-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_16px_rgba(238,214,119,0.75)] ${theme === 'dark' ? 'border-gold/35 bg-ocean-dark/65 hover:border-gold hover:bg-ocean-light/65 text-white' : 'border-gold/45 hover:border-gold hover:bg-gold/20 bg-white text-zinc-950'}`}
+                    className="vbiz-icon-btn flex h-10 w-10 items-center justify-center rounded-full border-2 p-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
                     onClick={() => {
                       triggerHaptic(10)
                       onAction?.('share')
@@ -366,8 +361,9 @@ export const HomeHero: React.FC<{
                   </button>
                 )}
                 <button
+                  type="button"
                   title="Notification"
-                  className={`group relative flex items-center justify-center rounded-full border p-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_16px_rgba(238,214,119,0.75)] ${theme === 'dark' ? 'border-gold/35 bg-ocean-dark/65 hover:border-gold hover:bg-ocean-light/65 text-white' : 'border-gold/45 hover:border-gold hover:bg-gold/20 bg-white text-zinc-950'}`}
+                  className="vbiz-icon-btn group relative flex h-10 w-10 items-center justify-center rounded-full border-2 p-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
                   onClick={() => {
                     triggerHaptic(10)
                     onAction?.('settings')
@@ -377,8 +373,9 @@ export const HomeHero: React.FC<{
                   <div className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full border border-black bg-red-500" />
                 </button>
                 <button
+                  type="button"
                   title="Notepad"
-                  className={`flex items-center justify-center rounded-full border p-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_16px_rgba(238,214,119,0.75)] ${theme === 'dark' ? 'border-gold/35 bg-ocean-dark/65 hover:border-gold hover:bg-ocean-light/65 text-white' : 'border-gold/45 hover:border-gold hover:bg-gold/20 bg-white text-zinc-950'}`}
+                  className="vbiz-icon-btn flex h-10 w-10 items-center justify-center rounded-full border-2 p-2 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 md:h-12 md:w-12"
                   onClick={() => {
                     triggerHaptic(10)
                     onAction?.('notepad')
@@ -399,7 +396,7 @@ export const HomeHero: React.FC<{
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex h-10 w-10 items-center justify-center rounded-full shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-110 ${theme === 'dark' ? 'border-gold/30 text-gold hover:bg-gold border bg-black/60 backdrop-blur-md hover:text-black hover:shadow-[0_0_18px_rgba(238,214,119,0.85)]' : 'hover:border-gold hover:bg-gold border border-zinc-300 bg-zinc-200 text-zinc-900 hover:text-[#0c1e35] hover:shadow-[0_0_15px_rgba(238,214,119,0.6)]'}`}
+                        className="vbiz-social flex items-center justify-center shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-110"
                       >
                         {renderSocialIcon(item, 18)}
                       </a>
@@ -424,7 +421,7 @@ export const HomeHero: React.FC<{
                   {contactItems.map((item) => (
                     <div
                       key={item.label}
-                      className={`group flex flex-col justify-center rounded-xl p-3 shadow-md transition-all ${theme === 'dark' ? 'border-gold/20 bg-ocean-dark/60 hover:border-gold hover:bg-ocean-light/50 border' : 'border-gold/55 hover:border-gold hover:bg-gold/5 border bg-white'} ${item.colSpan === 2 ? 'col-span-2' : 'col-span-1'}`}
+                      className={`vbiz-hero-card group flex flex-col justify-center rounded-2xl p-3 shadow-md transition-all ${theme === 'dark' ? 'border-gold/20 bg-ocean-dark/60 hover:border-gold hover:bg-ocean-light/50 border' : 'border-gold/55 hover:border-gold hover:bg-gold/5 border bg-white'} ${item.colSpan === 2 ? 'col-span-2' : 'col-span-1'}`}
                       style={item.style?.backgroundColor ? { backgroundColor: item.style.backgroundColor } : undefined}
                     >
                       <div className="mb-0.5 flex items-center gap-2">

@@ -503,15 +503,9 @@ export function LiveAgentPanel({
             <div className="z-10 flex w-full items-center justify-between">
               <div className="flex items-center gap-2 md:gap-3">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors md:h-10 md:w-10 ${isConnected ? '' : 'bg-zinc-900 text-zinc-500'}`}
-                  style={
-                    isConnected
-                      ? {
-                          backgroundColor: `color-mix(in srgb, ${accentColor} 22%, transparent)`,
-                          color: accentColor,
-                        }
-                      : undefined
-                  }
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors md:h-10 md:w-10 ${
+                    isConnected ? 'vbiz-pill-icon' : 'bg-zinc-900 text-zinc-500'
+                  }`}
                 >
                   {isSpeaking ? (
                     <Volume2 className="h-4 w-4 animate-pulse md:h-[18px] md:w-[18px]" />
@@ -559,14 +553,10 @@ export function LiveAgentPanel({
                 <button
                   onClick={toggleConnection}
                   disabled={isConnecting}
-                  className="ml-auto flex h-12 w-12 items-center justify-center rounded-full text-zinc-950 shadow-sm transition-all hover:scale-105 hover:brightness-110 active:scale-95 disabled:opacity-50 md:h-16 md:w-16"
-                  style={{
-                    backgroundColor: accentColor,
-                    boxShadow: `0 8px 24px color-mix(in srgb, ${accentColor} 35%, transparent)`,
-                  }}
+                  className="vbiz-live-agent-fab ml-auto flex h-12 w-12 items-center justify-center rounded-full shadow-sm transition-all hover:scale-105 hover:brightness-110 active:scale-95 disabled:opacity-50 md:h-16 md:w-16"
                 >
                   {isConnecting ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-zinc-950/70 md:h-6 md:w-6" />
+                    <Loader2 className="h-5 w-5 animate-spin md:h-6 md:w-6" />
                   ) : (
                     <Mic className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.5} />
                   )}
@@ -582,29 +572,15 @@ export function LiveAgentPanel({
         className={`pointer-events-auto relative flex items-center justify-center rounded-full border transition-all duration-300 ${
           isOpen
             ? 'h-10 w-10 border-zinc-800 bg-zinc-900 text-zinc-400 shadow-sm hover:bg-zinc-800 hover:text-zinc-200 md:h-14 md:w-14'
-            : 'h-10 w-10 border-white text-zinc-950 shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
+            : 'vbiz-live-agent-fab h-10 w-10 border-white shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
         }`}
-        style={
-          !isOpen
-            ? {
-                backgroundColor: accentColor,
-                boxShadow: `0 10px 30px color-mix(in srgb, ${accentColor} 35%, transparent)`,
-              }
-            : undefined
-        }
       >
         <Bot className="h-5 w-5 md:h-6 md:w-6" />
         {isConnected && !isOpen && (
-          <span
-            className="absolute top-0 right-0 h-2.5 w-2.5 animate-ping rounded-full border-2 border-zinc-900 md:h-3 md:w-3"
-            style={{ backgroundColor: accentColor }}
-          />
+          <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 animate-ping rounded-full border-2 border-white md:h-3 md:w-3" />
         )}
         {isConnected && !isOpen && (
-          <span
-            className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-zinc-900 md:h-3 md:w-3"
-            style={{ backgroundColor: accentColor }}
-          />
+          <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white md:h-3 md:w-3" />
         )}
       </button>
     </motion.div>

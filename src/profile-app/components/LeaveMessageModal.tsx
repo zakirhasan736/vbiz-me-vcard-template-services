@@ -243,7 +243,10 @@ function LeaveMessageModalPanel({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 12 }}
         transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-        className={cn('vbiz-notepad relative z-10 w-full max-w-lg', isV1 ? 'vbiz-notepad--v1' : 'vbiz-notepad--v2')}
+        className={cn(
+          'vbiz-notepad relative z-10 w-full max-w-lg overflow-hidden rounded-2xl',
+          isV1 ? 'vbiz-notepad--v1' : 'vbiz-notepad--v2'
+        )}
         style={{ ...noteThemeStyle, colorScheme: 'light' }}
         onClick={(e) => e.stopPropagation()}
       >

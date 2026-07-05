@@ -1,6 +1,5 @@
 'use client'
 
-import { CardThemeStyles } from '@/profile-app/components/CardThemeStyles'
 import { CinematicScrollbarBinder } from '@/profile-app/components/CinematicScrollbarBinder'
 import { ProfileBrandPreloader } from '@/profile-app/components/ProfileBrandPreloader'
 import { ProfileForceNotification } from '@/profile-app/components/ProfileForceNotification'
@@ -26,7 +25,6 @@ const VBizProfileAppV3 = dynamic(() =>
 /** Renders v1, v2, or v3 profile shell from resolved design settings. */
 export function ProfileApp(props: VBizProfileAppProps) {
   const template = props.design?.profileTemplate ?? 'v3'
-  const themeMode = props.themeConfig?.colors.defaultMode ?? (props.design?.darkMode === false ? 'light' : 'dark')
 
   const shell =
     template === 'v1' ? (
@@ -80,7 +78,6 @@ export function ProfileApp(props: VBizProfileAppProps) {
             />
             {!props.embedded && <ProfileBrandPreloader />}
             {!props.embedded && <ProfileIntroOverlay explainerVideoUrl={props.explainerVideoUrl} />}
-            <CardThemeStyles config={props.themeConfig} mode={themeMode} />
             <CinematicScrollbarBinder />
             {shell}
           </ProfileIntroProvider>

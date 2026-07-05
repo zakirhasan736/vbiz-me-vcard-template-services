@@ -5,11 +5,14 @@ import { FileText } from 'lucide-react'
 const STATIC_LINK_TO_NAV_ID: Record<string, string> = {
   home: 'home',
   resume: 'education',
+  education: 'education',
   'public-cards': 'public-cards',
+  'public cards': 'public-cards',
+  cards: 'public-cards',
 }
 
 function normalizeKey(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, ' ')
+  return value.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ')
 }
 
 const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
@@ -22,6 +25,7 @@ const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
   post: 'post',
   blog: 'blog',
   'about me': 'about',
+  about: 'about',
   'additional services': 'additional',
   '2d video explainer': 'explainer',
   '2d explainer': 'explainer',
@@ -38,6 +42,11 @@ const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
   'certifications/licenses': 'certificates',
   'certificates licenses': 'certificates',
   'certificates/licensing': 'certificates',
+  'certificates/licenses': 'certificates',
+  certificates: 'certificates',
+  license: 'certificates',
+  licenses: 'certificates',
+  licensing: 'licensing',
   'department of consumer protection (dcp)': 'dcp',
   dcp: 'dcp',
   dinner: 'dinner',
@@ -47,7 +56,6 @@ const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
   'insurance license': 'insurance-license',
   inventory: 'inventory',
   'join my team': 'join-team',
-  licensing: 'licensing',
   lunch: 'lunch',
   'media/press': 'press',
   'meet our team': 'meet-team',
@@ -64,20 +72,43 @@ const POST_TYPE_NAME_TO_NAV_ID: Record<string, string> = {
   'why choose us': 'who-we-are',
   'who we are': 'who-we-are',
   'work experience': 'work',
+  work: 'work',
+  experience: 'work',
+  resume: 'education',
+  education: 'education',
+}
+
+function resolveNavIdFromLabel(value?: string | null): string | undefined {
+  if (!value?.trim()) return undefined
+  const key = normalizeKey(value)
+  return POST_TYPE_NAME_TO_NAV_ID[key] ?? STATIC_LINK_TO_NAV_ID[key] ?? NAV_ITEM_BY_ID[key]?.id
 }
 
 function resolvePostTypeNavId(postType: PostTypeNavLink): string | undefined {
-  const byName = POST_TYPE_NAME_TO_NAV_ID[normalizeKey(postType.name)]
-  if (byName) return byName
-  const byTitle = POST_TYPE_NAME_TO_NAV_ID[normalizeKey(postType.title)]
-  if (byTitle) return byTitle
+  return (
+    resolveNavIdFromLabel(postType.name) ??
+    resolveNavIdFromLabel(postType.title) ??
+    resolveNavIdFromLabel(postType.slug) ??
+    resolveNavIdFromLabel(postType.type_id)
+  )
+}
+
+/** Prefer API `name` for `/dynamic-section/{name}` — falls back to title/slug. */
+function resolveApiSectionName(...candidates: Array<string | null | undefined>): string | undefined {
+  for (const candidate of candidates) {
+    const value = candidate?.trim()
+    if (value) return value
+  }
   return undefined
 }
 
-function withDisplayTitle(def: NavBarNavItem, title?: string): NavBarNavItem {
-  const displayTitle = title?.trim()
-  if (!displayTitle || displayTitle === def.label) return def
-  return { ...def, displayLabel: displayTitle }
+function withNavMeta(def: NavBarNavItem, options: { title?: string; apiSectionName?: string }): NavBarNavItem {
+  const displayTitle = options.title?.trim()
+  const apiSectionName = options.apiSectionName?.trim()
+  const next: NavBarNavItem = { ...def }
+  if (displayTitle && displayTitle !== def.label) next.displayLabel = displayTitle
+  if (apiSectionName) next.apiSectionName = apiSectionName
+  return next
 }
 
 function createFallbackNavItem(postType: PostTypeNavLink): NavBarNavItem {
@@ -85,59 +116,82 @@ function createFallbackNavItem(postType: PostTypeNavLink): NavBarNavItem {
   return {
     id: `post-type-${postType.id}`,
     label: title,
+    displayLabel: title,
+    apiSectionName: resolveApiSectionName(postType.name, postType.title, postType.slug),
     icon: FileText,
     profileContent: 'empty',
     editorPanel: { kind: 'empty' },
   }
 }
 
-function mapStaticLink(link: StaticNavLink): NavBarNavItem | null {
-  if (link.active !== true) return null
-  const navId = STATIC_LINK_TO_NAV_ID[link.id] ?? link.id
-  const def = NAV_ITEM_BY_ID[navId]
-  if (!def) return null
-  return withDisplayTitle(def, link.title)
+/** Backend profile-scoped lists may omit `active` or send 1/"true". */
+function isEnabledFlag(value: unknown): boolean {
+  if (value === undefined || value === null || value === '') return true
+  if (value === true || value === 1 || value === '1') return true
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    return normalized === 'active' || normalized === 'true' || normalized === 'enabled'
+  }
+  return false
 }
 
-function isActivePostType(postType: PostTypeNavLink): boolean {
-  const status = postType.status?.trim().toLowerCase()
-  return status === 'active' || status === '1'
+function mapStaticLink(link: StaticNavLink): NavBarNavItem | null {
+  if (!isEnabledFlag(link.active)) return null
+
+  const navId =
+    resolveNavIdFromLabel(link.id) ??
+    resolveNavIdFromLabel(link.name) ??
+    resolveNavIdFromLabel(link.title) ??
+    resolveNavIdFromLabel(link.post_type)
+
+  const def = navId ? NAV_ITEM_BY_ID[navId] : undefined
+  if (!def) return null
+
+  // Home / public-cards are not dynamic-section tabs.
+  const apiSectionName =
+    def.profileContent === 'home' || def.profileContent === 'public-cards'
+      ? undefined
+      : resolveApiSectionName(link.name, link.title, link.id)
+
+  return withNavMeta(def, {
+    title: link.title || link.name,
+    apiSectionName,
+  })
 }
 
 function mapPostType(postType: PostTypeNavLink): NavBarNavItem | null {
-  if (!isActivePostType(postType)) return null
+  if (!isEnabledFlag(postType.status)) return null
   const navId = resolvePostTypeNavId(postType)
   const def = navId ? NAV_ITEM_BY_ID[navId] : undefined
-  const item = def ? withDisplayTitle(def, postType.title) : createFallbackNavItem(postType)
-  return item
+  const apiSectionName = resolveApiSectionName(postType.name, postType.title, postType.slug)
+  if (!def) return createFallbackNavItem(postType)
+  return withNavMeta(def, {
+    title: postType.title || postType.name,
+    apiSectionName,
+  })
 }
 
 function dedupeNavItemsById(items: NavBarNavItem[]): NavBarNavItem[] {
   const seen = new Set<string>()
   return items.filter((item) => {
-    if (seen.has(item.id)) return false
-    seen.add(item.id)
+    const key = item.profileContent === 'empty' ? `empty:${item.id}` : `content:${item.profileContent}`
+    if (seen.has(key)) return false
+    seen.add(key)
     return true
   })
 }
 
 /**
- * Maps `GET /post-types` into profile nav items.
- * Visibility: StaticLink.active === true, post_types.status === "active".
- * Order: static links first (API order), then dynamic post types (API order).
+ * Maps `GET /post-types?profile_id=` into profile nav items.
+ * Backend returns only tabs with published data for that profile.
+ * Each item keeps `apiSectionName` for `GET /dynamic-section/{name}?profile_id=`.
  */
 export function mapNavBarLinks(data: NavBarLinksData | undefined | null): NavBarNavItem[] {
   if (!data) return []
 
-  const staticItems = (data.StaticLink ?? [])
-    .filter((link) => link.active === true)
-    .map(mapStaticLink)
-    .filter((item): item is NavBarNavItem => Boolean(item))
+  const staticItems = (data.StaticLink ?? []).map(mapStaticLink).filter((item): item is NavBarNavItem => Boolean(item))
 
-  const postTypeItems = (data.post_types ?? [])
-    .filter(isActivePostType)
-    .map(mapPostType)
-    .filter((item): item is NavBarNavItem => Boolean(item))
+  const postTypeItems = (data.post_types ?? []).map(mapPostType).filter((item): item is NavBarNavItem => Boolean(item))
 
   return dedupeNavItemsById([...staticItems, ...postTypeItems])
 }

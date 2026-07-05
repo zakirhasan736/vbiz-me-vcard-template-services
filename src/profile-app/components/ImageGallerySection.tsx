@@ -57,10 +57,10 @@ function ImageWithPlaceholder({ src, alt, className }: { src: string; alt: strin
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden bg-white/5 backdrop-blur-xl"
+            className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden bg-black/20 backdrop-blur-xl"
           >
             <div className="absolute inset-0 animate-pulse bg-linear-to-tr from-white/5 to-transparent" />
-            <ImageIcon size={32} className="text-white/20" />
+            <ImageIcon size={32} className="vbiz-pin opacity-40" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -82,7 +82,7 @@ function GalleryCardSkeleton({ delay, className }: { delay: number; className?: 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay }}
-      className={`aspect-4/3 w-full animate-pulse overflow-hidden rounded-sm border border-zinc-200 bg-zinc-200 dark:border-zinc-800/80 dark:bg-zinc-800 ${className ?? ''}`}
+      className={`vbiz-card aspect-4/3 w-full animate-pulse overflow-hidden rounded-sm border ${className ?? ''}`}
     />
   )
 }
@@ -90,12 +90,10 @@ function GalleryCardSkeleton({ delay, className }: { delay: number; className?: 
 function GalleryCard({
   item,
   idx,
-  accentColor,
   onOpen,
 }: {
   item: GalleryListItem
   idx: number
-  accentColor: string
   onOpen: (item: GalleryListItem) => void
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -126,7 +124,7 @@ function GalleryCard({
       transition={{ duration: 0.4, delay: idx * 0.04, ease: [0.32, 0.72, 0, 1] }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative aspect-4/3 w-full overflow-hidden rounded-sm border border-zinc-200 bg-zinc-100 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900 ${getGalleryGridClass(idx)}`}
+      className={`vbiz-card group relative aspect-4/3 w-full overflow-hidden rounded-sm border shadow-sm ${getGalleryGridClass(idx)}`}
     >
       <ImageWithPlaceholder src={item.imageUrl} alt={item.title} className="relative z-0 h-full w-full" />
 
@@ -138,11 +136,10 @@ function GalleryCard({
             animate={motionProps.animate}
             exit={motionProps.exit}
             transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-            className="absolute inset-0 z-30 flex flex-col p-4"
-            style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 75%, transparent)` }}
+            className="vbiz-card-overlay absolute inset-0 z-30 flex flex-col p-4"
           >
-            <div className="inline-flex w-fit max-w-[85%] rounded-sm bg-white px-3 py-1.5 shadow-sm">
-              <p className="truncate text-sm font-bold tracking-tight text-zinc-900">{item.title}</p>
+            <div className="vbiz-card-pill vbiz-on-light-surface inline-flex w-fit max-w-[85%] rounded-sm px-3 py-1.5 shadow-sm">
+              <p className="truncate text-sm font-bold tracking-tight">{item.title}</p>
             </div>
 
             <div className="mt-auto flex justify-end">
@@ -153,7 +150,7 @@ function GalleryCard({
                   event.stopPropagation()
                   onOpen(item)
                 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-white text-zinc-900 shadow-md transition-transform hover:scale-105 active:scale-95"
+                className="vbiz-card-action flex h-10 w-10 shrink-0 items-center justify-center rounded-sm shadow-md transition-transform hover:scale-105 active:scale-95"
               >
                 <Maximize2 size={18} strokeWidth={2.25} />
               </button>
@@ -199,7 +196,7 @@ function GalleryLightbox({ item, onClose }: { item: GalleryListItem; onClose: ()
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-200 flex items-center justify-center bg-black/85 px-4 pt-16 pb-28 backdrop-blur-sm sm:px-6 sm:pt-20 sm:pb-32"
+      className="vbiz-modal-backdrop fixed inset-0 z-200 flex items-center justify-center px-4 pt-16 pb-28 backdrop-blur-sm sm:px-6 sm:pt-20 sm:pb-32"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -209,7 +206,7 @@ function GalleryLightbox({ item, onClose }: { item: GalleryListItem; onClose: ()
         type="button"
         aria-label="Close preview"
         onClick={onClose}
-        className="absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white transition-colors hover:bg-black/70 sm:top-6 sm:right-6"
+        className="vbiz-modal-close absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border sm:top-6 sm:right-6"
       >
         <X size={20} />
       </button>
@@ -219,13 +216,13 @@ function GalleryLightbox({ item, onClose }: { item: GalleryListItem; onClose: ()
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-        className="relative flex max-h-[calc(100dvh-9rem)] max-w-[min(900px,90vw)] flex-col overflow-hidden rounded-lg shadow-2xl"
+        className="vbiz-modal-panel relative flex max-h-[calc(100dvh-9rem)] max-w-[min(900px,90vw)] flex-col overflow-hidden rounded-lg shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={item.imageUrl} alt={item.title} className="max-h-[calc(100dvh-11rem)] w-full object-contain" />
         <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent px-5 py-4">
-          <p className="text-base font-bold text-white">{item.title}</p>
+          <p className="vbiz-title text-base font-bold text-white">{item.title}</p>
         </div>
       </motion.div>
     </motion.div>,
@@ -234,9 +231,8 @@ function GalleryLightbox({ item, onClose }: { item: GalleryListItem; onClose: ()
 }
 
 export const ImageGallerySection = () => {
-  const { cardOwnerId, design } = useProfileDisplay()
+  const { cardOwnerId } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
-  const accentColor = design?.accentColor ?? design?.primaryColor ?? '#eab308'
   const [activeTab, setActiveTab] = useState('All')
   const [previewItem, setPreviewItem] = useState<GalleryListItem | null>(null)
   const scrollRef = useDragScroll<HTMLDivElement>()
@@ -285,12 +281,12 @@ export const ImageGallerySection = () => {
   if (showEmptyState) {
     return (
       <div className="w-full pb-20">
-        <div className="flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-200 bg-white/40 p-10 text-center dark:border-zinc-800/80 dark:bg-zinc-900/30">
-          <div className="text-yellow-primary mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/80">
+        <div className="vbiz-card flex min-h-[320px] flex-col items-center justify-center rounded-3xl border border-dashed p-10 text-center">
+          <div className="vbiz-pill-icon mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border">
             <Camera size={24} />
           </div>
-          <h2 className="mb-3 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">{sectionTitle}</h2>
-          <p className="max-w-md text-sm leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">
+          <h2 className="vbiz-title mb-3 text-2xl font-bold tracking-tight">{sectionTitle}</h2>
+          <p className="vbiz-description max-w-md text-sm leading-relaxed font-medium">
             No gallery images have been published yet. Add content from the vCard editor Gallery tab.
           </p>
         </div>
@@ -315,13 +311,7 @@ export const ImageGallerySection = () => {
       >
         <AnimatePresence mode="popLayout">
           {filteredItems.map((item, idx) => (
-            <GalleryCard
-              key={`${item.id}-${item.createdAt}`}
-              item={item}
-              idx={idx}
-              accentColor={accentColor}
-              onOpen={setPreviewItem}
-            />
+            <GalleryCard key={`${item.id}-${item.createdAt}`} item={item} idx={idx} onOpen={setPreviewItem} />
           ))}
         </AnimatePresence>
       </motion.div>
@@ -352,15 +342,14 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-3 grid grid-cols-1 gap-4 md:mb-4 lg:grid-cols-4">
-      <div className="group relative flex flex-col items-start justify-between gap-2 overflow-hidden rounded-3xl border border-zinc-200 bg-white/50 p-4 backdrop-blur-xl md:flex-row md:items-end md:gap-0 md:p-6 lg:col-span-4 lg:p-10 dark:border-zinc-800/80 dark:bg-zinc-900/50">
+      <div className="vbiz-section-banner group relative flex flex-col items-start justify-between gap-2 overflow-hidden rounded-3xl border p-4 backdrop-blur-xl md:flex-row md:items-end md:gap-0 md:p-6 lg:col-span-4 lg:p-10">
         <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
-
         <div className="bg-yellow-primary/10 dark:bg-yellow-primary/5 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
         <div className="pointer-events-none absolute bottom-0 left-0 -mb-24 -ml-24 rounded-full bg-black/5 p-24 blur-3xl transition-transform delay-100 duration-1000 group-hover:scale-110 dark:bg-white/5" />
 
         <div className="relative z-10 flex w-full flex-col gap-1 md:w-auto md:gap-2">
-          <div className="mb-0 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors md:px-3 md:py-1.5 dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
-            <Camera size={12} className="text-yellow-primary" /> Image Vault
+          <div className="vbiz-eyebrow mb-0 rounded-lg px-2.5 py-1 md:px-3 md:py-1.5">
+            <Camera size={12} /> Image Vault
           </div>
 
           {isLoading ? (
@@ -370,10 +359,10 @@ function SectionHeader({
             </>
           ) : (
             <>
-              <h2 className="max-w-2xl text-2xl leading-tight font-bold tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">
+              <h2 className="vbiz-title max-w-2xl text-2xl leading-tight font-bold tracking-tight sm:text-4xl lg:text-4xl">
                 {sectionTitle}
               </h2>
-              <p className="max-w-xl text-sm leading-snug font-medium text-zinc-600 md:text-base md:leading-normal dark:text-zinc-400">
+              <p className="vbiz-description max-w-xl text-sm leading-snug font-medium md:text-base md:leading-normal">
                 Browse curated gallery images from this profile.
               </p>
             </>
@@ -384,13 +373,16 @@ function SectionHeader({
           <div className="relative z-10 flex w-full shrink-0 md:w-auto">
             <div
               ref={scrollRef}
-              className="no-scrollbar mask-edges inline-flex max-w-full cursor-grab items-center gap-1 overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 p-1 shadow-inner active:cursor-grabbing md:gap-1.5 md:rounded-2xl md:p-1.5 dark:border-zinc-800/80 dark:bg-zinc-950/50"
+              className="vbiz-filter-bar no-scrollbar mask-edges inline-flex max-w-full cursor-grab items-center gap-1 overflow-x-auto rounded-xl border p-1 active:cursor-grabbing md:gap-1.5 md:rounded-2xl md:p-1.5"
             >
               {categories.map((category) => (
                 <button
                   key={category}
+                  type="button"
                   onClick={() => onTabChange(category)}
-                  className={`relative z-10 flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300 md:rounded-xl md:px-4 md:py-2.5 ${activeTab === category ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-100 dark:text-zinc-950' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'}`}
+                  className={`relative z-10 flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all duration-300 md:rounded-xl md:px-4 md:py-2.5 ${
+                    activeTab === category ? 'vbiz-filter-chip-active' : 'vbiz-filter-chip'
+                  }`}
                 >
                   <span className="relative z-10">{category}</span>
                 </button>

@@ -2,7 +2,7 @@
 
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { V3EmptyState, V3ErrorState, V3LoadingSkeleton, V3SectionShell } from '@/profile-app/sections'
-import { useGetFaqQuery } from '@/redux/api'
+import { useGetDynamicSectionQuery } from '@/redux/api'
 import { ChevronDown, HelpCircle, MessageCircle, RotateCcw, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
@@ -13,11 +13,19 @@ type FaqItem = {
   answer: string
 }
 
-export const FAQSection = () => {
+type FAQSectionProps = {
+  sectionName?: string
+}
+
+export const FAQSection = ({ sectionName = 'Faq' }: FAQSectionProps) => {
   const { cardOwnerId } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
+  const resolvedSectionName = sectionName.trim() || 'Faq'
 
-  const { data, isLoading, isError } = useGetFaqQuery(profileId, { skip: !profileId })
+  const { data, isLoading, isError } = useGetDynamicSectionQuery(
+    { profileId, sectionName: resolvedSectionName },
+    { skip: !profileId || !resolvedSectionName }
+  )
 
   const faqs = useMemo<FaqItem[]>(() => {
     return [...(data?.posts ?? [])]
@@ -170,7 +178,7 @@ export const FAQSection = () => {
           <div className={`group relative mb-4 overflow-hidden p-5 md:mb-4 md:p-6 lg:p-8 ${cardClass}`}>
             <div className="bg-gold/10 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
             <div className="relative z-10">
-              <div className="bg-gold/10 border-gold/30 text-gold mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase">
+              <div className="vbiz-eyebrow mb-2">
                 <MessageCircle size={12} /> {sectionTitle}
               </div>
               <h2 className="mb-2 text-2xl leading-[1.1] font-black tracking-tight text-zinc-900 sm:text-4xl lg:text-4xl dark:text-zinc-100">

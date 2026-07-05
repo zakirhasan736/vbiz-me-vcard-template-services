@@ -356,7 +356,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
       onClose={onClose}
       backdropId="share_modal_backdrop"
       backdropClassName="fixed inset-0 z-100 flex items-end justify-center overflow-y-auto bg-zinc-950/60 p-0 backdrop-blur-md sm:items-center sm:p-4"
-      panelClassName="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-4xl border border-zinc-200 bg-white shadow-2xl sm:max-w-[460px] sm:rounded-4xl dark:border-zinc-900 dark:bg-zinc-950"
+      panelClassName="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl border border-zinc-200 bg-white shadow-2xl sm:max-w-[460px] sm:rounded-2xl dark:border-zinc-900 dark:bg-zinc-950"
     >
       {body}
     </ProfileModalShell>

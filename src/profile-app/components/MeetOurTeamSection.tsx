@@ -3,7 +3,7 @@
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { useGetMeetOurTeamQuery } from '@/redux/api'
+import { useGetDynamicSectionQuery } from '@/redux/api'
 import { ExternalLink, UsersRound } from 'lucide-react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -109,14 +109,22 @@ function MeetOurTeamSkeleton() {
   )
 }
 
-export const MeetOurTeamSection = () => {
+type MeetOurTeamSectionProps = {
+  sectionName?: string
+}
+
+export const MeetOurTeamSection = ({ sectionName = 'Meet Our Team' }: MeetOurTeamSectionProps) => {
   const { cardOwnerId, design } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
+  const resolvedSectionName = sectionName.trim() || 'Meet Our Team'
   const accent = design?.accentColor ?? (design?.profileTemplate === 'v1' ? '#dcc969' : '#eab308')
 
-  const { data, isLoading, isError } = useGetMeetOurTeamQuery(profileId, { skip: !profileId })
+  const { data, isLoading, isError } = useGetDynamicSectionQuery(
+    { profileId, sectionName: resolvedSectionName },
+    { skip: !profileId || !resolvedSectionName }
+  )
 
-  const sectionTitle = data?.sectionTitle ?? 'Meet Our Team'
+  const sectionTitle = data?.sectionTitle ?? resolvedSectionName
   const members = data?.posts ?? []
   const showInitialLoader = isLoading && members.length === 0
   const showEmptyState = !isLoading && !isError && members.length === 0

@@ -135,7 +135,13 @@ export const urlBase64ToUint8Array = (base64String: string) => {
 export async function registerServiceWorker() {
   if (!isPushSupported()) return null
   try {
-    return await navigator.serviceWorker.register(SERVICE_WORKER_PATH)
+    const registration = await navigator.serviceWorker.register(SERVICE_WORKER_PATH, {
+      scope: '/',
+      updateViaCache: 'none',
+    })
+    // Pick up a newer sw.js as soon as it is deployed.
+    void registration.update()
+    return registration
   } catch (error) {
     console.error('Service Worker registration failed:', error)
     return null
@@ -144,7 +150,8 @@ export async function registerServiceWorker() {
 
 export async function getReadyRegistration() {
   if (!isPushSupported()) return null
-  await registerServiceWorker()
+  const registration = await registerServiceWorker()
+  if (!registration) return null
   return navigator.serviceWorker.ready
 }
 
@@ -278,7 +285,7 @@ export async function subscribeToCard(options: {
     })
   }
 
-  const payload = subscriptionToPayload(subscription)
+  const payload = writeStoredSubscription(subscription)
   const preferences = {
     ...DEFAULT_NOTIFICATION_PREFERENCES,
     ...options.preferences,
@@ -308,12 +315,18 @@ export async function subscribeToCard(options: {
   }
 
   clearNotificationDeclinedForCard(options.cardSlug)
+  writeFollowState(options.cardSlug, {
+    following: true,
+    preferences,
+    subscribedAt: new Date().toISOString(),
+  })
   setCachedCardPushStatus(options.cardSlug, { following: true, preferences })
 
+  // Ensure backend preference flags are enabled so pushes are not filtered out.
   try {
     await updateCardPreferences(options.cardSlug, preferences)
-  } catch {
-    /* subscription saved; preferences can be updated later in settings */
+  } catch (preferenceError) {
+    console.warn('Push subscribed, but preferences update failed:', preferenceError)
   }
 
   return { subscription, preferences }

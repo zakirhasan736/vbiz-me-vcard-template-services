@@ -309,7 +309,7 @@ export const NotepadModal = ({
       isOpen={isOpen}
       onClose={onClose}
       backdropClassName="fixed inset-0 z-100 flex items-end justify-center overflow-y-auto bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-6"
-      panelClassName="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-3xl border border-amber-200/50 bg-[#faf6ea] text-zinc-900 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.5)] sm:max-w-xl sm:rounded-3xl"
+      panelClassName="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl border border-amber-200/50 bg-[#faf6ea] text-zinc-900 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.5)] sm:max-w-xl sm:rounded-2xl"
     >
       {body}
     </ProfileModalShell>

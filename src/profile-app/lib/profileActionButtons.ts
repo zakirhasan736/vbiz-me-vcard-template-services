@@ -9,13 +9,19 @@ export type ProfileActionButtonKey = 'my_info' | 'save_contact' | 'share' | 'ref
 /** Fixed home-page CTAs (left column). Marked buttons always render. */
 export type HomeCtaKey = 'my_info' | 'save_my_info' | 'my_vcard' | 'google_wallet' | 'get_vcard_now'
 
+/** Theme button role — maps to theme_config.components.button.{primary|secondary|accent}. */
+export type HomeCtaButtonRole = 'primary' | 'secondary' | 'accent'
+
 export type ResolvedHomeCtaButton = {
   key: HomeCtaKey
   label: string
   icon: LucideIcon
   backgroundColor?: string
   textColor?: string
+  /** Visual variant (legacy). Prefer `role` for theme tokens. */
   variant: 'outline' | 'accent' | 'cta'
+  /** primary = CTA, accent = filled brand, secondary = outline. */
+  role: HomeCtaButtonRole
 }
 
 export type HomeCtaLayout = {
@@ -52,6 +58,7 @@ function resolveSaveMyInfoButton(
     label: (api?.label?.trim() || labels.save_my_info || HOME_CTA_DEFAULT_LABELS.save_my_info).toUpperCase(),
     icon: resolveFaIcon(api?.icon, Download),
     variant: 'outline',
+    role: 'secondary',
   }
 }
 
@@ -62,39 +69,44 @@ export function resolveHomeCtaLayout(options: {
   /** When true, adds a leading "My Info" button (opens the info popup) and pairs Save My Info with Save To Wallet — used on mobile. */
   includeMyInfo?: boolean
 }): HomeCtaLayout {
-  const { actionButtons, labels = {}, accentColor = '#eab308', includeMyInfo = false } = options
+  const { actionButtons, labels = {}, includeMyInfo = false } = options
 
   const saveMyInfo = resolveSaveMyInfoButton(actionButtons, labels)
 
+  // accent button — filled brand (MY VCARD)
   const myVcard: ResolvedHomeCtaButton = {
     key: 'my_vcard',
     label: (labels.my_vcard ?? HOME_CTA_DEFAULT_LABELS.my_vcard).toUpperCase(),
     icon: QrCode,
-    backgroundColor: accentColor,
-    textColor: '#000',
     variant: 'accent',
+    role: 'accent',
   }
 
+  // secondary button — outline (SAVE TO WALLET)
   const googleWallet: ResolvedHomeCtaButton = {
     key: 'google_wallet',
     label: (labels.google_wallet ?? HOME_CTA_DEFAULT_LABELS.google_wallet).toUpperCase(),
     icon: Download,
     variant: 'outline',
+    role: 'secondary',
   }
 
+  // primary button — main CTA (GET YOUR VCARD NOW)
   const getVcardNow: ResolvedHomeCtaButton = {
     key: 'get_vcard_now',
     label: (labels.get_vcard_now ?? HOME_CTA_DEFAULT_LABELS.get_vcard_now).toUpperCase(),
     icon: ArrowUpRight,
-    backgroundColor: accentColor,
     variant: 'cta',
+    role: 'primary',
   }
 
+  // secondary button — outline (MY INFO)
   const myInfo: ResolvedHomeCtaButton = {
     key: 'my_info',
     label: (labels.my_info ?? HOME_CTA_DEFAULT_LABELS.my_info).toUpperCase(),
     icon: User,
     variant: 'outline',
+    role: 'secondary',
   }
 
   const rows: ResolvedHomeCtaButton[][] = includeMyInfo
@@ -141,25 +153,15 @@ export function handleHomeCtaClick(
   }
 }
 
+/**
+ * Optional per-button overrides only. Theme tokens (primary/secondary/accent)
+ * drive fill/foreground/border via `.vbiz-btn[data-role]`.
+ */
 export function buildHomeCtaInlineStyle(
   button: ResolvedHomeCtaButton,
-  accentColor?: string
+  _accentColor?: string
 ): CSSProperties | undefined {
   const style: CSSProperties = {}
-  const accent = accentColor ?? '#eab308'
-
-  if (button.variant === 'accent') {
-    style.background = `linear-gradient(to right, ${button.backgroundColor || accent}, color-mix(in srgb, ${button.backgroundColor || accent} 75%, black))`
-    if (button.textColor) style.color = button.textColor
-    return style
-  }
-
-  if (button.variant === 'cta') {
-    style.background = `linear-gradient(to right, #fef08a, ${button.backgroundColor || accent})`
-    style.color = button.textColor ?? '#18181b'
-    return style
-  }
-
   if (button.backgroundColor) style.background = button.backgroundColor
   if (button.textColor) style.color = button.textColor
   return Object.keys(style).length > 0 ? style : undefined

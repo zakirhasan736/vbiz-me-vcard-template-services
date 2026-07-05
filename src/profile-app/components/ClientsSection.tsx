@@ -57,8 +57,8 @@ export const ClientsSection = () => {
           <div className="pointer-events-none absolute bottom-0 left-0 -mb-24 -ml-24 rounded-full bg-black/5 p-24 blur-3xl transition-transform delay-100 duration-1000 group-hover:scale-110 dark:bg-white/5" />
 
           <div className="relative z-10 w-full min-w-0 md:w-auto md:flex-1">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-zinc-600 uppercase shadow-sm backdrop-blur-sm transition-colors md:mb-3 dark:border-zinc-700/50 dark:bg-zinc-800/80 dark:text-zinc-300">
-              <Handshake size={12} className="text-yellow-primary" /> Trusted Partners
+            <div className="vbiz-eyebrow mb-2 rounded-lg md:mb-3">
+              <Handshake size={12} /> Trusted Partners
             </div>
 
             <h2 className="mb-0 max-w-2xl text-2xl leading-[1.1] font-bold tracking-tight text-zinc-900 sm:text-4xl md:mb-2 lg:text-4xl dark:text-zinc-100">

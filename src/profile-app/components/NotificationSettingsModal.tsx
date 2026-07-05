@@ -118,13 +118,13 @@ export const NotificationSettingsModal = ({
       key={cardSlug}
       isOpen={isOpen}
       onClose={onClose}
-      panelClassName="relative w-full overflow-hidden rounded-t-3xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:max-w-sm sm:rounded-3xl"
+      panelClassName="relative w-full overflow-hidden rounded-2xl border shadow-2xl sm:max-w-sm"
     >
       <div className="relative w-full max-w-sm p-6 sm:max-w-none">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-full bg-zinc-800 p-1.5 text-zinc-400 transition-colors hover:text-zinc-200"
+          className="vbiz-modal-close absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border transition-all active:scale-95"
           aria-label="Close notification settings"
         >
           <X size={16} />
@@ -132,25 +132,27 @@ export const NotificationSettingsModal = ({
 
         {unfollowed ? (
           <div className="flex flex-col items-center text-center">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+            <div className="vbiz-modal-icon-chip mb-5 flex h-14 w-14 items-center justify-center rounded-full">
               <BellOff size={24} />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-zinc-100">Notifications turned off</h2>
-            <p className="mb-6 text-sm text-zinc-400">
+            <h2 className="vbiz-title mb-2 text-xl font-bold">Notifications turned off</h2>
+            <p className="vbiz-description mb-6 text-sm">
               You won&apos;t get updates for this card anymore. You can re-enable them anytime.
             </p>
             <div className="flex w-full flex-col gap-3">
               <button
                 type="button"
                 onClick={handleReEnable}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-zinc-200"
+                className="vbiz-modal-btn-primary vbiz-btn flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-bold transition-all active:scale-[0.98]"
+                data-role="primary"
               >
                 <BellRing size={16} /> Re-enable Notifications
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full rounded-full border border-zinc-700 bg-zinc-950 py-3 text-sm font-medium text-zinc-200 transition-all hover:bg-zinc-800"
+                className="vbiz-modal-btn-secondary vbiz-btn w-full rounded-full py-3 text-sm font-medium transition-all active:scale-[0.98]"
+                data-role="secondary"
               >
                 Close
               </button>
@@ -159,18 +161,18 @@ export const NotificationSettingsModal = ({
         ) : (
           <div className="flex flex-col text-left">
             <div className="mb-2 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500/10 text-yellow-500">
+              <div className="vbiz-modal-icon-chip flex h-8 w-8 items-center justify-center rounded-full">
                 <Bell size={16} />
               </div>
-              <h2 className="text-xl font-bold text-zinc-100">Notification Settings</h2>
+              <h2 className="vbiz-title text-xl font-bold">Notification Settings</h2>
             </div>
 
-            <p className="text-md mb-4 text-zinc-400">Choose what to get notified about:</p>
+            <p className="vbiz-description text-md mb-4">Choose what to get notified about:</p>
 
-            <div className="text-md mb-6 w-full space-y-2 rounded-xl bg-zinc-950/50 p-4 font-medium text-zinc-300">
+            <div className="vbiz-modal-row text-md mb-6 w-full space-y-2 rounded-xl p-4 font-medium">
               {loading ? (
-                <div className="flex items-center justify-center py-6 text-zinc-400">
-                  <Loader2 size={20} className="animate-spin" />
+                <div className="vbiz-description flex items-center justify-center py-6">
+                  <Loader2 size={20} className="vbiz-pin animate-spin" />
                 </div>
               ) : (
                 BACKEND_NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
@@ -179,7 +181,7 @@ export const NotificationSettingsModal = ({
                       type="checkbox"
                       checked={preferences[p.id]}
                       onChange={() => togglePreference(p.id)}
-                      className="rounded border-zinc-700 bg-zinc-800 text-yellow-500 focus:ring-yellow-500"
+                      className="rounded border-[color:var(--vbiz-border)] bg-[color:var(--vbiz-surface)] text-[color:var(--vbiz-accent)] focus:ring-[color:var(--vbiz-accent)]"
                     />
                     {p.label}
                   </label>
@@ -187,7 +189,7 @@ export const NotificationSettingsModal = ({
               )}
             </div>
 
-            {message ? <p className="mb-3 text-xs text-green-400">{message}</p> : null}
+            {message ? <p className="mb-3 text-xs text-green-500">{message}</p> : null}
             {error ? (
               <p className="mb-3 text-xs text-red-400" role="alert">
                 {error}
@@ -199,7 +201,8 @@ export const NotificationSettingsModal = ({
                 type="button"
                 onClick={() => void handleSave()}
                 disabled={saving}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-zinc-950 transition-all hover:bg-zinc-200 disabled:opacity-60"
+                className="vbiz-modal-btn-primary vbiz-btn flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60"
+                data-role="primary"
               >
                 <Save size={16} /> {saving ? 'Saving…' : 'Save Preferences'}
               </button>

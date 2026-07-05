@@ -5,9 +5,7 @@ import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
 import { mapNavBarLinks } from '@/lib/api/navbar/mapNavBarLinks'
 import { orderAndDedupeNavItems } from '@/lib/api/navbar/orderNavTabs'
 import { DEFAULT_PROFILE_SECTION } from '@/lib/profileRoutes'
-import { getNavItemById, type NavBarNavItem, type ProfileNavContentKey } from '@/lib/vcardNavbar'
-import { useNavTabsWithSectionData } from '@/profile-app/hooks/useNavTabsWithSectionData'
-import { useProbeNavSectionsForData } from '@/profile-app/hooks/useProbeNavSectionsForData'
+import { getNavItemById, type NavBarNavItem } from '@/lib/vcardNavbar'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
 import { useGetNavBarLinksQuery } from '@/redux/api'
 import { navBarLinksApi } from '@/redux/features/navbar/navbar.api'
@@ -20,8 +18,6 @@ type ProfileNavigationContextValue = {
   goToSection: (tabId: string) => void
   getNavItem: (tabId: string) => NavBarNavItem | undefined
   isNavLoading: boolean
-  /** Called when an opened section confirms it has no published content. */
-  markSectionEmpty: (contentKey: ProfileNavContentKey) => void
 }
 
 const ProfileNavigationContext = createContext<ProfileNavigationContextValue | null>(null)
@@ -35,14 +31,13 @@ type Props = {
   children: ReactNode
   sectionId?: string
   onSectionChange?: (sectionId: string) => void
-  /** Server-prefetched `/post-types` — one fast request, no per-section probes. */
+  /** Server-prefetched `/post-types?profile_id=` — backend returns only tabs with data. */
   initialNavBarLinks?: NavBarLinksData | null
 }
 
 /**
  * Client-side section nav — no URL / route changes.
- * Active backend tabs are probed for content on load (cached 1h), so tabs whose
- * section has no published data are hidden silently before the user opens them.
+ * Tab list comes from `GET /post-types?profile_id=` (backend filters empty sections).
  */
 export function ProfileNavigationProvider({
   children,
@@ -51,20 +46,21 @@ export function ProfileNavigationProvider({
   initialNavBarLinks = null,
 }: Props) {
   const dispatch = useAppDispatch()
-  const { settings: displaySettings, education, experience } = useProfileDisplay()
+  const { settings: displaySettings, cardOwnerId } = useProfileDisplay()
+  const profileId = cardOwnerId?.trim() ?? ''
 
   const hasPrefetchedNavLinks = Boolean(initialNavBarLinks)
 
   useLayoutEffect(() => {
-    if (!initialNavBarLinks) return
-    dispatch(navBarLinksApi.util.upsertQueryData('getNavBarLinks', undefined, initialNavBarLinks))
-  }, [dispatch, initialNavBarLinks])
+    if (!initialNavBarLinks || !profileId) return
+    dispatch(navBarLinksApi.util.upsertQueryData('getNavBarLinks', profileId, initialNavBarLinks))
+  }, [dispatch, initialNavBarLinks, profileId])
 
   const {
     data: navBarLinksFromQuery,
     isLoading: isNavLinksLoading,
     isError: isNavError,
-  } = useGetNavBarLinksQuery(undefined, { skip: hasPrefetchedNavLinks })
+  } = useGetNavBarLinksQuery(profileId, { skip: !profileId || hasPrefetchedNavLinks })
 
   const navBarLinks = initialNavBarLinks ?? navBarLinksFromQuery
 
@@ -73,19 +69,10 @@ export function ProfileNavigationProvider({
     return mapNavBarLinks(navBarLinks)
   }, [navBarLinks, isNavError])
 
-  const { tabsWithData, markSectionEmpty } = useNavTabsWithSectionData(navItems, {
-    education,
-    experience,
-  })
-
-  // Probe each active section's content upfront so empty tabs hide silently,
-  // instead of disappearing only after the user opens them.
-  useProbeNavSectionsForData(navItems, markSectionEmpty)
-
   const visibleTabs = useMemo(() => {
     if (!displaySettings.globalEnabled) return []
-    return orderAndDedupeNavItems(tabsWithData)
-  }, [displaySettings.globalEnabled, tabsWithData])
+    return orderAndDedupeNavItems(navItems)
+  }, [displaySettings.globalEnabled, navItems])
 
   const isNavLoading = hasPrefetchedNavLinks ? false : isNavLinksLoading
 
@@ -118,9 +105,8 @@ export function ProfileNavigationProvider({
       goToSection,
       getNavItem,
       isNavLoading,
-      markSectionEmpty,
     }),
-    [navItems, visibleTabs, activeSectionId, goToSection, getNavItem, isNavLoading, markSectionEmpty]
+    [navItems, visibleTabs, activeSectionId, goToSection, getNavItem, isNavLoading]
   )
 
   return <ProfileNavigationContext.Provider value={value}>{children}</ProfileNavigationContext.Provider>

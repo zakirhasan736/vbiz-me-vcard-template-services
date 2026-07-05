@@ -287,7 +287,9 @@ export function mapMyCardToVCardData(card: MyCardData): VCardData {
     education: [],
     experience: [],
     displaySettings: mapDisplaySettings(card),
-    themeConfig: hasDynamicTheme(card.theme_config) ? resolveCardThemeConfig(card.theme_config) : undefined,
+    themeConfig: hasDynamicTheme(card.theme_config)
+      ? resolveCardThemeConfig(card.theme_config, resolveTemplate(card))
+      : undefined,
   }
 }
 

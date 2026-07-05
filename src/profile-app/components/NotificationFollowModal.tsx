@@ -71,18 +71,18 @@ export function NotificationFollowModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+        <div className="vbiz-modal-backdrop fixed inset-0 z-[210] flex items-center justify-center p-4 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 shadow-xl"
+            className="vbiz-modal-panel relative w-full max-w-sm overflow-hidden rounded-2xl border shadow-xl"
           >
             <div className="relative z-10 p-6">
               <button
                 type="button"
                 onClick={handleDecline}
-                className="absolute top-4 right-4 rounded-full border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500 transition-all hover:bg-zinc-800 hover:text-zinc-300 focus:outline-none"
+                className="vbiz-modal-close absolute top-4 right-4 rounded-full border p-1.5 transition-all focus:outline-none"
               >
                 <X size={16} />
               </button>
@@ -91,37 +91,35 @@ export function NotificationFollowModal({
                 <>
                   <div className="mt-2 mb-6 flex justify-center">
                     <div className="relative">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-zinc-950 shadow-sm">
+                      <div className="vbiz-pill-icon flex h-16 w-16 items-center justify-center rounded-2xl border shadow-sm">
                         <Bell size={28} className="animate-bounce" />
                       </div>
-                      <div className="absolute -top-1.5 -right-1.5 rounded-full border border-zinc-800 bg-zinc-950 p-1 text-zinc-100 shadow-sm">
+                      <div className="vbiz-modal-icon-chip absolute -top-1.5 -right-1.5 rounded-full p-1 shadow-sm">
                         <Sparkles size={12} />
                       </div>
                     </div>
                   </div>
 
                   <div className="mb-8 text-center">
-                    <h3 className="notranslate mb-2 text-xl font-bold tracking-tight text-zinc-100">
-                      Follow {firstName}
-                    </h3>
-                    <p className="text-sm leading-relaxed font-medium text-zinc-400">
+                    <h3 className="vbiz-title notranslate mb-2 text-xl font-bold tracking-tight">Follow {firstName}</h3>
+                    <p className="vbiz-description text-sm leading-relaxed font-medium">
                       Be the first to know when <span className="notranslate">{ownerName}</span>&apos;s card is updated.
                       Get instant notifications for new links, services, and media.
                     </p>
                   </div>
 
                   <div className="mb-8 space-y-2">
-                    <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900 p-2.5">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-800 text-zinc-300">
+                    <div className="vbiz-modal-row flex items-center gap-2.5 rounded-xl border p-2.5">
+                      <div className="vbiz-pill-icon flex h-6 w-6 items-center justify-center rounded-md border">
                         <ShieldCheck size={14} />
                       </div>
-                      <span className="text-xs font-medium text-zinc-300">Privacy Focused & Spam Free</span>
+                      <span className="vbiz-description text-xs font-medium">Privacy Focused & Spam Free</span>
                     </div>
-                    <div className="flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900 p-2.5">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-800 text-zinc-300">
+                    <div className="vbiz-modal-row flex items-center gap-2.5 rounded-xl border p-2.5">
+                      <div className="vbiz-pill-icon flex h-6 w-6 items-center justify-center rounded-md border">
                         <Sparkles size={14} />
                       </div>
-                      <span className="text-xs font-medium text-zinc-300">Real-time Platform Updates</span>
+                      <span className="vbiz-description text-xs font-medium">Real-time Platform Updates</span>
                     </div>
                   </div>
 
@@ -136,7 +134,7 @@ export function NotificationFollowModal({
                       type="button"
                       onClick={() => void handleSubscribe()}
                       disabled={submitting}
-                      className="group flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 text-sm font-bold text-zinc-950 shadow-sm transition-all hover:bg-white active:scale-[0.98] disabled:opacity-60"
+                      className="vbiz-modal-btn-primary group flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-bold shadow-sm transition-all active:scale-[0.98] disabled:opacity-60"
                     >
                       {submitting ? 'Enabling…' : 'Enable Notifications'}
                       <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -144,13 +142,13 @@ export function NotificationFollowModal({
                     <button
                       type="button"
                       onClick={handleDecline}
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 text-sm font-bold text-zinc-400 transition-all hover:bg-zinc-800 hover:text-zinc-200"
+                      className="vbiz-modal-btn-secondary w-full rounded-full py-3 text-sm font-bold transition-all"
                     >
                       Not Now
                     </button>
                   </div>
 
-                  <p className="mt-5 text-center text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
+                  <p className="vbiz-pin mt-5 text-center text-[10px] font-semibold tracking-wider uppercase opacity-80">
                     One-click opt in • No app required
                   </p>
                 </>
@@ -163,8 +161,8 @@ export function NotificationFollowModal({
                   >
                     <Check size={36} strokeWidth={3} />
                   </motion.div>
-                  <h3 className="mb-2 text-xl font-bold text-zinc-100">You&apos;re All Set!</h3>
-                  <p className="text-sm font-medium text-zinc-400">
+                  <h3 className="vbiz-title mb-2 text-xl font-bold">You&apos;re All Set!</h3>
+                  <p className="vbiz-description text-sm font-medium">
                     We&apos;ll notify you the moment an update is published.
                   </p>
                 </div>

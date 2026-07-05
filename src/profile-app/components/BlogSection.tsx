@@ -3,19 +3,27 @@
 import { BlogPostDetail } from '@/profile-app/components/BlogPostDetail'
 import { DynamicPostsSection } from '@/profile-app/components/DynamicPostsSection'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { useGetBlogQuery } from '@/redux/api'
+import { useGetDynamicSectionQuery } from '@/redux/api'
 import { useState } from 'react'
 
-export const BlogSection = () => {
+type BlogSectionProps = {
+  sectionName?: string
+}
+
+export const BlogSection = ({ sectionName = 'blog' }: BlogSectionProps) => {
   const { cardOwnerId } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
+  const resolvedSectionName = sectionName.trim() || 'blog'
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
 
-  const { data, isLoading, isError } = useGetBlogQuery(profileId, { skip: !profileId })
+  const { data, isLoading, isError } = useGetDynamicSectionQuery(
+    { profileId, sectionName: resolvedSectionName },
+    { skip: !profileId || !resolvedSectionName }
+  )
 
   if (!profileId) return null
 
-  const sectionTitle = data?.sectionTitle ?? 'Blog'
+  const sectionTitle = data?.sectionTitle ?? resolvedSectionName
   const selectedPost = data?.posts.find((post) => post.id === selectedPostId)
 
   if (selectedPost) {

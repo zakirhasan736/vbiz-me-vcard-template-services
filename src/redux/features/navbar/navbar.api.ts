@@ -10,8 +10,8 @@ function assertNavBarLinksResponse(response: NavBarLinksResponse): NavBarLinksDa
 
 export const navBarLinksApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getNavBarLinks: builder.query<NavBarLinksData, void>({
-      query: () => '/post-types',
+    getNavBarLinks: builder.query<NavBarLinksData, string>({
+      query: (profileId) => `/post-types?profile_id=${encodeURIComponent(profileId.trim())}`,
       transformResponse: assertNavBarLinksResponse,
       providesTags: ['NavBarLinks'],
     }),

@@ -1,10 +1,13 @@
 import type { NavBarLinksData, NavBarLinksResponse } from '@/interfaces/navbarLinks.interface'
 import { getApiBaseUrl, SERVER_FETCH_REVALIDATE_SECONDS } from '@/lib/api/serverApi'
 
-/** Fetches navbar catalog from `GET /post-types` (server-only, ISR-cached). */
-export async function fetchNavBarLinks(): Promise<NavBarLinksData | null> {
+/** Fetches profile nav catalog from `GET /post-types?profile_id=` (server-only, ISR-cached). */
+export async function fetchNavBarLinks(profileId: string | number): Promise<NavBarLinksData | null> {
+  const id = String(profileId).trim()
+  if (!id) return null
+
   try {
-    const response = await fetch(`${getApiBaseUrl()}/post-types`, {
+    const response = await fetch(`${getApiBaseUrl()}/post-types?profile_id=${encodeURIComponent(id)}`, {
       headers: { Accept: 'application/json' },
       next: { revalidate: SERVER_FETCH_REVALIDATE_SECONDS },
     })

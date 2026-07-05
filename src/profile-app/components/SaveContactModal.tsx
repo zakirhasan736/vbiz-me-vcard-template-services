@@ -91,17 +91,12 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
   const contactOwnerLabel = trimmedOwnerName || 'this contact'
 
   return (
-    <ProfileModalShell
-      isOpen={isOpen}
-      onClose={onClose}
-      backdropClassName="fixed inset-0 z-100 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      panelClassName="relative w-full overflow-hidden rounded-t-3xl border border-zinc-800 bg-zinc-950 shadow-xl sm:max-w-sm sm:rounded-3xl"
-    >
+    <ProfileModalShell isOpen={isOpen} onClose={onClose} panelClassName="sm:max-w-sm">
       <div className="relative z-10 p-6">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-full border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500 transition-all hover:bg-zinc-800 hover:text-zinc-300 focus:outline-none"
+          className="vbiz-modal-close absolute top-4 right-4 rounded-full border p-1.5 transition-all focus:outline-none"
           aria-label="Close download contact dialog"
         >
           <X size={16} />
@@ -110,8 +105,8 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
         {!showSuccess ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="mb-1 pr-8">
-              <h3 className="text-xl font-bold tracking-tight text-zinc-100">Download Contact Info</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              <h3 className="vbiz-title text-xl font-bold tracking-tight">Download Contact Info</h3>
+              <p className="vbiz-description mt-2 text-sm leading-relaxed">
                 You&apos;re about to receive {contactOwnerLabel}&apos;s contact file. First, tell us who you are — your
                 first name, last name, and email — so we know who&apos;s saving this contact.
               </p>
@@ -124,7 +119,7 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
               required
               disabled={submitting}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-700 focus:outline-none disabled:opacity-60"
+              className="vbiz-modal-input w-full rounded-xl border p-3 text-sm focus:outline-none disabled:opacity-60"
             />
             <input
               type="text"
@@ -134,7 +129,7 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
               required
               disabled={submitting}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-700 focus:outline-none disabled:opacity-60"
+              className="vbiz-modal-input w-full rounded-xl border p-3 text-sm focus:outline-none disabled:opacity-60"
             />
             <input
               type="email"
@@ -144,7 +139,7 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               disabled={submitting}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-700 focus:outline-none disabled:opacity-60"
+              className="vbiz-modal-input w-full rounded-xl border p-3 text-sm focus:outline-none disabled:opacity-60"
             />
             {submitError ? (
               <p className="text-center text-xs text-red-400" role="alert">
@@ -154,7 +149,7 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-xl bg-zinc-100 py-3 text-sm font-bold text-zinc-950 shadow-sm transition-all hover:bg-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              className="vbiz-modal-btn-primary w-full rounded-full py-3 text-sm font-bold shadow-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? 'Preparing download…' : 'Download Contact File'}
             </button>
@@ -168,8 +163,8 @@ export const SaveContactModal = ({ isOpen, onClose, onSuccess, profileId, ownerN
             >
               <Check size={36} strokeWidth={3} />
             </motion.div>
-            <h3 className="mb-2 text-xl font-bold text-zinc-100">Contact file ready!</h3>
-            <p className="text-sm text-zinc-400">{contactOwnerLabel}&apos;s contact info is downloading now.</p>
+            <h3 className="vbiz-title mb-2 text-xl font-bold">Contact file ready!</h3>
+            <p className="vbiz-description text-sm">{contactOwnerLabel}&apos;s contact info is downloading now.</p>
           </div>
         )}
       </div>

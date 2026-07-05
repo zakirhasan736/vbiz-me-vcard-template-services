@@ -38,8 +38,9 @@ export function v3DesignToCssVars(design: ResolvedProfileDesign): CSSProperties 
 
 /** Runtime overrides for hardcoded hex / yellow / amber utilities used across v3 components. */
 export function buildV3ThemeCss(design: ResolvedProfileDesign): string {
-  const accent = design.accentColor
-  const dark = accentDark(accent)
+  // Prefer live theme tokens (light/dark from CardThemeStyles); design colors are fallbacks only.
+  const accent = `var(--vbiz-accent, ${design.accentColor})`
+  const dark = `var(--vbiz-accent-dark, ${accentDark(design.accentColor)})`
   const scope = '.vbiz-profile-v3'
 
   const gradientStops = `

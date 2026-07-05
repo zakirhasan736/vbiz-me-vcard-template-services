@@ -1,8 +1,10 @@
 'use client'
 
+import { useProfileNavScroll } from '@/profile-app/hooks/useProfileNavScroll'
+import { cn } from '@/utils/cn'
 import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 interface Tab {
   id: string
@@ -15,97 +17,63 @@ interface NavigationProps {
   activeTab: string
   setActiveTab: (id: string) => void
   theme?: string
+  /** Persist horizontal scroll position per profile slug. */
+  slugForPersistence?: string
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActiveTab, theme }) => {
+export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActiveTab, slugForPersistence }) => {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
+  const [isOverflowing, setIsOverflowing] = useState(false)
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const isDragging = useRef(false)
-  const startX = useRef(0)
-  const scrollLeft = useRef(0)
-  const [dragged, setDragged] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
+  const { scrollRef, scrollClassName, canScrollLeft, canScrollRight, scrollToEdge, scrollTabIntoView, didDragRef } =
+    useProfileNavScroll(slugForPersistence, 'v3', activeTab, 'tab-btn')
 
-  // Scroll visibility states
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-
-  const checkScrollLimits = () => {
-    if (!containerRef.current) return
-    const { scrollLeft, scrollWidth, clientWidth } = containerRef.current
-    setCanScrollLeft(scrollLeft > 4)
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4)
-  }
+  const checkOverflow = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setIsOverflowing(el.scrollWidth > el.clientWidth + 2)
+  }, [scrollRef])
 
   useEffect(() => {
-    const el = containerRef.current
-    if (el) {
-      checkScrollLimits()
-      el.addEventListener('scroll', checkScrollLimits)
-      window.addEventListener('resize', checkScrollLimits)
-    }
-    // Set up initial check after a brief layout render
-    const timer = setTimeout(checkScrollLimits, 250)
+    const el = scrollRef.current
+    if (!el) return
+
+    checkOverflow()
+    el.addEventListener('scroll', checkOverflow)
+    window.addEventListener('resize', checkOverflow)
+    const timer = window.setTimeout(checkOverflow, 250)
+
     return () => {
-      if (el) {
-        el.removeEventListener('scroll', checkScrollLimits)
-      }
-      window.removeEventListener('resize', checkScrollLimits)
-      clearTimeout(timer)
+      el.removeEventListener('scroll', checkOverflow)
+      window.removeEventListener('resize', checkOverflow)
+      window.clearTimeout(timer)
     }
-  }, [tabs, activeTab])
+  }, [tabs, activeTab, checkOverflow, scrollRef])
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    if (!containerRef.current) return
-    isDragging.current = true
-    setIsPressed(true)
-    startX.current = e.pageX - containerRef.current.offsetLeft
-    scrollLeft.current = containerRef.current.scrollLeft
-    setDragged(false)
-  }
+  const handleTabClick = (tabId: string) => {
+    if (didDragRef.current) return
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current || !containerRef.current) return
-    e.preventDefault()
-    const x = e.pageX - containerRef.current.offsetLeft
-    const walk = (x - startX.current) * 1.5 // Speed multiplier
-    if (Math.abs(walk) > 5) {
-      setDragged(true)
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(10)
     }
-    containerRef.current.scrollLeft = scrollLeft.current - walk
-  }
 
-  const onMouseUpOrLeave = () => {
-    isDragging.current = false
-    setIsPressed(false)
-  }
-
-  const handleScrollClick = (direction: 'left' | 'right') => {
-    if (!containerRef.current) return
-    const { scrollWidth, clientWidth } = containerRef.current
-    containerRef.current.scrollTo({
-      left: direction === 'left' ? 0 : scrollWidth - clientWidth,
-      behavior: 'smooth',
-    })
+    setActiveTab(tabId)
+    scrollTabIntoView(tabId, 'tab-btn')
   }
 
   return (
-    <div className="relative flex w-full items-center justify-center">
-      {/* Left Chevron Indicator for Mobile */}
+    <div className="relative flex w-full min-w-0 items-center">
       <AnimatePresence>
         {canScrollLeft && (
           <motion.button
+            type="button"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => handleScrollClick('left')}
-            className={`absolute left-0 z-30 flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-90 ${
-              theme === 'dark'
-                ? 'border-gold/30 text-gold bg-zinc-950/90'
-                : 'border-zinc-200 bg-white/95 text-zinc-900 shadow-sm'
-            }`}
+            onClick={() => scrollToEdge('left')}
+            className="vbiz-nav-scroll-btn absolute left-0 z-30 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all active:scale-90"
             title="Scroll left"
+            aria-label="Scroll navigation left"
           >
             <ChevronLeft size={14} strokeWidth={2.5} />
           </motion.button>
@@ -113,15 +81,15 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
       </AnimatePresence>
 
       <div
-        ref={containerRef}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUpOrLeave}
-        onMouseLeave={onMouseUpOrLeave}
-        className={`no-scrollbar flex w-full touch-pan-x items-center gap-3 overflow-x-auto scroll-smooth px-6 py-0.5 select-none md:w-auto md:gap-3.5 md:px-2 ${
-          isPressed ? 'scale-[0.995] cursor-grabbing' : 'cursor-grab'
-        } transition-all duration-150`}
-        style={{ scrollbarWidth: 'none' }}
+        ref={scrollRef}
+        role="tablist"
+        aria-label="Profile navigation"
+        aria-orientation="horizontal"
+        className={cn(
+          'vbiz-floating-nav-scroll mask-edges gap-3 px-6 py-0.5 md:gap-3.5 md:px-2',
+          isOverflowing ? 'justify-start' : 'justify-center',
+          scrollClassName
+        )}
       >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
@@ -131,93 +99,64 @@ export const Navigation: React.FC<NavigationProps> = ({ tabs, activeTab, setActi
             <motion.button
               layout="position"
               key={tab.id}
-              onClick={() => {
-                if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                  navigator.vibrate(10)
-                }
-                if (!dragged) {
-                  setActiveTab(tab.id)
-                  // Scroll selected element into view smoothly on mobile
-                  if (containerRef.current) {
-                    const buttonEl = document.getElementById(`tab-btn-${tab.id}`)
-                    if (buttonEl) {
-                      buttonEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-                    }
-                  }
-                }
-              }}
+              type="button"
+              role="tab"
+              onClick={() => handleTabClick(tab.id)}
               id={`tab-btn-${tab.id}`}
+              aria-current={isActive ? 'page' : undefined}
+              aria-selected={isActive}
+              data-active={isActive ? 'true' : 'false'}
               onMouseEnter={() => setHoveredTab(tab.id)}
               onMouseLeave={() => setHoveredTab(null)}
-              className="focus-visible:ring-gold/60 relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-12 md:w-12 md:rounded-[14px]"
+              className="vbiz-nav-tab focus-visible:ring-gold/60 relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] transition-all duration-300 outline-none focus-visible:ring-1 active:scale-95 md:h-12 md:w-12 md:rounded-[14px]"
               title={tab.label}
+              aria-label={tab.label}
             >
-              {/* Hover highlight with animated layout transition */}
               {isHovered && !isActive && (
                 <motion.div
                   layoutId="hoverIndicator"
-                  className={`absolute inset-0 rounded-[12px] border md:rounded-[14px] ${
-                    theme === 'dark'
-                      ? 'bg-ocean-light/30 border-gold/20 shadow-[0_2px_10px_rgba(22,54,95,0.2)]'
-                      : 'bg-gold/10 border-gold/20 shadow-[0_2px_10px_rgba(238,214,119,0.1)]'
-                  }`}
+                  className="vbiz-nav-tab-hover-bg absolute inset-0 rounded-[12px] border md:rounded-[14px]"
                   transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                 />
               )}
 
-              {/* Active selection with sliding spring transition, rounded cover, and custom colors */}
               {isActive && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className={`absolute inset-0 rounded-[12px] border shadow-sm md:rounded-[14px] ${
-                    theme === 'dark'
-                      ? 'bg-ocean-dark border-gold/80 shadow-ocean-dark/40'
-                      : 'bg-gold/10 border-gold shadow-gold/5'
-                  }`}
+                  className="vbiz-nav-tab-active-bg absolute inset-0 rounded-[12px] border shadow-sm md:rounded-[14px]"
                   transition={{ type: 'spring', stiffness: 350, damping: 26 }}
                 />
               )}
 
-              {/* Icon & Label Container */}
               <div className="relative z-10 flex items-center justify-center">
                 <tab.icon
                   size={20}
-                  className={`h-5 w-5 md:h-5 md:w-5 ${
-                    isActive
-                      ? theme === 'dark'
-                        ? 'text-gold'
-                        : 'font-extrabold text-zinc-950'
-                      : 'dark:hover:text-gold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400'
-                  } transition-colors duration-200`}
+                  className="vbiz-nav-tab-icon h-5 w-5 transition-colors duration-200 md:h-5 md:w-5"
                   strokeWidth={isActive ? 2.5 : 2}
                   fill={isActive ? 'currentColor' : 'none'}
                   fillOpacity={isActive ? 0.25 : 0}
                 />
               </div>
 
-              {/* Mobile Active Bottom Golden Dot */}
               {isActive && (
-                <span className="bg-gold absolute bottom-[2px] left-1/2 z-10 h-1.5 w-1.5 -translate-x-1/2 animate-pulse rounded-full md:hidden" />
+                <span className="vbiz-nav-tab-dot absolute bottom-[2px] left-1/2 z-10 h-1.5 w-1.5 -translate-x-1/2 animate-pulse rounded-full md:hidden" />
               )}
             </motion.button>
           )
         })}
       </div>
 
-      {/* Right Chevron Indicator for Mobile */}
       <AnimatePresence>
         {canScrollRight && (
           <motion.button
+            type="button"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => handleScrollClick('right')}
-            className={`absolute right-0 z-30 flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-90 ${
-              theme === 'dark'
-                ? 'border-gold/30 text-gold bg-zinc-950/90'
-                : 'border-zinc-200 bg-white/95 text-zinc-900 shadow-sm'
-            }`}
+            onClick={() => scrollToEdge('right')}
+            className="vbiz-nav-scroll-btn absolute right-0 z-30 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all active:scale-90"
             title="Scroll right"
+            aria-label="Scroll navigation right"
           >
             <ChevronRight size={14} strokeWidth={2.5} />
           </motion.button>

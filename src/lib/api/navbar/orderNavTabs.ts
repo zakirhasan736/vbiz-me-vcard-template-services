@@ -2,7 +2,7 @@ import type { NavBarNavItem } from '@/lib/vcardNavbar'
 
 /**
  * Default profile nav order when tabs have published data.
- * API `/post-types` may return items in any order — we sort to this list.
+ * API `/post-types?profile_id=` may return items in any order — we sort to this list.
  * Tabs not listed here keep their relative API order at the end.
  */
 export const CANONICAL_NAV_TAB_ORDER = [
@@ -14,6 +14,8 @@ export const CANONICAL_NAV_TAB_ORDER = [
   'explainer',
   'reviews',
   'certificates',
+  'licensing',
+  'insurance-license',
   'bbb',
   'dcp',
   'faq',
@@ -29,6 +31,7 @@ export const CANONICAL_NAV_TAB_ORDER = [
   'join-team',
   'public-cards',
   'education',
+  'work',
 ] as const
 
 const NAV_ORDER_INDEX: Record<string, number> = Object.fromEntries(

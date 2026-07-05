@@ -3,7 +3,7 @@
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { useGetInsuranceLicenseQuery } from '@/redux/api'
+import { useGetDynamicSectionQuery } from '@/redux/api'
 import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -111,15 +111,24 @@ function InsuranceLicenseCard({ item, idx, accent }: { item: DynamicPostListItem
   )
 }
 
-export const InsuranceLicenseSection = () => {
+type InsuranceLicenseSectionProps = {
+  /** Exact nav/post-type `name` from `/post-types` (e.g. "Insurance License"). */
+  sectionName?: string
+}
+
+export const InsuranceLicenseSection = ({ sectionName = 'Insurance License' }: InsuranceLicenseSectionProps) => {
   const { cardOwnerId, design } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
+  const resolvedSectionName = sectionName.trim() || 'Insurance License'
   const template = design?.profileTemplate === 'v1' ? 'v1' : 'v2'
   const accent = design?.accentColor ?? (template === 'v1' ? '#dcc969' : '#eab308')
 
-  const { data, isLoading, isError } = useGetInsuranceLicenseQuery(profileId, { skip: !profileId })
+  const { data, isLoading, isError } = useGetDynamicSectionQuery(
+    { profileId, sectionName: resolvedSectionName },
+    { skip: !profileId || !resolvedSectionName }
+  )
 
-  const sectionTitle = data?.sectionTitle ?? 'Insurance License'
+  const sectionTitle = data?.sectionTitle ?? resolvedSectionName
   const items = data?.posts ?? []
   const showInitialLoader = isLoading && items.length === 0
   const showEmptyState = !isLoading && !isError && items.length === 0

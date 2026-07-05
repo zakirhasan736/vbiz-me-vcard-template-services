@@ -60,6 +60,8 @@ type RenderSectionOptions = {
   contentKey: ProfileNavContentKey
   tabId: string
   title: string
+  /** Exact `/post-types` nav `name` for `GET /dynamic-section/{name}?profile_id=`. */
+  sectionName?: string
   template: ProfileTemplateVariant
   homeHeroProps?: HomeHeroProps
 }
@@ -69,6 +71,7 @@ export function renderProfileSection({
   contentKey,
   tabId,
   title,
+  sectionName,
   template,
   homeHeroProps,
 }: RenderSectionOptions): ReactNode {
@@ -97,7 +100,7 @@ export function renderProfileSection({
     case 'additional':
       return <AdditionalServicesSection key={tabId} />
     case 'blog':
-      return <BlogSection key={tabId} />
+      return <BlogSection key={tabId} sectionName={sectionName} />
     case 'post':
       return <PostsSection key={tabId} />
     case 'gallery':
@@ -105,7 +108,7 @@ export function renderProfileSection({
     case 'videos':
       return <VideosSection key={tabId} />
     case 'video-links':
-      return <VideoLinksSection key={tabId} />
+      return <VideoLinksSection key={tabId} sectionName={sectionName} />
     case 'why-choose-us':
       return <WhyChooseUsSection key={tabId} />
     case 'explainer':
@@ -115,15 +118,15 @@ export function renderProfileSection({
     case 'certificates':
       return <CertificationsLicensingSection key={tabId} />
     case 'education':
-      return <EducationSection key={tabId} />
+      return <EducationSection key={tabId} sectionName={sectionName} />
     case 'work':
-      return <ExperienceSection key={tabId} />
+      return <ExperienceSection key={tabId} sectionName={sectionName} />
     case 'public-cards':
       return <PublicCardsSection key={tabId} />
     case 'clients':
       return <ClientsSection key={tabId} />
     case 'meet-team':
-      return <MeetOurTeamSection key={tabId} />
+      return <MeetOurTeamSection key={tabId} sectionName={sectionName} />
     case 'join-my-team':
       return <JoinMyTeamSection key={tabId} />
     case 'calendar':
@@ -135,11 +138,11 @@ export function renderProfileSection({
     case 'menu':
       return <MenuSection key={tabId} />
     case 'sales-person':
-      return <SalesPersonSection key={tabId} />
+      return <SalesPersonSection key={tabId} sectionName={sectionName} />
     case 'see-products':
       return <SeeProductsSection key={tabId} />
     case 'faq':
-      return <FAQSection key={tabId} />
+      return <FAQSection key={tabId} sectionName={sectionName} />
     case 'bbb':
       return <BbbAccreditationSection key={tabId} />
     case 'dcp':
@@ -163,9 +166,9 @@ export function renderProfileSection({
     case 'inventory':
       return <InventorySection key={tabId} />
     case 'licensing':
-      return <LicensingSection key={tabId} />
+      return <LicensingSection key={tabId} sectionName={sectionName} />
     case 'insurance-license':
-      return <InsuranceLicenseSection key={tabId} />
+      return <InsuranceLicenseSection key={tabId} sectionName={sectionName} />
     case 'empty':
     default:
       return <EmptyNavSection key={tabId} title={title} />

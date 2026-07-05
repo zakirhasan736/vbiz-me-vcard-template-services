@@ -1,4 +1,6 @@
 import { getStaticProfileTheme } from '@/lib/staticProfileThemes'
+import type { CardThemeConfig, ThemeMode } from '@/lib/theme/cardThemeContract'
+import { brandColorsFromThemeConfig } from '@/lib/theme/resolveCardTheme'
 import { resolveVCardAppearance } from '@/lib/vcardDesignDefaults'
 import type { DesignSettingsState, ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import type { VCardAppearance, VCardData, VCardRecord, VCardTheme } from '@/types/vcard'
@@ -55,23 +57,43 @@ export function buttonStyleClasses(buttonStyle: string): string {
   }
 }
 
-/** Merge account defaults with per-card appearance; colors always come from the static template palette. */
+type ResolveProfileDesignOptions = {
+  themeConfig?: CardThemeConfig | null
+  /** Which palette to read brand colors from (defaults to theme_config.defaultMode or dark). */
+  colorMode?: ThemeMode
+}
+
+/**
+ * Merge account defaults with per-card appearance.
+ * Colors: template static palette as fallback, then smart placement from `theme_config`
+ * (light/dark sets from `/profiles/{id}/settings`).
+ */
 export function resolveProfileDesign(
   designSettings: DesignSettingsState,
   _cardTheme?: Partial<VCardTheme> | null,
-  cardAppearance?: Partial<VCardAppearance> | null
+  cardAppearance?: Partial<VCardAppearance> | null,
+  options?: ResolveProfileDesignOptions
 ): ResolvedProfileDesign {
   const appearance = resolveVCardAppearance(designSettings, cardAppearance)
   const staticTheme = getStaticProfileTheme(appearance.profileTemplate)
+  const mode: ThemeMode =
+    options?.colorMode ??
+    options?.themeConfig?.colors.defaultMode ??
+    (staticTheme.darkMode === false ? 'light' : 'dark')
+
+  const brand = options?.themeConfig
+    ? brandColorsFromThemeConfig(options.themeConfig, mode)
+    : { primaryColor: staticTheme.primaryColor, accentColor: staticTheme.accentColor }
+
   return {
-    primaryColor: staticTheme.primaryColor,
-    accentColor: staticTheme.accentColor,
+    primaryColor: brand.primaryColor || staticTheme.primaryColor,
+    accentColor: brand.accentColor || staticTheme.accentColor,
     fontFamily: staticTheme.fontFamily || designSettings.fontFamily || 'inter',
     profileTemplate: appearance.profileTemplate,
     layoutStyle: appearance.layoutStyle,
     buttonStyle: appearance.buttonStyle,
     cornerStyle: appearance.cornerStyle,
-    darkMode: staticTheme.darkMode ?? true,
+    darkMode: mode === 'dark',
   }
 }
 

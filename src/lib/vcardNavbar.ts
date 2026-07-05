@@ -138,6 +138,11 @@ export type NavBarNavItem = {
   label: string
   /** Optional API title override for tooltips / aria labels. */
   displayLabel?: string
+  /**
+   * Exact section key from `/post-types` (`name` for post types / static links).
+   * Used as `GET /dynamic-section/{apiSectionName}?profile_id=`.
+   */
+  apiSectionName?: string
   icon: LucideIcon
   profileContent: ProfileNavContentKey
   editorPanel: EditorNavPanel

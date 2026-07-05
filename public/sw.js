@@ -6,13 +6,25 @@ const PUSH_TYPE_TO_CATEGORY = {
   video_update: 'video',
   blog_update: 'blog',
   services_update: 'services',
+  event_update: 'events',
+  event_updates: 'events',
+  announcement_update: 'announcements',
+  announcement_updates: 'announcements',
+  portfolio_update: 'video',
+  service_updates: 'services',
+  news: 'blog',
+  business_hours: 'company',
 }
 
 function slugFromUrl(url) {
   if (!url || typeof url !== 'string') return ''
-  const path = url.startsWith('http') ? new URL(url).pathname : url
-  const segment = path.replace(/^\/+|\/+$/g, '').split('/')[0]
-  return segment || ''
+  try {
+    const path = url.startsWith('http') ? new URL(url).pathname : url
+    const segment = path.replace(/^\/+|\/+$/g, '').split('/')[0]
+    return segment || ''
+  } catch {
+    return ''
+  }
 }
 
 function normalizePushPayload(raw) {
@@ -46,14 +58,21 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('push', (event) => {
-  if (!event.data) return
-
+  // userVisibleOnly subscriptions require a visible notification.
+  // Always show an OS notification so the user receives updates even when
+  // a tab is open, the toast fails, or the browser was in the background.
   let payload = normalizePushPayload({})
 
-  try {
-    payload = normalizePushPayload({ ...payload, ...event.data.json() })
-  } catch {
-    payload.body = event.data.text()
+  if (event.data) {
+    try {
+      payload = normalizePushPayload({ ...payload, ...event.data.json() })
+    } catch {
+      try {
+        payload.body = event.data.text() || payload.body
+      } catch {
+        /* keep defaults */
+      }
+    }
   }
 
   const richPayload = {
@@ -71,31 +90,35 @@ self.addEventListener('push', (event) => {
     type: payload.type,
   }
 
+  const icon = payload.avatarImageUrl || payload.avatarUrl || payload.icon || DEFAULT_ICON
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Tab open on this site → in-app toast only (no duplicate OS banner).
-      if (clientList.length > 0) {
-        for (const client of clientList) {
-          client.postMessage({
-            type: 'vbiz_push',
-            payload: richPayload,
-          })
-        }
-        return undefined
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const hasFocusedClient = clientList.some((client) => client.focused)
+
+      // In-app toast for any open tab on this origin.
+      for (const client of clientList) {
+        client.postMessage({
+          type: 'vbiz_push',
+          payload: richPayload,
+        })
       }
 
-      // No open tabs (vcard closed / browser was off) → OS notification.
-      // Delivered when the user next opens the browser if they were offline.
-      const icon = payload.avatarImageUrl || payload.avatarUrl || payload.icon
-      return self.registration.showNotification(payload.title, {
+      // Always show OS notification when no tab is focused (background / closed).
+      // When a tab is focused, toast handles UX; still show OS notification as
+      // a reliable fallback so enabled users never miss an update.
+      await self.registration.showNotification(payload.title, {
         body: payload.body,
         icon,
         badge: icon,
         data: richPayload,
         tag: payload.slug ? `vbiz-card-${payload.slug}` : 'vbiz-card-update',
         renotify: true,
+        requireInteraction: false,
+        silent: hasFocusedClient,
       })
-    })
+    })()
   )
 })
 
@@ -103,16 +126,34 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
   const rawUrl = event.notification.data?.url || '/'
-  const targetUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, self.location.origin).href
+  let targetUrl = '/'
+  try {
+    targetUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, self.location.origin).href
+  } catch {
+    targetUrl = self.location.origin + '/'
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        const clientPath = new URL(client.url).pathname
-        const targetPath = new URL(targetUrl).pathname
-
-        if (clientPath === targetPath) {
-          return client.focus()
+        try {
+          const clientUrl = new URL(client.url)
+          const target = new URL(targetUrl)
+          if (clientUrl.origin === target.origin) {
+            if ('focus' in client) {
+              return client.focus().then((focused) => {
+                if (focused && 'navigate' in focused) {
+                  return focused.navigate(targetUrl)
+                }
+                if (focused) {
+                  focused.postMessage({ type: 'vbiz_navigate', url: targetUrl })
+                }
+                return focused
+              })
+            }
+          }
+        } catch {
+          /* try next client */
         }
       }
 

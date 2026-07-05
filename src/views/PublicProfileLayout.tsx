@@ -2,10 +2,17 @@
 
 import { useAppSelector } from '@/hooks/redux'
 import type { NavBarLinksData } from '@/interfaces/navbarLinks.interface'
+import type { MappedProfileSettings } from '@/lib/api/profileSettings/mapProfileSettings'
 import { CardScopeProvider } from '@/lib/card-scope'
+import { resolveProfileDesign } from '@/lib/resolvedProfileDesign'
 import { ProfileApp } from '@/profile-app/ProfileApp'
+import { ProfileLoadingScreen } from '@/profile-app/components/ProfileLoadingScreen'
+import { ProfileThemeShell } from '@/profile-app/components/ProfileThemeShell'
+import { useResolvedProfileTheme } from '@/profile-app/hooks/useResolvedProfileTheme'
 import '@/profile-app/profile-app.css'
 import { vCardRecordToProfileProps } from '@/profile-app/profilePublicProps'
+import { ProfileThemeProvider } from '@/profile-app/providers/ProfileThemeProvider'
+import type { ProfileTemplateId } from '@/redux/features/designSettings/designSettings.slice'
 import { useProfile } from '@/redux/features/myCard'
 import type { MyCardData } from '@interfaces/api/myCard'
 import { useMemo } from 'react'
@@ -18,6 +25,8 @@ type Props = {
   initialMyCard?: MyCardData | null
   /** Server-prefetched navbar catalog. */
   initialNavBarLinks?: NavBarLinksData | null
+  /** Server-prefetched `GET /profiles/{id}/settings` (theme + appearance). */
+  initialProfileSettings?: MappedProfileSettings | null
   liveAgentCardData?: LiveAgentCardData
   liveAgentSystemPrompt?: string
 }
@@ -27,22 +36,56 @@ export default function PublicProfileLayout({
   slug,
   initialMyCard,
   initialNavBarLinks,
+  initialProfileSettings,
   liveAgentCardData,
   liveAgentSystemPrompt,
 }: Props) {
   const { record, isLoading, isError, error, actionButtons } = useProfile(slug, { initialMyCard })
   const designSettings = useAppSelector((s) => s.designSettings)
 
-  const profileProps = useMemo(
-    () => (record ? vCardRecordToProfileProps(record, designSettings, actionButtons) : null),
-    [record, designSettings, actionButtons]
-  )
+  const earlyTemplate: ProfileTemplateId =
+    (record?.appearance?.profileTemplate as ProfileTemplateId | undefined) ?? 'v3'
+
+  const earlyProfileId =
+    record?.id != null ? String(record.id) : initialMyCard?.profile?.id != null ? String(initialMyCard.profile.id) : ''
+
+  const {
+    themeConfig,
+    appearance: settingsAppearance,
+    fromApi,
+  } = useResolvedProfileTheme({
+    profileId: earlyProfileId,
+    template: earlyTemplate,
+    initialSettings: initialProfileSettings,
+    cardThemeConfig: record?.themeConfig ?? null,
+  })
+
+  const template: ProfileTemplateId = earlyTemplate
+
+  const profileProps = useMemo(() => {
+    if (!record) return null
+    const base = vCardRecordToProfileProps(record, designSettings, actionButtons)
+    const appearance = {
+      ...record.appearance,
+      ...settingsAppearance,
+    }
+    const design = resolveProfileDesign(designSettings, record.theme, appearance, {
+      themeConfig,
+    })
+
+    return {
+      ...base,
+      design,
+      themeConfig,
+      themeFromApi: fromApi,
+    }
+  }, [record, designSettings, actionButtons, settingsAppearance, themeConfig, fromApi])
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 text-sm font-medium text-zinc-500 dark:bg-[#09090b]">
-        Loading profile…
-      </div>
+      <ProfileThemeShell config={themeConfig} fromApi={fromApi} template={template}>
+        <ProfileLoadingScreen />
+      </ProfileThemeShell>
     )
   }
 
@@ -53,24 +96,30 @@ export default function PublicProfileLayout({
         : 'Profile not found'
 
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-6 text-center dark:bg-[#09090b]">
-        <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">vCard not found</p>
-        <p className="mt-2 max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          {message}. No public card matches <span className="font-mono text-zinc-900 dark:text-zinc-200">{slug}</span>.
-        </p>
-      </div>
+      <ProfileThemeShell config={themeConfig} fromApi={fromApi} template={template}>
+        <div className="vbiz-loading-screen flex min-h-screen flex-col items-center justify-center px-6 text-center">
+          <p className="vbiz-title text-lg font-bold">vCard not found</p>
+          <p className="vbiz-description mt-2 max-w-md text-sm">
+            {message}. No public card matches <span className="vbiz-title font-mono">{slug}</span>.
+          </p>
+        </div>
+      </ProfileThemeShell>
     )
   }
 
   return (
-    <CardScopeProvider cardId={record.id}>
-      <ProfileApp
-        {...profileProps}
-        profileSlug={slug}
-        initialNavBarLinks={initialNavBarLinks}
-        liveAgentCardData={liveAgentCardData}
-        liveAgentSystemPrompt={liveAgentSystemPrompt}
-      />
-    </CardScopeProvider>
+    <ProfileThemeShell config={themeConfig} fromApi={fromApi} template={template}>
+      <ProfileThemeProvider themeConfig={themeConfig} fromApi={fromApi}>
+        <CardScopeProvider cardId={record.id}>
+          <ProfileApp
+            {...profileProps}
+            profileSlug={slug}
+            initialNavBarLinks={initialNavBarLinks}
+            liveAgentCardData={liveAgentCardData}
+            liveAgentSystemPrompt={liveAgentSystemPrompt}
+          />
+        </CardScopeProvider>
+      </ProfileThemeProvider>
+    </ProfileThemeShell>
   )
 }

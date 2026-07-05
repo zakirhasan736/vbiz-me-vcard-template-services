@@ -1,7 +1,7 @@
 import type { DynamicPostListItem } from '@/interfaces/api/dynamicPosts.interface'
 import { stripHtml } from '@/lib/api/calendar/resolveCalendarItemUrl'
 import { useProfileDisplay } from '@/profile-app/lib/profileDisplayContext'
-import { useGetVideoLinksQuery } from '@/redux/api'
+import { useGetDynamicSectionQuery } from '@/redux/api'
 import { ArrowUpRight, PlayCircle, Video } from 'lucide-react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -82,15 +82,23 @@ function VideoLinksCard({ item, idx, accent }: { item: DynamicPostListItem; idx:
   )
 }
 
-export const VideoLinksSection = () => {
+type VideoLinksSectionProps = {
+  sectionName?: string
+}
+
+export const VideoLinksSection = ({ sectionName = 'Video Links' }: VideoLinksSectionProps) => {
   const { cardOwnerId, design } = useProfileDisplay()
   const profileId = cardOwnerId?.trim() ?? ''
+  const resolvedSectionName = sectionName.trim() || 'Video Links'
   const template = design?.profileTemplate === 'v1' ? 'v1' : 'v2'
   const accent = design?.accentColor ?? (template === 'v1' ? '#dcc969' : '#eab308')
 
-  const { data, isLoading, isError } = useGetVideoLinksQuery(profileId, { skip: !profileId })
+  const { data, isLoading, isError } = useGetDynamicSectionQuery(
+    { profileId, sectionName: resolvedSectionName },
+    { skip: !profileId || !resolvedSectionName }
+  )
 
-  const sectionTitle = data?.sectionTitle ?? 'Video Links'
+  const sectionTitle = data?.sectionTitle ?? resolvedSectionName
   const items = data?.posts ?? []
   const showInitialLoader = isLoading && items.length === 0
   const showEmptyState = !isLoading && !isError && items.length === 0

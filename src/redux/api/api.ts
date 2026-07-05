@@ -102,6 +102,11 @@ export const api = createApi({
     'Inventory',
     'Licensing',
     'InsuranceLicense',
+    'Resume',
+    'WorkExperience',
+    'DynamicSection',
+    'ProfileAiData',
+    'ProfileSettings',
   ],
   endpoints: () => ({}),
 })

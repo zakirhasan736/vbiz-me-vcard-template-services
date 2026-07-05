@@ -118,7 +118,7 @@ export function ProfileHeaderV2({
       return <Icon />
     }
     const Icon = item.icon as LucideIcon
-    return <Icon size={14} className="text-zinc-600 md:h-4 md:w-4 dark:text-zinc-400" />
+    return <Icon size={14} className="md:h-4 md:w-4" />
   }
 
   const nameStyle = headerTextColor
@@ -145,7 +145,7 @@ export function ProfileHeaderV2({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 transition-colors hover:bg-zinc-50 md:h-10 md:w-10 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                className="vbiz-social flex h-8 w-8 items-center justify-center rounded-full transition-colors md:h-10 md:w-10"
                 aria-label={social.label}
               >
                 {renderSocialIcon(social)}
@@ -211,7 +211,7 @@ export function ProfileHeaderV2({
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  className="vbiz-social flex h-10 w-10 items-center justify-center rounded-full transition-colors"
                   aria-label={social.label}
                 >
                   {itemIcon(social)}

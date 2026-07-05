@@ -1,5 +1,7 @@
 import { fetchMyCardBySlug } from '@/lib/api/myCard/fetchMyCardBySlug'
+import { resolveProfileTemplateFromMyCard } from '@/lib/api/myCard/resolveProfileTemplate'
 import { fetchNavBarLinks } from '@/lib/api/navbar/fetchNavBarLinks'
+import { resolveProfileSettingsTheme } from '@/lib/api/profileSettings/fetchProfileSettings'
 import { fallbackLiveAgentPrompt, resolveLiveAgentPromptFromProfileId } from '@/lib/liveAgent/resolveLiveAgentPrompt'
 import PublicProfileLayout from '@/views/PublicProfileLayout'
 import { notFound } from 'next/navigation'
@@ -22,10 +24,12 @@ export default async function PublicProfilePage({ params }: Props) {
   }
 
   const profileId = myCard.profile.id
+  const template = resolveProfileTemplateFromMyCard(myCard)
 
-  const [navBarLinks, liveAgent] = await Promise.all([
-    fetchNavBarLinks(),
+  const [navBarLinks, liveAgent, profileSettings] = await Promise.all([
+    fetchNavBarLinks(profileId),
     resolveLiveAgentPromptFromProfileId(profileId),
+    resolveProfileSettingsTheme(profileId, template),
   ])
 
   const agent = liveAgent ?? fallbackLiveAgentPrompt()
@@ -35,6 +39,7 @@ export default async function PublicProfilePage({ params }: Props) {
       slug={trimmed}
       initialMyCard={myCard}
       initialNavBarLinks={navBarLinks}
+      initialProfileSettings={profileSettings}
       liveAgentCardData={agent.cardData}
       liveAgentSystemPrompt={agent.systemPrompt}
     />

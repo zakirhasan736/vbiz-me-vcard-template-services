@@ -4,14 +4,14 @@ import { useHorizontalScroll } from '@/hooks/useHorizontalScroll'
 import { cn } from '@/utils/cn'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-function scrollStorageKey(slug: string, variant: 'v1' | 'v2'): string {
+function scrollStorageKey(slug: string, variant: 'v1' | 'v2' | 'v3'): string {
   return `profile-nav:${variant}:${slug.trim().toLowerCase()}`
 }
 
 /** Wheel-to-scroll, mouse drag with momentum, touch pan, persisted scrollLeft, edge arrows, tab scroll-into-view. */
 export function useProfileNavScroll(
   slug: string | undefined,
-  variant: 'v1' | 'v2',
+  variant: 'v1' | 'v2' | 'v3',
   activeTabId?: string,
   tabIdPrefix = 'tab-btn'
 ) {

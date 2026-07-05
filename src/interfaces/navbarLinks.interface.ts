@@ -14,6 +14,8 @@ export type PostTypeNavLink = {
   title: string
   status: string
   type_id: string
+  /** Optional URL slug from `/post-types?profile_id=` (e.g. "licensing"). */
+  slug?: string
 }
 
 export interface NavBarLinksData {

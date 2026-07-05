@@ -254,7 +254,8 @@ iframe.goog-te-banner-frame {
 }
 
 .vbiz-floating-nav-inner {
-  max-width: 100%;
+  width: 100%;
+  max-width: 1032px;
   min-width: 0;
   overflow: hidden;
 }

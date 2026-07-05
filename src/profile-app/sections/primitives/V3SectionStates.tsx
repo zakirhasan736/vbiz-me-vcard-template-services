@@ -23,22 +23,20 @@ type V3SectionHeaderProps = {
 export function V3SectionHeader({ badge, badgeIcon: Icon, title, subtitle, className = '' }: V3SectionHeaderProps) {
   return (
     <div
-      className={`group relative mb-4 w-full overflow-hidden rounded-4xl border border-zinc-200 bg-white/50 p-5 shadow-sm md:mb-4 md:rounded-[2.5rem] md:p-6 lg:p-8 dark:border-zinc-800/80 dark:bg-[#031327]/80 ${className}`}
+      className={`vbiz-section-banner group relative mb-4 w-full overflow-hidden rounded-4xl border p-5 shadow-sm md:mb-4 md:rounded-[2.5rem] md:p-6 lg:p-8 ${className}`}
     >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-zinc-100/50 to-transparent dark:from-zinc-800/20" />
       <div className="bg-gold/10 pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 rounded-full p-32 blur-3xl transition-transform duration-1000 group-hover:scale-110" />
 
       <div className="relative z-10">
-        <div className="bg-gold/10 border-gold/30 text-gold mb-2 inline-flex items-center gap-2 self-start rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md md:mb-3 md:text-xs">
-          <Icon size={14} className="text-gold" /> {badge}
+        <div className="vbiz-eyebrow mb-2 self-start shadow-sm backdrop-blur-md md:mb-3 md:text-xs">
+          <Icon size={14} /> {badge}
         </div>
-        <h2 className="mb-2 text-2xl leading-[1.15] font-black tracking-tight text-zinc-900 sm:text-4xl md:mb-2 lg:text-4xl dark:text-white">
+        <h2 className="vbiz-title mb-2 text-2xl leading-[1.15] font-black tracking-tight sm:text-4xl md:mb-2 lg:text-4xl">
           {title}
         </h2>
         {subtitle ? (
-          <p className="max-w-2xl text-sm leading-normal font-medium text-zinc-600 md:text-base dark:text-zinc-400">
-            {subtitle}
-          </p>
+          <p className="vbiz-description max-w-2xl text-sm leading-normal font-medium md:text-base">{subtitle}</p>
         ) : null}
       </div>
     </div>
@@ -54,12 +52,12 @@ type V3EmptyStateProps = {
 export function V3EmptyState({ icon: Icon, title, message }: V3EmptyStateProps) {
   return (
     <V3SectionShell>
-      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-4xl border border-dashed border-zinc-200 bg-white/40 p-10 text-center dark:border-zinc-800/80 dark:bg-[#031327]/40">
-        <div className="border-gold/30 bg-gold/10 text-gold mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border">
+      <div className="vbiz-card flex min-h-[320px] flex-col items-center justify-center rounded-4xl border border-dashed p-10 text-center">
+        <div className="vbiz-pill-icon mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border">
           <Icon size={24} />
         </div>
-        <h2 className="mb-3 text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">{title}</h2>
-        <p className="max-w-md text-sm leading-relaxed font-medium text-zinc-600 dark:text-zinc-400">{message}</p>
+        <h2 className="vbiz-title mb-3 text-2xl font-black tracking-tight">{title}</h2>
+        <p className="vbiz-description max-w-md text-sm leading-relaxed font-medium">{message}</p>
       </div>
     </V3SectionShell>
   )
