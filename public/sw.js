@@ -52,7 +52,9 @@ function isBadDefaultIcon(url) {
 }
 
 function isStaticImageUrl(url) {
-  const value = String(url || '').trim().toLowerCase()
+  const value = String(url || '')
+    .trim()
+    .toLowerCase()
   if (!value || isBadDefaultIcon(value)) return false
   if (value.endsWith('.mp4') || value.endsWith('.webm') || value.includes('/video')) return false
   return true

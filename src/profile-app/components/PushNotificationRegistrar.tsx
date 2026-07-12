@@ -1,7 +1,7 @@
 'use client'
 
-import { isPushSupported, registerServiceWorker } from '@/lib/push/config'
 import { enrichPushPayloadWithCardMedia, readCardPushMediaSync } from '@/lib/push/cardPushMediaCache'
+import { isPushSupported, registerServiceWorker } from '@/lib/push/config'
 import type { PlatformUpdateDetail } from '@/lib/push/types'
 import { useEffect } from 'react'
 

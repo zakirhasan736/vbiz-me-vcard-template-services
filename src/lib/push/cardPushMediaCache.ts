@@ -53,7 +53,11 @@ function normalizeMedia(input: Omit<CardPushMedia, 'updatedAt'> & { updatedAt?: 
   const avatarUrl = input.avatarUrl?.trim() || ''
   const avatarVideoUrl = input.avatarVideoUrl?.trim() || ''
   const iconCandidate = (input.icon || avatarImageUrl || avatarUrl).trim()
-  const icon = isUsableStaticIcon(iconCandidate) ? iconCandidate : isUsableStaticIcon(avatarImageUrl) ? avatarImageUrl : ''
+  const icon = isUsableStaticIcon(iconCandidate)
+    ? iconCandidate
+    : isUsableStaticIcon(avatarImageUrl)
+      ? avatarImageUrl
+      : ''
 
   if (!icon && !avatarVideoUrl) return null
 
@@ -121,14 +125,9 @@ export async function writeCardPushMedia(input: Omit<CardPushMedia, 'updatedAt'>
 }
 
 /** Merge cached card media into a push / toast payload when avatar fields are missing. */
-export function enrichPushPayloadWithCardMedia<T extends Record<string, unknown>>(
-  payload: T,
-  slug?: string | null
-): T {
+export function enrichPushPayloadWithCardMedia<T extends Record<string, unknown>>(payload: T, slug?: string | null): T {
   const resolvedSlug =
-    (typeof slug === 'string' && slug.trim()) ||
-    (typeof payload.slug === 'string' && payload.slug.trim()) ||
-    ''
+    (typeof slug === 'string' && slug.trim()) || (typeof payload.slug === 'string' && payload.slug.trim()) || ''
 
   const cached = readCardPushMediaSync(resolvedSlug || null)
   if (!cached) return payload
@@ -142,16 +141,14 @@ export function enrichPushPayloadWithCardMedia<T extends Record<string, unknown>
     return {
       ...payload,
       slug: resolvedSlug || cached.slug,
-      businessName:
-        (typeof payload.businessName === 'string' && payload.businessName.trim()) || cached.businessName,
+      businessName: (typeof payload.businessName === 'string' && payload.businessName.trim()) || cached.businessName,
     }
   }
 
   return {
     ...payload,
     slug: resolvedSlug || cached.slug,
-    businessName:
-      (typeof payload.businessName === 'string' && payload.businessName.trim()) || cached.businessName,
+    businessName: (typeof payload.businessName === 'string' && payload.businessName.trim()) || cached.businessName,
     avatarImageUrl: cached.avatarImageUrl || cached.icon,
     avatarUrl: cached.avatarUrl || cached.icon,
     avatarVideoUrl:
