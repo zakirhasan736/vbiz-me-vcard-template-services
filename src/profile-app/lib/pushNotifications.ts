@@ -55,7 +55,7 @@ export function getNotificationPermission(): NotificationPermission | 'unsupport
 }
 
 export function followStorageKey(cardSlug: string) {
-  return `vbiz_push_follow_${cardSlug}`
+  return `vbiz_push_follow_${cardSlug.trim().toLowerCase()}`
 }
 
 export function subscriptionStorageKey() {
@@ -64,28 +64,50 @@ export function subscriptionStorageKey() {
 
 export function readFollowState(cardSlug: string) {
   if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem(followStorageKey(cardSlug))
-  if (!raw) return null
-  try {
-    return JSON.parse(raw) as {
-      following: boolean
-      preferences: NotificationPreferences
-      subscribedAt?: string
+  const trimmed = cardSlug.trim()
+  if (!trimmed) return null
+
+  const normalizedKey = followStorageKey(trimmed)
+  const candidates = [normalizedKey]
+  // Legacy key before slug lowercasing.
+  const legacyKey = `vbiz_push_follow_${trimmed}`
+  if (legacyKey !== normalizedKey) candidates.push(legacyKey)
+
+  for (const key of candidates) {
+    const raw = localStorage.getItem(key)
+    if (!raw) continue
+    try {
+      const parsed = JSON.parse(raw) as {
+        following: boolean
+        preferences: NotificationPreferences
+        subscribedAt?: string
+      }
+      if (key !== normalizedKey) {
+        localStorage.setItem(normalizedKey, raw)
+        localStorage.removeItem(key)
+      }
+      return parsed
+    } catch {
+      /* try next */
     }
-  } catch {
-    return null
   }
+  return null
 }
 
 export function writeFollowState(
   cardSlug: string,
   state: { following: boolean; preferences: NotificationPreferences; subscribedAt?: string }
 ) {
-  localStorage.setItem(followStorageKey(cardSlug), JSON.stringify(state))
+  const trimmed = cardSlug.trim()
+  if (!trimmed) return
+  localStorage.setItem(followStorageKey(trimmed), JSON.stringify(state))
 }
 
 export function clearFollowState(cardSlug: string) {
-  localStorage.removeItem(followStorageKey(cardSlug))
+  const trimmed = cardSlug.trim()
+  if (!trimmed) return
+  localStorage.removeItem(followStorageKey(trimmed))
+  localStorage.removeItem(`vbiz_push_follow_${trimmed}`)
 }
 
 export function readStoredSubscription(): PushSubscriptionPayload | null {

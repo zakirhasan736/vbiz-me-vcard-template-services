@@ -4,11 +4,18 @@ function declineKey(cardSlug: string) {
   return `${DECLINE_PREFIX}${cardSlug.trim().toLowerCase()}`
 }
 
-/** User tapped "Not Now" on the follow prompt for this profile (session only). */
+/** User tapped "Not Now" on the follow prompt for this profile (persists across tabs). */
 export function hasDeclinedNotificationPrompt(cardSlug: string): boolean {
   if (typeof window === 'undefined' || !cardSlug.trim()) return false
   try {
-    return sessionStorage.getItem(declineKey(cardSlug)) === '1'
+    if (localStorage.getItem(declineKey(cardSlug)) === '1') return true
+    // Migrate legacy session-only decline.
+    if (sessionStorage.getItem(declineKey(cardSlug)) === '1') {
+      localStorage.setItem(declineKey(cardSlug), '1')
+      sessionStorage.removeItem(declineKey(cardSlug))
+      return true
+    }
+    return false
   } catch {
     return false
   }
@@ -17,7 +24,8 @@ export function hasDeclinedNotificationPrompt(cardSlug: string): boolean {
 export function markNotificationDeclinedForCard(cardSlug: string) {
   if (!cardSlug.trim()) return
   try {
-    sessionStorage.setItem(declineKey(cardSlug), '1')
+    localStorage.setItem(declineKey(cardSlug), '1')
+    sessionStorage.removeItem(declineKey(cardSlug))
   } catch {
     /* private mode */
   }
@@ -26,6 +34,7 @@ export function markNotificationDeclinedForCard(cardSlug: string) {
 export function clearNotificationDeclinedForCard(cardSlug: string) {
   if (!cardSlug.trim()) return
   try {
+    localStorage.removeItem(declineKey(cardSlug))
     sessionStorage.removeItem(declineKey(cardSlug))
   } catch {
     /* ignore */

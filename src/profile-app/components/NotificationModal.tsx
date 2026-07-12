@@ -8,6 +8,7 @@ import {
 } from '@/lib/push/notificationExperience'
 import { shouldAutoShowNotificationPrompt } from '@/lib/push/notificationRouting'
 import { NotificationFollowModal } from '@/profile-app/components/NotificationFollowModal'
+import { readFollowState } from '@/profile-app/lib/pushNotifications'
 import { useCallback, useEffect, useState } from 'react'
 
 type NotificationModalProps = {
@@ -42,6 +43,12 @@ export function NotificationModal({
 
   useEffect(() => {
     if (!enabled || !experienceSettled || !cardSlug.trim()) return
+
+    // Fast path: already enabled for this card — never schedule the popup.
+    if (readFollowState(cardSlug)?.following) {
+      settle()
+      return
+    }
 
     let cancelled = false
     let timer: number | undefined
