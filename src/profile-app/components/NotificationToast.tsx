@@ -125,8 +125,16 @@ export const NotificationToast = () => {
   const accentColor = '#ebd675'
   const imageUrl = notification?.avatarImageUrl || notification?.avatarUrl
   const videoUrl = !imageUrl ? notification?.avatarVideoUrl : undefined
-  const title = notification?.title?.trim() || `${businessName} sent an update`
-  const message = notification?.message?.trim() || 'Tap to view the latest on this card.'
+  const title = notification?.title?.trim() || `${businessName} · Update`
+  const rawMessage = notification?.message?.trim() || ''
+  const displayLink =
+    (typeof notification?.displayLink === 'string' && notification.displayLink.trim()) ||
+    (notification?.slug ? `${window.location.host}/${notification.slug}` : '')
+  const message =
+    rawMessage ||
+    (displayLink
+      ? `${businessName} has a new update on their card.\nOpen card · ${displayLink}`
+      : 'Tap to view the latest on this card.')
   const targetUrl = notification?.url || (notification?.slug ? buildProfilePath(notification.slug) : '')
 
   const handleOpenTarget = useCallback(() => {
@@ -196,7 +204,7 @@ export const NotificationToast = () => {
                   {businessName}
                 </p>
                 <p className="mt-0.5 truncate text-sm font-semibold text-zinc-100">{title}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-zinc-400">{message}</p>
+                <p className="mt-0.5 line-clamp-3 text-xs leading-snug whitespace-pre-line text-zinc-400">{message}</p>
 
                 {isClickable ? (
                   <span

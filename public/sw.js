@@ -1,7 +1,9 @@
-const DEFAULT_ICON = ''
+const DEFAULT_ICON = '/favicon.ico'
 const CARD_PUSH_MEDIA_CACHE = 'vbiz-card-push-media-v1'
 const LAST_MEDIA_SLUG = '__last__'
 const CLIENT_MEDIA_TIMEOUT_MS = 900
+/** Friendly public host shown in notification text when running on localhost. */
+const PUBLIC_CARD_HOST = 'vbiz.me'
 
 const PUSH_TYPE_TO_CATEGORY = {
   profile_update: 'company',
@@ -17,6 +19,16 @@ const PUSH_TYPE_TO_CATEGORY = {
   service_updates: 'services',
   news: 'blog',
   business_hours: 'company',
+}
+
+const CATEGORY_ACTION = {
+  contact: 'updated their contact info',
+  video: 'added new photos or videos',
+  blog: 'published a new post',
+  services: 'updated their services',
+  company: 'updated their profile',
+  events: 'shared a new event',
+  announcements: 'posted an announcement',
 }
 
 function slugFromUrl(url) {
@@ -44,6 +56,11 @@ function toAbsoluteUrl(url) {
   } catch {
     return url
   }
+}
+
+function isLocalDevHost() {
+  const host = self.location.hostname
+  return host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0'
 }
 
 function isBadDefaultIcon(url) {
@@ -81,11 +98,11 @@ async function readCachedCardMedia(slug) {
 }
 
 function normalizePushPayload(raw) {
-  const url = raw.url || (raw.slug ? `/${raw.slug}` : '/')
-  const slug = firstNonEmpty(raw.slug, raw.profile_slug, raw.cardSlug, slugFromUrl(url))
+  const slug = firstNonEmpty(raw.slug, raw.profile_slug, raw.cardSlug, slugFromUrl(raw.url))
   const category = raw.category || PUSH_TYPE_TO_CATEGORY[raw.type] || 'company'
+  // Always open the card on this origin (works in local + production).
+  const url = raw.url || (slug ? `/${slug}` : '/')
 
-  // Company logo first, then avatar / profile image fields from the push payload.
   const avatarImageUrl = firstNonEmpty(
     raw.logo,
     raw.company_logo,
@@ -104,12 +121,12 @@ function normalizePushPayload(raw) {
   const icon = firstNonEmpty(avatarImageUrl, avatarUrl)
 
   return {
-    title: raw.title || 'vBiz Me Update',
-    body: raw.body || raw.message || 'A card you follow has been updated.',
+    title: firstNonEmpty(raw.title, raw.notification_title),
+    body: firstNonEmpty(raw.body, raw.message, raw.notification_body),
     url,
     slug,
     icon,
-    businessName: firstNonEmpty(raw.businessName, raw.business_name, raw.name, slug) || 'vBiz Me',
+    businessName: firstNonEmpty(raw.businessName, raw.business_name, raw.name, raw.owner_name, slug) || 'vBiz Me',
     avatarUrl,
     avatarImageUrl,
     avatarVideoUrl,
@@ -118,6 +135,39 @@ function normalizePushPayload(raw) {
     profileId: raw.profile_id ?? raw.profileId ?? null,
     type: raw.type || '',
   }
+}
+
+/** Build a clearer OS notification title/body (owner + what changed + card link). */
+function buildNotificationCopy(payload) {
+  const name = firstNonEmpty(payload.businessName, payload.slug, 'vBiz Me')
+  const action = CATEGORY_ACTION[payload.category] || 'has a new update'
+  const rawTitle = firstNonEmpty(payload.title)
+  const rawBody = firstNonEmpty(payload.body, payload.speakLine)
+
+  // Title: card owner first, then short update type from backend when useful.
+  let title = name
+  if (rawTitle) {
+    const titleLower = rawTitle.toLowerCase()
+    const nameLower = name.toLowerCase()
+    if (!titleLower.includes(nameLower)) {
+      title = `${name} · ${rawTitle}`
+    } else {
+      title = rawTitle
+    }
+  } else {
+    title = `${name} · Update`
+  }
+
+  // Body: what changed, then a friendly card link (never advertise localhost).
+  const detail = rawBody || `${name} ${action}.`
+  let displayLink = ''
+  if (payload.slug) {
+    displayLink = isLocalDevHost() ? `${PUBLIC_CARD_HOST}/${payload.slug}` : `${self.location.host}/${payload.slug}`
+  }
+
+  const body = displayLink ? `${detail}\nOpen card · ${displayLink}` : `${detail}\nTap to open card`
+
+  return { title, body, displayLink }
 }
 
 function applyCachedMedia(payload, cached) {
@@ -225,25 +275,28 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     (async () => {
       payload = await resolveCardMedia(payload)
+      const copy = buildNotificationCopy(payload)
+      const openUrl = toAbsoluteUrl(payload.url || (payload.slug ? `/${payload.slug}` : '/'))
 
       const richPayload = {
-        title: payload.title,
-        message: payload.body,
+        title: copy.title,
+        message: copy.body,
         businessName: payload.businessName,
         avatarUrl: payload.avatarUrl,
         avatarImageUrl: payload.avatarImageUrl,
         avatarVideoUrl: payload.avatarVideoUrl,
         category: payload.category,
         speakLine: payload.speakLine,
-        url: payload.url,
+        url: openUrl,
         slug: payload.slug,
         profileId: payload.profileId,
         type: payload.type,
+        displayLink: copy.displayLink,
       }
 
       const iconSource = firstNonEmpty(payload.avatarImageUrl, payload.avatarUrl, payload.icon)
-      const icon = isStaticImageUrl(iconSource) ? toAbsoluteUrl(iconSource) : DEFAULT_ICON
-      const hasCardImage = Boolean(icon)
+      const icon = toAbsoluteUrl(isStaticImageUrl(iconSource) ? iconSource : DEFAULT_ICON)
+      const hasCardImage = isStaticImageUrl(iconSource)
 
       const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       const hasFocusedClient = clientList.some((client) => client.focused)
@@ -255,14 +308,17 @@ self.addEventListener('push', (event) => {
         })
       }
 
-      await self.registration.showNotification(payload.title, {
-        body: payload.body,
-        ...(hasCardImage ? { icon, badge: icon, image: icon } : {}),
+      await self.registration.showNotification(copy.title, {
+        body: copy.body,
+        icon,
+        badge: icon,
+        ...(hasCardImage ? { image: icon } : {}),
         data: richPayload,
         tag: payload.slug ? `vbiz-card-${payload.slug}` : 'vbiz-card-update',
         renotify: true,
         requireInteraction: false,
         silent: hasFocusedClient,
+        actions: [{ action: 'open', title: 'Open card' }],
       })
     })()
   )

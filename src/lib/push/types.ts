@@ -62,4 +62,6 @@ export type PlatformUpdateDetail = {
   category?: NotificationPreferenceKey
   url?: string
   slug?: string
+  /** Friendly card link shown in copy (e.g. vbiz.me/slug) — not used for navigation. */
+  displayLink?: string
 }
