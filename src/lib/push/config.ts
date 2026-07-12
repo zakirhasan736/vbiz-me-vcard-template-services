@@ -50,6 +50,10 @@ export {
   writeFollowState,
 }
 
+export { enrichPushPayloadWithCardMedia, writeCardPushMedia } from '@/lib/push/cardPushMediaCache'
+export type { CardPushMedia } from '@/lib/push/cardPushMediaCache'
+export { resolveNotificationAvatar, initialsFromName, isVideoAvatarSrc } from '@/lib/push/resolveNotificationAvatar'
+
 export type { NotificationPreferenceKey, NotificationPreferences, UpdatePreferencesResult } from '@/lib/push/types'
 
 export {

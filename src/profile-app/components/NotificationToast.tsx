@@ -124,7 +124,7 @@ export const NotificationToast = () => {
   const businessName = notification?.businessName ?? 'vBiz Me'
   const accentColor = '#ebd675'
   const imageUrl = notification?.avatarImageUrl || notification?.avatarUrl
-  const videoUrl = notification?.avatarVideoUrl
+  const videoUrl = !imageUrl ? notification?.avatarVideoUrl : undefined
   const title = notification?.title?.trim() || `${businessName} sent an update`
   const message = notification?.message?.trim() || 'Tap to view the latest on this card.'
   const targetUrl = notification?.url || (notification?.slug ? buildProfilePath(notification.slug) : '')

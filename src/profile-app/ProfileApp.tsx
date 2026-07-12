@@ -1,5 +1,6 @@
 'use client'
 
+import { CardPushMediaSync } from '@/profile-app/components/CardPushMediaSync'
 import { CinematicScrollbarBinder } from '@/profile-app/components/CinematicScrollbarBinder'
 import { ProfileBrandPreloader } from '@/profile-app/components/ProfileBrandPreloader'
 import { ProfileForceNotification } from '@/profile-app/components/ProfileForceNotification'
@@ -76,6 +77,7 @@ export function ProfileApp(props: VBizProfileAppProps) {
               ownerName={props.liveAgentCardData?.ownerName ?? props.ownerName ?? 'Guest'}
               embedded={props.embedded}
             />
+            {!props.embedded && <CardPushMediaSync />}
             {!props.embedded && <ProfileBrandPreloader />}
             {!props.embedded && <ProfileIntroOverlay explainerVideoUrl={props.explainerVideoUrl} />}
             <CinematicScrollbarBinder />
