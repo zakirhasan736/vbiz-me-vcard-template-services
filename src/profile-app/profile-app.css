@@ -84,16 +84,16 @@
 .vbiz-notepad-title,
 .vbiz-notepad-editor,
 .vbiz-notepad-toolbar-btn {
-  color: var(--vbiz-note-text, #2a2416);
+  color: #09090b;
 }
 
 .vbiz-notepad-muted {
-  color: var(--vbiz-note-muted, #5c5340);
+  color: #18181b;
 }
 
 .vbiz-notepad-editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--vbiz-note-placeholder, #a39572);
+  color: #52525b;
   pointer-events: none;
 }
 

@@ -260,10 +260,15 @@ function LeaveMessageModalPanel({
             <div className="vbiz-notepad-paper relative overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
               <div className="vbiz-notepad-header relative flex items-start justify-between gap-3 border-b px-4 pt-5 pb-2">
                 <div className="min-w-0 flex-1">
-                  <h3 id="leave-note-title" className="vbiz-notepad-title text-[1.35rem] leading-tight font-semibold">
+                  <h3
+                    id="leave-note-title"
+                    className="vbiz-notepad-title text-[1.35rem] leading-tight font-semibold text-zinc-950"
+                  >
                     Note for {ownerName}
                   </h3>
-                  <p className="vbiz-notepad-muted mt-0.5 text-xs">Write freely — your note will reach them later.</p>
+                  <p className="vbiz-notepad-muted mt-0.5 text-xs text-zinc-900">
+                    Write freely — your note will reach them later.
+                  </p>
                 </div>
                 <button
                   type="button"

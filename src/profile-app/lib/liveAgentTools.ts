@@ -1,5 +1,6 @@
 import { dispatchGoToProfileSection, dispatchOpenSaveContactFlow } from '@/profile-app/lib/liveAgentEvents'
 import type { LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
+import { openExternalIntent, toMailtoHref, toSmsHref, toTelHref } from '@/profile-app/lib/openExternalIntent'
 import { Type, type FunctionCall, type Session } from '@google/genai'
 
 export const LIVE_AGENT_TOOL_DECLARATIONS = [
@@ -30,6 +31,20 @@ export const LIVE_AGENT_TOOL_DECLARATIONS = [
     },
   },
   {
+    name: 'textUser',
+    description:
+      'Open the device SMS / Messages app to text the card owner. Use when the visitor asks to text, SMS, or message them by phone.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        body: {
+          type: Type.STRING,
+          description: 'Optional SMS body in clear, concise English.',
+        },
+      },
+    },
+  },
+  {
     name: 'saveContact',
     description:
       'Open the Save Contact popup so the visitor can enter their name and email, then download the card owner vCard file. Use when they ask to save contact, add to contacts, or download the contact.',
@@ -47,43 +62,6 @@ export function buildLiveAgentTools() {
   return [{ functionDeclarations: [...LIVE_AGENT_TOOL_DECLARATIONS] }]
 }
 
-function toTelHref(phone: string): string | null {
-  const trimmed = phone.trim()
-  if (!trimmed) return null
-  const digits = trimmed.replace(/[^\d+]/g, '')
-  if (!digits) return null
-  return `tel:${digits}`
-}
-
-function normalizeEmailPlainText(text: string): string {
-  return text
-    .replace(/\+/g, ' ')
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]{2,}/g, ' ')
-    .trim()
-}
-
-function toMailtoHref(email: string, subject?: string, body?: string): string | null {
-  const trimmed = email.trim()
-  if (!trimmed) return null
-
-  const queryParts: string[] = []
-  const subjectText = subject?.trim()
-  const bodyText = body?.trim() ? normalizeEmailPlainText(body) : ''
-
-  if (subjectText) queryParts.push(`subject=${encodeURIComponent(subjectText)}`)
-  if (bodyText) queryParts.push(`body=${encodeURIComponent(bodyText)}`)
-
-  const query = queryParts.join('&')
-  return query ? `mailto:${trimmed}?${query}` : `mailto:${trimmed}`
-}
-
-function openExternalUrl(href: string) {
-  window.location.href = href
-}
-
 function readToolArgs(call: FunctionCall): Record<string, string> {
   const raw = call.args
   if (!raw || typeof raw !== 'object') return {}
@@ -92,24 +70,37 @@ function readToolArgs(call: FunctionCall): Record<string, string> {
   )
 }
 
+const OPENED_HINT =
+  'Opened on their device. If nothing appeared, a Tap to continue button is on screen — ask them to tap it. Do not say popup blocked or permission denied unless they report that.'
+
 export function handleLiveAgentToolCalls(functionCalls: FunctionCall[], session: Session, cardData: LiveAgentCardData) {
   for (const call of functionCalls) {
     let result = 'Action executed successfully'
     const args = readToolArgs(call)
 
     if (call.name === 'callUser') {
-      const href = toTelHref(cardData.phone)
+      const href = toTelHref(cardData.phone ?? '')
       if (href) {
-        openExternalUrl(href)
+        openExternalIntent(href, 'Call now', cardData.phone)
+        result = OPENED_HINT
       } else {
         result = 'No phone number is available on this card.'
       }
     } else if (call.name === 'emailUser') {
-      const href = toMailtoHref(cardData.email, args.subject, args.body)
+      const href = toMailtoHref(cardData.email ?? '', args.subject, args.body)
       if (href) {
-        openExternalUrl(href)
+        openExternalIntent(href, 'Open email', cardData.email)
+        result = OPENED_HINT
       } else {
         result = 'No email address is available on this card.'
+      }
+    } else if (call.name === 'textUser') {
+      const href = toSmsHref(cardData.phone ?? '', args.body)
+      if (href) {
+        openExternalIntent(href, 'Open messages', cardData.phone)
+        result = OPENED_HINT
+      } else {
+        result = 'No phone number is available on this card for SMS.'
       }
     } else if (call.name === 'saveContact') {
       dispatchOpenSaveContactFlow()

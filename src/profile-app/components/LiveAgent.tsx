@@ -1,5 +1,6 @@
 'use client'
 
+import { ExternalIntentPrompt } from '@/profile-app/components/ExternalIntentPrompt'
 import { LiveAgentPanel } from '@/profile-app/components/live-agent/LiveAgentPanel'
 import type { UseLiveAgentOptions } from '@/profile-app/components/live-agent/useLiveAgent'
 import { isInIframe } from '@/profile-app/lib/isInIframe'
@@ -49,14 +50,17 @@ export function LiveAgent({
   if (isInIframe()) return null
 
   const panel = (
-    <LiveAgentPanel
-      accentColor={accentColor}
-      cardData={cardData}
-      systemInstruction={systemInstruction}
-      readyToConnect={readyToConnect}
-      embedded={embedded}
-      wrapperClassName={wrapperClassName}
-    />
+    <>
+      <LiveAgentPanel
+        accentColor={accentColor}
+        cardData={cardData}
+        systemInstruction={systemInstruction}
+        readyToConnect={readyToConnect}
+        embedded={embedded}
+        wrapperClassName={wrapperClassName}
+      />
+      {!embedded ? <ExternalIntentPrompt /> : null}
+    </>
   )
 
   if (!embedded) return panel

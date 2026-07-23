@@ -118,28 +118,31 @@ export const NotificationSettingsModal = ({
       key={cardSlug}
       isOpen={isOpen}
       onClose={onClose}
-      panelClassName="relative w-full overflow-hidden rounded-2xl border shadow-2xl sm:max-w-sm"
+      backdropClassName="vbiz-modal-backdrop fixed inset-0 z-100 flex items-end justify-center p-0 backdrop-blur-md sm:items-center sm:p-4"
+      panelClassName="relative flex h-[calc(100dvh-30px)] max-h-[calc(100dvh-30px)] w-full flex-col overflow-hidden rounded-t-2xl border shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-sm sm:rounded-2xl"
     >
-      <div className="relative w-full max-w-sm p-6 sm:max-w-none">
+      <div className="relative flex min-h-0 w-full max-w-sm flex-1 flex-col overflow-y-auto p-5 sm:max-w-none sm:p-6">
         <button
           type="button"
           onClick={onClose}
-          className="vbiz-modal-close absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border transition-all active:scale-95"
+          className="vbiz-modal-close absolute top-5 right-5 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all active:scale-95"
           aria-label="Close notification settings"
         >
           <X size={16} />
         </button>
 
         {unfollowed ? (
-          <div className="flex flex-col items-center text-center">
-            <div className="vbiz-modal-icon-chip mb-5 flex h-14 w-14 items-center justify-center rounded-full">
+          <div className="flex min-h-full flex-col items-center justify-center gap-5 text-center">
+            <div className="vbiz-modal-icon-chip flex h-14 w-14 items-center justify-center rounded-full">
               <BellOff size={24} />
             </div>
-            <h2 className="vbiz-title mb-2 text-xl font-bold">Notifications turned off</h2>
-            <p className="vbiz-description mb-6 text-sm">
-              You won&apos;t get updates for this card anymore. You can re-enable them anytime.
-            </p>
-            <div className="flex w-full flex-col gap-3">
+            <div className="flex flex-col gap-2">
+              <h2 className="vbiz-title text-xl font-bold">Notifications turned off</h2>
+              <p className="vbiz-description text-sm">
+                You won&apos;t get updates for this card anymore. You can re-enable them anytime.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-5">
               <button
                 type="button"
                 onClick={handleReEnable}
@@ -159,44 +162,49 @@ export const NotificationSettingsModal = ({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col text-left">
-            <div className="mb-2 flex items-center gap-3">
-              <div className="vbiz-modal-icon-chip flex h-8 w-8 items-center justify-center rounded-full">
-                <Bell size={16} />
+          <div className="flex min-h-full flex-col gap-5 sm:min-h-0">
+            <div className="flex shrink-0 flex-col gap-2 pr-10">
+              <div className="flex items-center gap-3">
+                <div className="vbiz-modal-icon-chip flex h-8 w-8 items-center justify-center rounded-full">
+                  <Bell size={16} />
+                </div>
+                <h2 className="vbiz-title text-xl font-bold">Notification Settings</h2>
               </div>
-              <h2 className="vbiz-title text-xl font-bold">Notification Settings</h2>
+              <p className="vbiz-description text-md">Choose what to get notified about:</p>
             </div>
 
-            <p className="vbiz-description text-md mb-4">Choose what to get notified about:</p>
-
-            <div className="vbiz-modal-row text-md mb-6 w-full space-y-2 rounded-xl p-4 font-medium">
+            <div className="vbiz-modal-row text-md flex min-h-0 w-full flex-1 flex-col justify-between gap-0 rounded-xl p-4 font-medium">
               {loading ? (
-                <div className="vbiz-description flex items-center justify-center py-6">
+                <div className="vbiz-description flex flex-1 items-center justify-center py-6">
                   <Loader2 size={20} className="vbiz-pin animate-spin" />
                 </div>
               ) : (
                 BACKEND_NOTIFICATION_PREFERENCE_OPTIONS.map((p) => (
-                  <label key={p.id} className="flex cursor-pointer items-center gap-2">
+                  <label key={p.id} className="flex min-h-[36px] cursor-pointer items-center gap-3 py-1">
                     <input
                       type="checkbox"
                       checked={preferences[p.id]}
                       onChange={() => togglePreference(p.id)}
                       className="rounded border-[color:var(--vbiz-border)] bg-[color:var(--vbiz-surface)] text-[color:var(--vbiz-accent)] focus:ring-[color:var(--vbiz-accent)]"
                     />
-                    {p.label}
+                    <span className="leading-snug">{p.label}</span>
                   </label>
                 ))
               )}
             </div>
 
-            {message ? <p className="mb-3 text-xs text-green-500">{message}</p> : null}
-            {error ? (
-              <p className="mb-3 text-xs text-red-400" role="alert">
-                {error}
-              </p>
-            ) : null}
+            {(message || error) && (
+              <div className="flex shrink-0 flex-col gap-2">
+                {message ? <p className="text-xs text-green-500">{message}</p> : null}
+                {error ? (
+                  <p className="text-xs text-red-400" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+              </div>
+            )}
 
-            <div className="flex flex-col gap-3">
+            <div className="mt-auto flex shrink-0 flex-col gap-5">
               <button
                 type="button"
                 onClick={() => void handleSave()}

@@ -175,14 +175,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
   const body = (
     <>
       {/* Header section */}
-      <div className="flex items-center justify-between border-b border-zinc-100 p-6 pb-2 dark:border-zinc-900">
+      <div className="flex shrink-0 items-center justify-between border-b border-zinc-100 px-5 pt-5 pb-0 sm:px-6 sm:pt-6 sm:pb-2 dark:border-zinc-900">
         <div className="flex items-center gap-2">
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-2 text-amber-500">
-            <QrIcon size={18} />
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-1.5 text-amber-500 sm:p-2">
+            <QrIcon size={16} />
           </div>
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Share Profile</h3>
-            <p className="text-xs font-medium text-zinc-500">Generate QR & connect instantly</p>
+            <h3 className="text-base font-bold tracking-tight text-zinc-900 sm:text-lg dark:text-zinc-100">
+              Share Profile
+            </h3>
+            <p className="text-[11px] font-medium text-zinc-500 sm:text-xs">Generate QR & connect instantly</p>
           </div>
         </div>
 
@@ -195,155 +197,165 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
 
-      <div className="no-scrollbar max-h-[75vh] space-y-5 overflow-y-auto p-6">
-        {/* Virtual Scan Card Container */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-100 bg-zinc-50 p-5 dark:border-zinc-900/80 dark:bg-zinc-900/40">
-          {/* Physical-style Badge Card with QR code */}
-          <div className="group relative flex w-full max-w-[260px] flex-col items-center rounded-2xl border border-zinc-200/50 bg-white p-5 text-center text-zinc-950 shadow-lg">
-            {/* Small card accents */}
-            <div className="absolute top-3 left-3 flex gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
-            </div>
-            <span className="absolute top-3 right-3 font-mono text-[8px] font-bold tracking-wider text-zinc-400">
-              vBIZ PASS
-            </span>
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:p-6">
+        <div className="flex min-h-full flex-col justify-between gap-5 sm:min-h-0 sm:justify-start sm:gap-5">
+          {/* Virtual Scan Card Container */}
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-100 bg-zinc-50 p-3 sm:p-5 dark:border-zinc-900/80 dark:bg-zinc-900/40">
+            {/* Physical-style Badge Card with QR code */}
+            <div className="group relative flex w-full max-w-[180px] flex-col items-center rounded-xl border border-zinc-200/50 bg-white p-2.5 text-center text-zinc-950 shadow-lg sm:max-w-[260px] sm:rounded-2xl sm:p-5">
+              {/* Small card accents */}
+              <div className="absolute top-2 left-2 flex gap-1 sm:top-3 sm:left-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <span className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
+              </div>
+              <span className="absolute top-2 right-2 font-mono text-[7px] font-bold tracking-wider text-zinc-400 sm:top-3 sm:right-3 sm:text-[8px]">
+                vBIZ PASS
+              </span>
 
-            {/* Portrait Mini Profile */}
-            <div className="mt-2 mb-3 min-h-[2.5rem]">
-              {profileName ? (
-                <h4 className="notranslate text-sm font-bold tracking-tight text-zinc-900">{profileName}</h4>
-              ) : null}
-              {profileTitle ? (
-                <p
-                  className="notranslate text-[10px] font-semibold tracking-wide uppercase"
-                  style={{ color: accentColor }}
-                >
-                  {profileTitle}
-                </p>
-              ) : null}
-            </div>
+              {/* Portrait Mini Profile */}
+              <div className="mt-1 mb-1.5 min-h-0 sm:mt-2 sm:mb-3 sm:min-h-[2.5rem]">
+                {profileName ? (
+                  <h4 className="notranslate text-xs font-bold tracking-tight text-zinc-900 sm:text-sm">
+                    {profileName}
+                  </h4>
+                ) : null}
+                {profileTitle ? (
+                  <p
+                    className="notranslate text-[9px] font-semibold tracking-wide uppercase sm:text-[10px]"
+                    style={{ color: accentColor }}
+                  >
+                    {profileTitle}
+                  </p>
+                ) : null}
+              </div>
 
-            {/* QR Image Frame — center logo is baked into the QR canvas so the
+              {/* QR Image Frame — center logo is baked into the QR canvas so the
                     on-screen preview matches the downloaded PNG exactly. */}
-            <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl border border-zinc-100 bg-zinc-50 p-2.5 shadow-inner">
-              {qrCodeUrl ? (
-                <motion.img
-                  key={qrCodeUrl}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  src={qrCodeUrl}
-                  alt="Profile QR Code"
-                  className="pointer-events-none h-full w-full object-contain"
-                />
-              ) : (
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-zinc-300 border-t-[#eab308]" />
-              )}
+              <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg border border-zinc-100 bg-zinc-50 p-1.5 shadow-inner sm:h-40 sm:w-40 sm:rounded-xl sm:p-2.5">
+                {qrCodeUrl ? (
+                  <motion.img
+                    key={qrCodeUrl}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    src={qrCodeUrl}
+                    alt="Profile QR Code"
+                    className="pointer-events-none h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-300 border-t-[#eab308] sm:h-12 sm:w-12" />
+                )}
+              </div>
+
+              {/* Bottom Verification Mark */}
+              <div className="mt-1.5 flex items-center gap-1 text-[9px] font-medium text-zinc-400 sm:mt-3 sm:text-[10px]">
+                <span className="inline-block h-1 w-1 rounded-full bg-green-500" />
+                Scan to view digital card
+              </div>
             </div>
 
-            {/* Bottom Verification Mark */}
-            <div className="mt-3 flex items-center gap-1 text-[10px] font-medium text-zinc-400">
-              <span className="inline-block h-1 w-1 rounded-full bg-green-500" />
-              Scan to view digital card
-            </div>
-          </div>
+            {/* QR Config buttons */}
+            <div className="mt-3 flex w-full items-center justify-between gap-2 px-1 sm:mt-4 sm:gap-4 sm:px-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Color:</span>
+                <button
+                  onClick={() => setQrColor('classic')}
+                  className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
+                    qrColor === 'classic'
+                      ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-950'
+                      : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400'
+                  }`}
+                >
+                  Classic
+                </button>
+                <button
+                  onClick={() => setQrColor('amber')}
+                  className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
+                    qrColor === 'amber'
+                      ? 'border-amber-500 bg-amber-500 font-black text-zinc-950'
+                      : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400'
+                  }`}
+                >
+                  Amber
+                </button>
+              </div>
 
-          {/* QR Config buttons */}
-          <div className="mt-4 flex w-full items-center justify-between gap-4 px-2">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Color:</span>
               <button
-                onClick={() => setQrColor('classic')}
-                className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
-                  qrColor === 'classic'
-                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-zinc-950'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400'
-                }`}
+                onClick={handleDownloadQr}
+                className="flex items-center gap-1.5 text-xs font-bold text-[#eab308] transition-all hover:text-[#ca8a04] active:scale-95"
               >
-                Classic
-              </button>
-              <button
-                onClick={() => setQrColor('amber')}
-                className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition-all ${
-                  qrColor === 'amber'
-                    ? 'border-amber-500 bg-amber-500 font-black text-zinc-950'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400'
-                }`}
-              >
-                Amber
+                <Download size={14} /> Download PNG
               </button>
             </div>
-
-            <button
-              onClick={handleDownloadQr}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#eab308] transition-all hover:text-[#ca8a04] active:scale-95"
-            >
-              <Download size={14} /> Download PNG
-            </button>
           </div>
-        </div>
 
-        {/* Quick Copy Link Box */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Copy Direct Link</label>
-          <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-1.5 pl-3.5 transition-colors focus-within:border-[#eab308]/50 dark:border-zinc-800 dark:bg-zinc-900">
-            <span className="flex-1 truncate font-mono text-xs text-zinc-400 select-all">{shareUrl}</span>
-            <button
-              onClick={handleCopyLink}
-              className="flex shrink-0 items-center gap-1 rounded-lg bg-zinc-900 px-4 py-2 text-xs font-bold tracking-tight text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
-            >
-              {copied ? (
-                <>
-                  <Check size={13} className="stroke-3" /> Copied!
-                </>
-              ) : (
-                <>
-                  <Copy size={13} /> Copy
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Social Media Share Platforms */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Share with Social Media</label>
-          <div className="grid grid-cols-5 gap-2">
-            {socialShares.map((platform) => (
-              <a
-                key={platform.name}
-                href={platform.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group flex flex-col items-center justify-center rounded-xl border border-zinc-200/60 bg-zinc-50/50 p-3 transition-all duration-300 dark:border-zinc-800/80 dark:bg-zinc-900/30 ${platform.color} active:scale-95`}
-                title={`Share on ${platform.name}`}
+          {/* Quick Copy Link Box */}
+          <div className="space-y-2">
+            <label className="text-[calc(0.75rem*1.35)] font-bold text-zinc-900 dark:text-white">
+              Copy Direct Link
+            </label>
+            <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-1.5 pl-3.5 transition-colors focus-within:border-[#eab308]/50 dark:border-zinc-800 dark:bg-zinc-900">
+              <span className="flex-1 truncate font-mono text-xs text-zinc-400 select-all">{shareUrl}</span>
+              <button
+                onClick={handleCopyLink}
+                className="flex shrink-0 items-center gap-1 rounded-lg bg-zinc-900 px-4 py-2 text-xs font-bold tracking-tight text-white transition-all hover:bg-zinc-800 active:scale-95 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
               >
-                <platform.icon
-                  size={20}
-                  className={`opacity-80 transition-opacity group-hover:opacity-100 ${platform.textColor} group-hover:text-white`}
-                />
-                <span className="mt-1.5 text-[9px] font-bold text-zinc-500 group-hover:text-white dark:text-zinc-400">
-                  {platform.name}
-                </span>
-              </a>
-            ))}
+                {copied ? (
+                  <>
+                    <Check size={13} className="stroke-3" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={13} /> Copy
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Direct Quick Contact Links */}
-        <div className="space-y-2 pt-1">
-          <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Direct Contact Shortcuts</label>
-          <div className="grid grid-cols-3 gap-2">
-            {contactLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className={`flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-3 text-center text-[11px] font-bold transition-all duration-200 active:scale-95 ${link.color}`}
-              >
-                <link.icon size={13} />
-                <span className="truncate">{link.name}</span>
-              </a>
-            ))}
+          {/* Social Media Share Platforms */}
+          <div className="space-y-2">
+            <label className="text-[calc(0.75rem*1.35)] font-bold text-zinc-900 dark:text-white">
+              Share with Social Media
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {socialShares.map((platform) => (
+                <a
+                  key={platform.name}
+                  href={platform.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`group flex flex-col items-center justify-center rounded-xl border border-zinc-200/60 bg-zinc-50/50 p-2 transition-all duration-300 sm:p-3 dark:border-zinc-800/80 dark:bg-zinc-900/30 ${platform.color} active:scale-95`}
+                  title={`Share on ${platform.name}`}
+                >
+                  <platform.icon
+                    size={18}
+                    className={`opacity-80 transition-opacity group-hover:opacity-100 ${platform.textColor} group-hover:text-white`}
+                  />
+                  <span className="mt-1 text-[calc(9px*1.2)] font-medium text-zinc-400 group-hover:text-white sm:mt-1.5 dark:text-zinc-300">
+                    {platform.name}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Direct Quick Contact Links */}
+          <div className="space-y-2">
+            <label className="text-[calc(0.75rem*1.35)] font-bold text-zinc-900 dark:text-white">
+              Direct Contact Shortcuts
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {contactLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center text-[calc(11px*1.2)] font-medium transition-all duration-200 active:scale-95 sm:px-2.5 sm:py-3 ${link.color}`}
+                >
+                  <link.icon size={13} />
+                  <span className="truncate font-medium text-zinc-500 dark:text-zinc-300">{link.name}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -356,7 +368,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
       onClose={onClose}
       backdropId="share_modal_backdrop"
       backdropClassName="fixed inset-0 z-100 flex items-end justify-center overflow-y-auto bg-zinc-950/60 p-0 backdrop-blur-md sm:items-center sm:p-4"
-      panelClassName="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-2xl border border-zinc-200 bg-white shadow-2xl sm:max-w-[460px] sm:rounded-2xl dark:border-zinc-900 dark:bg-zinc-950"
+      panelClassName="flex h-[calc(100dvh-30px)] max-h-[calc(100dvh-30px)] w-full flex-col overflow-hidden rounded-t-2xl border border-zinc-200 bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-[460px] sm:rounded-2xl dark:border-zinc-900 dark:bg-zinc-950"
     >
       {body}
     </ProfileModalShell>

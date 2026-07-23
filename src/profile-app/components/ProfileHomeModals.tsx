@@ -46,6 +46,7 @@ export function ProfileHomeModals({
         isOpen={activeModal === 'notepad'}
         onClose={onClose}
         cardOwnerId={cardOwnerId ?? 'michaelangelo_casanova'}
+        ownerName={ownerName}
       />
       <SaveContactModal
         isOpen={activeModal === 'contact'}

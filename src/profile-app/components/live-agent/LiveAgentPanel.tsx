@@ -8,6 +8,7 @@ import {
   getSelectedLanguageForLiveAgent,
 } from '@/lib/liveAgent/languagePrompt'
 import { DEFAULT_LIVE_AGENT_CARD, type LiveAgentCardData } from '@/profile-app/lib/liveAgentPrompt'
+import { openExternalIntent, toMailtoHref, toSmsHref, toTelHref } from '@/profile-app/lib/openExternalIntent'
 
 import { buildLiveAgentToolConfig } from '@/lib/liveAgent/tools'
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai'
@@ -88,6 +89,15 @@ export function LiveAgentPanel({
   const [error, setError] = useState<string | null>(null)
   const [isMuted, setIsMuted] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   const apiKey = getGeminiApiKey()
   const ai = useMemo(() => (apiKey ? new GoogleGenAI({ apiKey }) : null), [apiKey])
@@ -136,6 +146,8 @@ export function LiveAgentPanel({
   }
 
   const playChunk = (audioBuffer: AudioBuffer) => {
+    if (isMutedRef.current) return
+
     const pcmContext = pcmContextRef.current
     if (!pcmContext) return
 
@@ -155,6 +167,31 @@ export function LiveAgentPanel({
     nextStartTimeRef.current += audioBuffer.duration
     lastAudioTimeRef.current = Date.now() + Math.ceil(audioBuffer.duration * 1000)
   }
+
+  const stopAgentSpeech = useCallback(() => {
+    if (pcmContextRef.current) {
+      scheduledSourcesRef.current.forEach((source) => {
+        try {
+          source.stop()
+        } catch {
+          /* already stopped */
+        }
+      })
+      scheduledSourcesRef.current = []
+      nextStartTimeRef.current = pcmContextRef.current.currentTime
+      lastAudioTimeRef.current = 0
+    }
+    setIsSpeaking(false)
+  }, [])
+
+  const muteAndStopAgent = useCallback(() => {
+    stopAgentSpeech()
+    setIsMuted(true)
+  }, [stopAgentSpeech])
+
+  const unmuteAgent = useCallback(() => {
+    setIsMuted(false)
+  }, [])
 
   const disconnect = useCallback(() => {
     isCancelledRef.current = true
@@ -352,21 +389,46 @@ export function LiveAgentPanel({
               const functionCalls = message.toolCall.functionCalls
               if (functionCalls && functionCalls.length > 0) {
                 for (const call of functionCalls) {
+                  const args = (call.args ?? {}) as Record<string, string>
+                  let result =
+                    'Opened on their device. If nothing appeared, ask them to tap the on-screen button. Do not say popup blocked unless they report that.'
+
                   if (call.name === 'callUser') {
-                    const phoneDigits = cardData.phone?.replace(/[^\d+]/g, '') ?? ''
-                    window.location.href = phoneDigits ? `tel:${phoneDigits}` : `tel:+18607709893`
+                    const href = toTelHref(cardData.phone ?? '')
+                    if (href) {
+                      openExternalIntent(href, 'Call now', cardData.phone)
+                    } else {
+                      result = 'No phone number is available on this card.'
+                    }
                   } else if (call.name === 'emailUser') {
-                    window.location.href = cardData.email ? `mailto:${cardData.email}` : `mailto:mcasanova@vbizme.com`
+                    const href = toMailtoHref(cardData.email ?? '', args.subject, args.body)
+                    if (href) {
+                      openExternalIntent(href, 'Open email', cardData.email)
+                    } else {
+                      result = 'No email address is available on this card.'
+                    }
+                  } else if (call.name === 'textUser') {
+                    const href = toSmsHref(cardData.phone ?? '', args.body)
+                    if (href) {
+                      openExternalIntent(href, 'Open messages', cardData.phone)
+                    } else {
+                      result = 'No phone number is available on this card for SMS.'
+                    }
                   } else if (call.name === 'openVideos') {
-                    const args = call.args as Record<string, string>
-                    window.open(
-                      `https://www.youtube.com/results?search_query=${encodeURIComponent(args?.query || 'mc intro videos')}`,
-                      '_blank'
+                    const query = args?.query || `${cardData.ownerName || 'intro'} videos`
+                    openExternalIntent(
+                      `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+                      'Open videos',
+                      query
                     )
                   } else if (call.name === 'saveContact') {
                     window.dispatchEvent(new CustomEvent(LIVE_AGENT_CONFIG.events.saveContact))
+                    result = 'Save Contact popup opened.'
                   } else if (call.name === 'openNotepad') {
                     window.dispatchEvent(new CustomEvent(LIVE_AGENT_CONFIG.events.openNotepad))
+                    result = 'Notepad opened.'
+                  } else {
+                    result = `Unknown action: ${call.name ?? 'unnamed'}`
                   }
 
                   if (sessionRef.current) {
@@ -375,7 +437,7 @@ export function LiveAgentPanel({
                         {
                           id: call.id,
                           name: call.name,
-                          response: { result: 'Action executed successfully' },
+                          response: { result },
                         },
                       ],
                     })
@@ -474,16 +536,33 @@ export function LiveAgentPanel({
     }
   }
 
+  const toggleMuteOrStart = () => {
+    if (!isConnected && !isConnecting) {
+      unmuteAgent()
+      void startConnection()
+      return
+    }
+    if (isMuted) {
+      unmuteAgent()
+      return
+    }
+    muteAndStopAgent()
+  }
+
+  const showDesktopPanel = isOpen && !isMobile
+  const fabLooksOpen = !isMobile && isOpen
+
   return (
     <motion.div
       drag
       dragMomentum={false}
       className={`${embedded ? 'absolute' : 'fixed'} live-ai-agent-panel pointer-events-none z-100 flex flex-col items-end gap-2 md:gap-4 ${
-        wrapperClassName ?? 'right-4 bottom-24 md:right-6 md:bottom-6 lg:right-10 lg:bottom-10'
+        wrapperClassName ??
+        'top-1/2 right-3 -translate-y-1/2 md:top-auto md:right-6 md:bottom-6 md:translate-y-0 lg:right-10 lg:bottom-10'
       }`}
     >
       <AnimatePresence>
-        {isOpen && (
+        {showDesktopPanel && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -533,7 +612,10 @@ export function LiveAgentPanel({
               {isConnected ? (
                 <>
                   <button
-                    onClick={() => setIsMuted(!isMuted)}
+                    onClick={() => {
+                      if (isMuted) unmuteAgent()
+                      else muteAndStopAgent()
+                    }}
                     className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all md:h-12 md:w-12 ${isMuted ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'}`}
                   >
                     {isMuted ? (
@@ -567,22 +649,64 @@ export function LiveAgentPanel({
         )}
       </AnimatePresence>
 
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`pointer-events-auto relative flex items-center justify-center rounded-full border transition-all duration-300 ${
-          isOpen
-            ? 'h-10 w-10 border-zinc-800 bg-zinc-900 text-zinc-400 shadow-sm hover:bg-zinc-800 hover:text-zinc-200 md:h-14 md:w-14'
-            : 'vbiz-live-agent-fab h-10 w-10 border-white shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
-        }`}
-      >
-        <Bot className="h-5 w-5 md:h-6 md:w-6" />
-        {isConnected && !isOpen && (
-          <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 animate-ping rounded-full border-2 border-white md:h-3 md:w-3" />
-        )}
-        {isConnected && !isOpen && (
-          <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white md:h-3 md:w-3" />
-        )}
-      </button>
+      {/* Mobile: small mic badge on agent button top-right; no popup */}
+      <div className="pointer-events-auto relative">
+        {isMobile && (isConnected || isConnecting || isMuted) ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleMuteOrStart()
+            }}
+            disabled={isConnecting}
+            aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+            className={`absolute top-0 right-0 z-20 flex h-5 w-5 translate-x-1/4 -translate-y-1/4 items-center justify-center rounded-full border shadow-sm transition-all active:scale-95 disabled:opacity-50 ${
+              isMuted ? 'border-red-500/50 bg-red-500 text-white' : 'border-white/80 bg-zinc-950 text-zinc-100'
+            }`}
+          >
+            {isConnecting ? (
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            ) : isMuted ? (
+              <MicOff className="h-2.5 w-2.5" strokeWidth={2.5} />
+            ) : (
+              <Mic className="h-2.5 w-2.5" strokeWidth={2.5} />
+            )}
+          </button>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => {
+            if (isMobile) {
+              toggleMuteOrStart()
+              return
+            }
+            setIsOpen(!isOpen)
+          }}
+          aria-label={
+            isMobile
+              ? isMuted
+                ? 'Start live agent microphone'
+                : 'Mute live agent microphone'
+              : isOpen
+                ? 'Close live agent panel'
+                : 'Open live agent panel'
+          }
+          className={`relative flex items-center justify-center rounded-full border transition-all duration-300 ${
+            fabLooksOpen
+              ? 'h-10 w-10 border-zinc-800 bg-zinc-900 text-zinc-400 shadow-sm hover:bg-zinc-800 hover:text-zinc-200 md:h-14 md:w-14'
+              : 'vbiz-live-agent-fab h-10 w-10 border-white shadow-sm hover:scale-105 active:scale-95 md:h-14 md:w-14'
+          }`}
+        >
+          <Bot className="h-5 w-5 md:h-6 md:w-6" />
+          {!isMobile && isConnected && !fabLooksOpen ? (
+            <>
+              <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 animate-ping rounded-full border-2 border-white md:h-3 md:w-3" />
+              <span className="vbiz-live-agent-dot absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white md:h-3 md:w-3" />
+            </>
+          ) : null}
+        </button>
+      </div>
     </motion.div>
   )
 }
