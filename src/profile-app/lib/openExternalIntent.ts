@@ -5,54 +5,63 @@ export type ExternalIntentDetail = {
   href: string
   label: string
   description?: string
+  kind: 'call' | 'email' | 'sms' | 'link'
+}
+
+const MAILTO_MAX_LENGTH = 1600
+const SMS_BODY_MAX = 400
+
+function isIosDevice(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return (
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  )
+}
+
+function detectKind(href: string): ExternalIntentDetail['kind'] {
+  if (href.startsWith('tel:')) return 'call'
+  if (href.startsWith('mailto:')) return 'email'
+  if (href.startsWith('sms:')) return 'sms'
+  return 'link'
 }
 
 /**
- * Open tel:/mailto:/sms:/https: links from async AI-tool callbacks.
- * Browsers often treat those as non-user-gestures and block popups —
- * we try an immediate anchor click + location fallback, then emit an
- * event so the UI can show a one-tap confirm button.
+ * Hard-open tel / mailto / sms / https from AI tool callbacks.
+ * Native schemes use a single top-level navigation (location.href).
+ * A fallback confirm UI is always armed because browsers often block
+ * async opens that are not tied to a real user tap.
  */
 export function openExternalIntent(href: string, label: string, description?: string): void {
   if (typeof window === 'undefined' || !href) return
 
-  try {
-    const anchor = document.createElement('a')
-    anchor.href = href
-    anchor.rel = 'noopener noreferrer'
-    // Keep in same tab for dialer/mail/sms; new tab only for http(s)
-    if (/^https?:/i.test(href)) {
-      anchor.target = '_blank'
-    }
-    anchor.style.display = 'none'
-    document.body.appendChild(anchor)
-    anchor.click()
-    document.body.removeChild(anchor)
-  } catch {
-    /* continue to location fallback */
-  }
+  const kind = detectKind(href)
 
-  // Same-tab schemes (tel/mailto/sms) often need location.assign when
-  // the synthetic click is ignored outside a user gesture.
-  if (/^(tel:|mailto:|sms:)/i.test(href)) {
-    try {
-      window.setTimeout(() => {
-        try {
-          window.location.assign(href)
-        } catch {
-          /* ignore */
-        }
-      }, 50)
-    } catch {
-      /* ignore */
-    }
-  }
-
+  // Arm fallback UI immediately (same tick) so a tap is always available.
   window.dispatchEvent(
     new CustomEvent<ExternalIntentDetail>(VBIZ_EXTERNAL_INTENT_EVENT, {
-      detail: { href, label, description },
+      detail: { href, label, description, kind },
     })
   )
+
+  if (/^https?:/i.test(href)) {
+    const opened = window.open(href, '_blank', 'noopener,noreferrer')
+    if (!opened) {
+      // Popup blocked — fallback banner handles it.
+    }
+    return
+  }
+
+  // Native apps: ONE navigation only. Do not also synthetic-click an <a>,
+  // or the OS may show "choose an app" twice / fail SMS entirely.
+  try {
+    window.location.href = href
+  } catch {
+    try {
+      window.location.assign(href)
+    } catch {
+      /* fallback UI remains */
+    }
+  }
 }
 
 export function toTelHref(phone: string): string | null {
@@ -68,10 +77,16 @@ export function toSmsHref(phone: string, body?: string): string | null {
   if (!trimmed) return null
   const digits = trimmed.replace(/[^\d+]/g, '')
   if (!digits) return null
+
   const text = body?.trim()
   if (!text) return `sms:${digits}`
-  // iOS prefers &body=, Android accepts ?body=
-  return `sms:${digits}?&body=${encodeURIComponent(text)}`
+
+  const encoded = encodeURIComponent(text.slice(0, SMS_BODY_MAX))
+  // iOS: sms:NUMBER&body=…   Android: sms:NUMBER?body=…
+  if (isIosDevice()) {
+    return `sms:${digits}&body=${encoded}`
+  }
+  return `sms:${digits}?body=${encoded}`
 }
 
 function normalizeEmailPlainText(text: string): string {
@@ -88,13 +103,33 @@ export function toMailtoHref(email: string, subject?: string, body?: string): st
   const trimmed = email.trim()
   if (!trimmed) return null
 
-  const queryParts: string[] = []
-  const subjectText = subject?.trim()
+  const subjectText = subject?.trim() || ''
   const bodyText = body?.trim() ? normalizeEmailPlainText(body) : ''
 
-  if (subjectText) queryParts.push(`subject=${encodeURIComponent(subjectText)}`)
-  if (bodyText) queryParts.push(`body=${encodeURIComponent(bodyText)}`)
+  const build = (subjectValue: string, bodyValue: string) => {
+    const queryParts: string[] = []
+    if (subjectValue) queryParts.push(`subject=${encodeURIComponent(subjectValue)}`)
+    if (bodyValue) queryParts.push(`body=${encodeURIComponent(bodyValue)}`)
+    const query = queryParts.join('&')
+    return query ? `mailto:${trimmed}?${query}` : `mailto:${trimmed}`
+  }
 
-  const query = queryParts.join('&')
-  return query ? `mailto:${trimmed}?${query}` : `mailto:${trimmed}`
+  let href = build(subjectText, bodyText)
+
+  // Oversized mailto URLs often fail silently on mobile — shrink and copy full text.
+  if (href.length > MAILTO_MAX_LENGTH && bodyText) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(bodyText).catch(() => undefined)
+    }
+    const shortBody =
+      bodyText.slice(0, 350).trimEnd() + '\n\n—(Full message copied to clipboard. Paste into this email.)'
+    href = build(subjectText, shortBody)
+  }
+
+  if (href.length > MAILTO_MAX_LENGTH) {
+    // Last resort: subject only so the mail app still opens.
+    href = build(subjectText || 'Message from vBiz Me card', '')
+  }
+
+  return href
 }

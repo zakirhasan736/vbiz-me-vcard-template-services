@@ -391,7 +391,7 @@ export function LiveAgentPanel({
                 for (const call of functionCalls) {
                   const args = (call.args ?? {}) as Record<string, string>
                   let result =
-                    'Opened on their device. If nothing appeared, ask them to tap the on-screen button. Do not say popup blocked unless they report that.'
+                    'Opened the device app (or showed a Tap to open button). If nothing opened, ask them to tap the yellow Open button once. Do not say popup blocked unless they report that.'
 
                   if (call.name === 'callUser') {
                     const href = toTelHref(cardData.phone ?? '')

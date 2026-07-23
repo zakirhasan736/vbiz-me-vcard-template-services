@@ -71,7 +71,7 @@ function readToolArgs(call: FunctionCall): Record<string, string> {
 }
 
 const OPENED_HINT =
-  'Opened on their device. If nothing appeared, a Tap to continue button is on screen — ask them to tap it. Do not say popup blocked or permission denied unless they report that.'
+  'Opened the device app (or showed a Tap to open button). If the visitor says nothing opened, tell them to tap the yellow Open Phone Dialer / Open Email App / Open Messages button on screen once. Do not say popup blocked unless they report that.'
 
 export function handleLiveAgentToolCalls(functionCalls: FunctionCall[], session: Session, cardData: LiveAgentCardData) {
   for (const call of functionCalls) {
